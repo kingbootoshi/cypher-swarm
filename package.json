@@ -1,0 +1,27 @@
+{
+  "name": "agent-x",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
+    "@supabase/supabase-js": "^2.46.1",
+    "dotenv": "^16.4.5",
+    "fs": "^0.0.1-security",
+    "goat-x": "^1.1.0",
+    "node-fetch": "^3.3.2",
+    "openai": "^4.73.0",
+    "path": "^0.12.7",
+    "shell-quote": "^1.8.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0"
+  }
+}

@@ -1,0 +1,49 @@
+# Agent-X Development Guidelines
+
+## Key Principles for Development
+
+- **Modularity**: Ensure all components are highly modular to facilitate the easy addition of new terminal commands and pipelines.
+
+- **Terminal Interface**:
+  - The AI agent interacts with the world through a custom terminal interface.
+  - Focus on seamless communication between the AI agent and the terminal system.
+
+- **Twitter Integration**:
+  - Prioritize Twitter functionality as the primary interface with external systems.
+  - Design commands and pipelines that make interfacing with Twitter straightforward and efficient.
+
+- **Sub-Agent Pipelines**:
+  - Certain commands could trigger sub-agent pipelines to perform complex tasks.
+  - Sub-agents execute commands and return results to the main AI agent.
+  - Structure these pipelines to be easily extendable and maintainable.
+
+- **Memory Management**:
+  - Terminal logs and AI inputs are stored in a short-term memory buffer within the database.
+  - This mimics AI chat message history where:
+    - **USER**: Represents terminal logs.
+    - **ASSISTANT**: Represents AI inputs to the terminal.
+
+- **Extensibility**:
+  - Design the system to simplify the creation and integration of new pipelines, starting with Twitter and expanding to other platforms.
+
+## Development Guidelines
+
+- **Code Quality**:
+  - Write concise, efficient code with clear comments explaining the "why" and "how".
+  - Preserve the original code's formatting and structure when making changes.
+  - Avoid redundancy by modularizing code and reusing components where possible.
+
+- **Error Handling**:
+  - Prioritize comprehensive error handling and consider edge cases.
+  - Provide meaningful error messages to assist in debugging and user feedback.
+
+- **Best Practices**:
+  - Keep components small with minimal props to enhance maintainability.
+  - Use declarative programming paradigms and iterate functionally.
+  - Implement efficient data fetching strategies, leveraging server-side capabilities when appropriate.
+
+## Notes
+
+- **Collaboration**: Encourage contributions by maintaining clear guidelines and an organized code structure.
+- **Scalability**: Build with future growth in mind to accommodate new features and integrations.
+- **Communication**: Ensure that interactions between the main AI agent and sub-agents are well-defined and documented.
