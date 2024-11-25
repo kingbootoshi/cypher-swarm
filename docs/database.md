@@ -192,7 +192,7 @@ CREATE TABLE twitter_interactions (
   tweet_id VARCHAR,
   user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   text TEXT,
-  action VARCHAR, -- 'replied', 'liked', 'retweeted', 'quoted'
+  action VARCHAR, -- 'replied', 'retweeted', 'quoted'
   context JSONB, -- Stores context from fetchAndFormatTweetMemory()
   timestamp TIMESTAMP -- Time when the user's tweet was posted
 );

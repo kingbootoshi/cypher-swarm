@@ -1,5 +1,5 @@
 // src/ai/agents/TerminalAgent/TerminalAgent.ts
-import { BaseAgent } from '../baseAgent';
+import { BaseAgent } from '../BaseAgent';
 import { terminalAgentConfig } from './terminalAgentConfig';
 import { ModelClient } from '../../types/agentSystem';
 import { terminalToolSchema, TerminalTool } from './terminalTool';
