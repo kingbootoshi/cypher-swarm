@@ -22,7 +22,7 @@ export class FireworkClient implements ModelClient {
 
     this.modelName = modelName;
     this.defaultParams = {
-      temperature: 1,
+      temperature: 0.8,
       max_tokens: 1000,
       ...params, // Override defaults with provided params
     };

@@ -31,15 +31,23 @@ export class OpenAIAdapter implements ModelAdapter {
     formattedTools: any[],
     toolChoice: any
   ): any {
-    return {
+    const params: any = {
       messages: messageHistory.map((msg) => ({
         role: msg.role,
         content: msg.content,
         name: msg.name,
       })),
-      tools: formattedTools,
-      ...(toolChoice && { tool_choice: toolChoice }),
     };
+
+    // Include tools and tool_choice only if tools are provided
+    if (formattedTools.length > 0) {
+      params.tools = formattedTools;
+      if (toolChoice) {
+        params.tool_choice = toolChoice;
+      }
+    }
+
+    return params;
   }
 
   // Process the OpenAI response to extract AI message and function call

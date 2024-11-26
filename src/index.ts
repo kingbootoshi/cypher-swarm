@@ -8,6 +8,11 @@ import { executeCommand } from './terminal/executeCommand';
 import { ensureAuthenticated } from './twitter/twitterClient';
 import { ModelType } from './ai/types/agentSystem';
 import dotenv from 'dotenv';
+import { logTerminalInteraction, logCommandResponse } from './supabase/functions/terminalEntries';
+import { v4 as uuidv4 } from 'uuid';
+import { Logger } from './utils/logger';
+
+Logger.enable();
 
 dotenv.config();
 
@@ -30,6 +35,9 @@ function getModelClient(modelType: ModelType) {
 }
 
 export async function startAISystem() {
+  const sessionId = uuidv4();
+  await ensureAuthenticated();
+  
   // Prompt user for model type if not provided via command line or env var
   const readline = require('readline').createInterface({
     input: process.stdin,
@@ -57,6 +65,7 @@ export async function startAISystem() {
   console.log(`Using ${modelType} model client...`);
   const modelClient = getModelClient(modelType);
   const terminalAgent = new TerminalAgent(modelClient);
+  
 
   // Add a default user message to initialize the conversation
   terminalAgent.addMessage({
@@ -69,36 +78,37 @@ export async function startAISystem() {
 
   while (actionCount < MAX_ACTIONS) {
     try {
-      // Ensure Twitter authentication before starting
-      console.log('Initializing Twitter authentication...');
-      await ensureAuthenticated();
-
       const functionResult = await terminalAgent.run();
+      
+      if (!functionResult.success) {
+        throw new Error(functionResult.error);
+      }
 
-      // Extract the terminal command
-      const terminalCommand = functionResult.terminal_command;
-
-      // Execute the terminal command
-      const commandOutput = await executeCommand(terminalCommand);
-
-      // Format the output properly before adding to message history
-      const formattedOutput = typeof commandOutput === 'object' 
-        ? JSON.stringify(commandOutput.output || commandOutput, null, 2)
-        : commandOutput;
-
-      // Add the command output to the agent's message history
-      terminalAgent.addMessage({
-        role: 'user',
-        content: `TERMINAL OUTPUT: ${formattedOutput}`,
+      // Now TypeScript knows the exact shape of the output
+      const commandId = await logTerminalInteraction(sessionId, {
+        internal_thought: functionResult.output.internal_thought,
+        plan: functionResult.output.plan,
+        terminal_command: functionResult.output.terminal_command
       });
 
-      // Optionally, sleep between actions
-      await new Promise((resolve) => setTimeout(resolve, 15000)); // 15 seconds
+      // Execute command
+      const commandOutput = await executeCommand(functionResult.output.terminal_command);
 
+      // Log the command response
+      await logCommandResponse(sessionId, commandOutput.output, commandId);
+
+      // Update agent's message history
+      terminalAgent.addMessage({
+        role: 'user',
+        content: `TERMINAL OUTPUT: ${commandOutput.output}`,
+      });
+
+      await new Promise((resolve) => setTimeout(resolve, 15000));
       actionCount++;
     } catch (error) {
+      await logCommandResponse(sessionId, `Error: ${error.message}`);
       console.error('Error in AI system loop:', error);
-      await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait before retrying
+      await new Promise((resolve) => setTimeout(resolve, 5000));
     }
   }
 }

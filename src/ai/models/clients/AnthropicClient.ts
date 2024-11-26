@@ -16,18 +16,24 @@ export class AnthropicClient implements ModelClient {
 
     this.modelName = modelName;
     this.defaultParams = {
-      temperature: 1,
+      temperature: 0.8,
       max_tokens: 1000,
-      ...params, // Override defaults with provided params
+      ...params,
     };
   }
 
   async chatCompletion(params: any): Promise<any> {
     try {
+      const messages = params.messages?.map((msg: any) => ({
+        role: msg.role,
+        content: msg.content,
+      }));
+
       const requestParams = {
         model: this.modelName,
         ...this.defaultParams,
         ...params,
+        messages: messages || params.messages,
       };
 
       const response = await this.anthropic.messages.create(requestParams);

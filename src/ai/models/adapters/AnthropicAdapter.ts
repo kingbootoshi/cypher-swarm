@@ -29,7 +29,7 @@ export class AnthropicAdapter implements ModelAdapter {
     formattedTools: any[],
     toolChoice: any
   ): any {
-    return {
+    const params: any = {
       system: messageHistory.find((msg) => msg.role === 'system')?.content || '',
       messages: messageHistory
         .filter((msg) => msg.role !== 'system')
@@ -38,24 +38,42 @@ export class AnthropicAdapter implements ModelAdapter {
           content: [{ type: 'text', text: msg.content }],
           name: msg.name,
         })),
-      tools: formattedTools,
-      ...(toolChoice && { tool_choice: toolChoice }),
     };
+
+    // Include tools and tool_choice only if tools are provided
+    if (formattedTools.length > 0) {
+      params.tools = formattedTools;
+      if (toolChoice) {
+        params.tool_choice = toolChoice;
+      }
+    }
+
+    return params;
   }
 
-  // Process the Anthropic response to extract AI message and function call
+  // Updated processResponse method to normalize the output format
   processResponse(response: any): { aiMessage: any; functionCall?: any } {
-    const aiMessage = response;
+    // Extract the text content from the first content item
+    const messageText = response.content?.[0]?.text || '';
+    
+    // Create a normalized message format matching OpenAI/Fireworks structure
+    const normalizedMessage = {
+      role: 'assistant',
+      content: messageText
+    };
+
+    // Handle tool calls if present
     if (response.content?.[0]?.type === 'tool_use') {
       const toolCall = response.content[0];
       return {
-        aiMessage,
+        aiMessage: normalizedMessage,
         functionCall: {
           functionName: toolCall.name,
           functionArgs: toolCall.input,
         },
       };
     }
-    return { aiMessage };
+
+    return { aiMessage: normalizedMessage };
   }
 } 

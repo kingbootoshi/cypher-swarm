@@ -38,7 +38,33 @@ const ExampleTool = {
 
 ## Creating an Agent
 
-### 1. Define Configuration
+### 1. Define Tool Schema & Type
+```typescript
+// agentTool.ts
+import { z } from 'zod';
+
+// Define the schema for your tool's output
+export const toolSchema = z.object({
+  // Define expected parameters
+});
+
+// Optional: Create a type from the schema
+type ToolOutput = z.infer<typeof toolSchema>;
+
+// Define the tool itself
+export const Tool = {
+  type: 'function',
+  function: {
+    name: 'tool_name',
+    description: 'Tool description',
+    parameters: {
+      // Tool parameters schema matching the Zod schema
+    }
+  }
+};
+```
+
+### 2. Define Configuration
 ```typescript
 // agentConfig.ts
 export const myAgentConfig = {
@@ -51,24 +77,9 @@ export const myAgentConfig = {
 };
 ```
 
-### 2. Create Tool Schema
-```typescript
-// agentTool.ts
-export const toolSchema = z.object({
-  // Define expected parameters
-});
-
-export const Tool = {
-  type: 'function',
-  function: {
-    // Tool definition
-  }
-};
-```
-
 ### 3. Implement Agent Class
 ```typescript
-export class MyAgent extends BaseAgent {
+export class MyAgent extends BaseAgent<typeof toolSchema> {
   constructor(modelClient: ModelClient) {
     super(myAgentConfig, modelClient, toolSchema);
   }
@@ -86,8 +97,14 @@ export class MyAgent extends BaseAgent {
 const modelClient = new OpenAIClient('gpt-4o');
 const agent = new MyAgent(modelClient);
 
-// Run agent
+// Run agent - now returns typed results
 const result = await agent.run();
+if (result.success) {
+  // TypeScript knows the shape of result.output
+  console.log('Tool output:', result.output);
+} else {
+  console.error('Error:', result.error);
+}
 ```
 
 ## Example: Terminal Agent
@@ -172,7 +189,7 @@ export const TerminalTool: Tool = {
 };
 ```
 
-Then we bring it together in the agent class by extending BaseAgent:
+Then we bring it together in the agent class by extending BaseAgent with proper typing:
 ```typescript
 // src/ai/agents/TerminalAgent/TerminalAgent.ts
 import { BaseAgent } from '../BaseAgent';
@@ -180,7 +197,8 @@ import { terminalAgentConfig } from './terminalAgentConfig';
 import { ModelClient } from '../../types/agentSystem';
 import { terminalToolSchema, TerminalTool } from './terminalTool';
 
-export class TerminalAgent extends BaseAgent {
+// Now properly typed with the schema
+export class TerminalAgent extends BaseAgent<typeof terminalToolSchema> {
   constructor(modelClient: ModelClient) {
     super(terminalAgentConfig, modelClient, terminalToolSchema);
   }
@@ -198,19 +216,30 @@ Finally, we can see an example of a terminal command execution:
 import { TerminalAgent } from './ai/agents/TerminalAgent/TerminalAgent';
 import { OpenAIClient } from './ai/models/clients/OpenAiClient';
 
-  const modelClient = new OpenAIClient('gpt-4o'); // or FireworksClient, or AnthropicClient
-  const terminalAgent = new TerminalAgent(modelClient);
-  const functionResult = await terminalAgent.run();
-  ```
+const modelClient = new OpenAIClient('gpt-4o'); // or FireworksClient, or AnthropicClient
+const terminalAgent = new TerminalAgent(modelClient);
+const result = await terminalAgent.run();
 
-which functionResult outputs:
+if (result.success) {
+  // TypeScript knows the exact shape of the output
+  console.log('Command:', result.output.terminal_command);
+  console.log('Thought:', result.output.internal_thought);
+  console.log('Plan:', result.output.plan);
+} else {
+  console.error('Error:', result.error);
+}
+```
+
+which outputs something like:
 
 ```json
-// Example terminal command execution
 {
-  "internal_thought": "Should check mentions",
-  "plan": "Review recent interactions",
-  "terminal_command": "get-mentions"
+  "success": true,
+  "output": {
+    "internal_thought": "Should check mentions",
+    "plan": "Review recent interactions",
+    "terminal_command": "get-mentions"
+  }
 }
 ```
 
@@ -231,9 +260,105 @@ which functionResult outputs:
    - Implement graceful fallbacks
    - Log important state changes
 
+4. **Type Safety**
+   - Always extend BaseAgent with proper schema typing
+   - Use Zod for runtime validation
+   - Handle both success and error cases in run() results
+   - Leverage TypeScript's type inference with tool schemas
+
 ## Notes
 
 - Agents maintain their own message history
 - Each run processes one interaction cycle
 - Tools should be stateless and reusable
 - Configurations can be updated at runtime
+
+## Logging System
+
+The agent system includes a toggleable logging system for debugging and monitoring:
+
+```typescript
+import { Logger } from './utils/logger';
+
+// Enable logging
+Logger.enable();
+
+// Disable logging
+Logger.disable();
+```
+
+Logged information includes:
+- Agent initialization and configuration
+- System prompt construction
+- Message history
+- Model parameters and responses
+- Function calls and direct responses
+- Error states
+
+## Agent Types
+
+### 1. Tool-based Agents
+Agents that use function calling to perform specific actions:
+
+```typescript
+export class TerminalAgent extends BaseAgent<typeof terminalToolSchema> {
+  constructor(modelClient: ModelClient) {
+    super(terminalAgentConfig, modelClient, terminalToolSchema);
+  }
+
+  protected defineTools(): void {
+    this.tools = [TerminalTool];
+  }
+}
+```
+
+### 2. Direct Response Agents
+Agents that provide natural language responses without tools:
+
+```typescript
+export class ChatAgent extends BaseAgent<null> {
+  constructor(modelClient: ModelClient) {
+    super(chatAgentConfig, modelClient, null);
+  }
+
+  protected defineTools(): void {
+    // No tools to define
+  }
+}
+```
+
+## Model Adapters
+
+The system includes adapters for different AI providers that handle both tool-based and direct response scenarios:
+
+- **OpenAI Adapter**: Handles GPT models
+- **Anthropic Adapter**: Handles Claude models
+- **Fireworks Adapter**: Handles Fireworks AI models
+
+Each adapter normalizes the provider-specific formats into a consistent interface:
+
+```typescript
+interface ModelAdapter {
+  buildToolChoice(tools: Tool[]): any;
+  formatTools(tools: Tool[]): any[];
+  buildParams(messageHistory: Message[], formattedTools: any[], toolChoice: any): any;
+  processResponse(response: any): { aiMessage: any; functionCall?: any };
+}
+```
+
+## Best Practices
+
+1. **Choosing Agent Type**
+   - Use tool-based agents when specific actions are needed
+   - Use direct response agents for conversational interfaces
+   - Consider mixing both approaches when needed
+
+2. **Logging**
+   - Enable logging during development and debugging
+   - Use Logger.enable() selectively to avoid noise
+   - Monitor both success and error states
+
+3. **Error Handling**
+   - Check success state in agent responses
+   - Handle both tool outputs and direct responses appropriately
+   - Provide meaningful error messages

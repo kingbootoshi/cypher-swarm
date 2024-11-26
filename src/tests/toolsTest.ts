@@ -1,9 +1,12 @@
-import { OpenAIClient } from './ai/models/clients/OpenAiClient';
-import { AnthropicClient } from './ai/models/clients/AnthropicClient';
-import { FireworkClient } from './ai/models/clients/FireworkClient';
-import { BaseAgent } from './ai/agents/BaseAgent';
-import { Tool } from './ai/types/agentSystem';
+import { OpenAIClient } from '../ai/models/clients/OpenAiClient';
+import { AnthropicClient } from '../ai/models/clients/AnthropicClient';
+import { FireworkClient } from '../ai/models/clients/FireworkClient';
+import { BaseAgent } from '../ai/agents/BaseAgent';
+import { Tool } from '../ai/types/agentSystem';
 import { z } from 'zod';
+import { Logger } from '../utils/logger';
+
+// Logger.enable();
 
 // Define test tool schema
 const testToolSchema = z.object({
@@ -11,7 +14,6 @@ const testToolSchema = z.object({
   test_message: z.string(),
   success: z.boolean(),
 });
-
 // Define test tool
 const TestTool: Tool = {
   type: 'function',
@@ -51,7 +53,7 @@ const testAgentConfig = {
 };
 
 // Test agent implementation
-class TestAgent extends BaseAgent {
+class TestAgent extends BaseAgent<typeof testToolSchema> {
   constructor(modelClient: any) {
     super(testAgentConfig, modelClient, testToolSchema);
   }
@@ -91,17 +93,19 @@ async function runModelTests() {
     
     try {
       const agent = new TestAgent(model.client);
-      
-      // Add test message
-      agent.addMessage({
-        role: 'user',
-        content: model.prompt,
-      });
 
       // Run the test
-      const result = await agent.run();
+      const result = await agent.run(model.prompt);
       
-      console.log(`✅ ${model.name} Test Result:`, result);
+      if (result.success) {
+        console.log(`✅ ${model.name} Test Result:`, {
+          modelName: result.output.model_name,
+          message: result.output.test_message,
+          success: result.output.success
+        });
+      } else {
+        console.error(`❌ ${model.name} Test Failed:`, result.error);
+      }
     } catch (error) {
       console.error(`❌ ${model.name} Test Failed:`, error);
     }
