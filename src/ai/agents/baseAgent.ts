@@ -31,8 +31,7 @@ export abstract class BaseAgent<T extends z.ZodTypeAny | null = null> {
     // Enhanced config logging
     Logger.log('\n🔍 Initializing BaseAgent:');
     Logger.log('📋 Full Config:', {
-      personalityPrompt: config.personalityPrompt?.slice(0, 100) + '...',
-      mainGoal: config.mainGoal,
+      systemPromptTemplate: config.systemPromptTemplate?.slice(0, 100) + '...',
       dynamicVariables: config.dynamicVariables,
     });
 
@@ -51,7 +50,7 @@ export abstract class BaseAgent<T extends z.ZodTypeAny | null = null> {
         throw new Error(`Unsupported model type: ${this.modelType}`);
     }
 
-    const systemPrompt = this.buildSystemPrompt();
+    const systemPrompt = this.compileSystemPrompt();
     this.messageHistory.push({
       role: 'system',
       content: systemPrompt,
@@ -78,33 +77,19 @@ export abstract class BaseAgent<T extends z.ZodTypeAny | null = null> {
       });
     }
 
-  protected buildSystemPrompt(): string {
-    const { personalityPrompt, dynamicVariables, mainGoal, outputFormat } = this.config;
+// src/ai/agents/BaseAgent.ts
 
-    // Enhanced dynamic variables logging
-    Logger.log('\n🔄 Building System Prompt:');
-    Logger.log('📦 Dynamic Variables:', {
-      exists: !!dynamicVariables,
-      keys: dynamicVariables ? Object.keys(dynamicVariables) : 'none',
-      values: dynamicVariables || 'none'
-    });
+protected compileSystemPrompt(): string {
+  const { systemPromptTemplate, dynamicVariables } = this.config;
+  let prompt = systemPromptTemplate;
 
-    // Construct the dynamic variables section with logging
-    let dynamicVariablesSection = '';
-    if (dynamicVariables && Object.keys(dynamicVariables).length > 0) {
-      Logger.log('🏗️ Constructing dynamic variables section');
-      dynamicVariablesSection = '\n# IMPORTANT INFORMATION\n';
-      for (const [key, value] of Object.entries(dynamicVariables)) {
-        Logger.log(`  ↪ Adding ${key}`);
-        dynamicVariablesSection += `\n## ${key}\n${value}`;
-      }
-      dynamicVariablesSection += '\n';
+  if (dynamicVariables) {
+    for (const [key, value] of Object.entries(dynamicVariables)) {
+      // Replace all instances of {{key}} with the corresponding value
+      const placeholder = `{{${key}}}`;
+      prompt = prompt.replace(new RegExp(placeholder, 'g'), value);
     }
-
-    // Log final prompt construction
-    const prompt = `# PERSONALITY\n${personalityPrompt}\n${dynamicVariablesSection}\n# MAIN GOAL\n${mainGoal}\n# OUTPUT FORMAT\n${outputFormat}`;
-    Logger.log('\n📝 Final System Prompt Length:', prompt.length);
-    Logger.log('📝 Dynamic Variables Section:', dynamicVariablesSection);
+  }
 
     return prompt;
   }

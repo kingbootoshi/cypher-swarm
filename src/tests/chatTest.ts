@@ -4,7 +4,7 @@ import { AnthropicClient } from '../ai/models/clients/AnthropicClient';
 import { FireworkClient } from '../ai/models/clients/FireworkClient';
 import { Logger } from '../utils/logger';
 
-// Logger.enable();
+Logger.enable();
 
 // Test configurations for different models
 const models = [

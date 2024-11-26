@@ -9,10 +9,8 @@ export interface Message {
 }
 
 export interface AgentConfig {
-  personalityPrompt: string;
-  mainGoal: string;
-  outputFormat: string;
-  dynamicVariables?: Record<string, any>;
+  systemPromptTemplate: string;
+  dynamicVariables?: { [key: string]: string };
 }
 
 export interface Tool {

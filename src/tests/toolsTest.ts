@@ -2,6 +2,7 @@ import { OpenAIClient } from '../ai/models/clients/OpenAiClient';
 import { AnthropicClient } from '../ai/models/clients/AnthropicClient';
 import { FireworkClient } from '../ai/models/clients/FireworkClient';
 import { BaseAgent } from '../ai/agents/BaseAgent';
+import { AgentConfig } from '../ai/types/agentSystem';
 import { Tool } from '../ai/types/agentSystem';
 import { z } from 'zod';
 import { Logger } from '../utils/logger';
@@ -42,13 +43,23 @@ const TestTool: Tool = {
   },
 };
 
-// Test agent configuration
-const testAgentConfig = {
-  personalityPrompt: `You are a test agent designed to verify the functionality of different AI models.`,
-  mainGoal: `Test the functionality of the AI model by generating a coherent response.`,
-  outputFormat: `You must use the test_model function to report your test results.`,
+// Test agent configuration following standard agent config pattern
+const testAgentConfig: AgentConfig = {
+  systemPromptTemplate: `
+# PERSONALITY
+You are a test agent designed to verify the functionality of different AI models.
+
+# MAIN GOAL
+Test the functionality of the AI model by generating a coherent response.
+
+# OUTPUT FORMAT
+You must use the test_model function to report your test results.
+
+## DYNAMIC VARIABLES
+{{testPurpose}}
+`,
   dynamicVariables: {
-    'TestPurpose': 'Verify model functionality',
+    testPurpose: 'Verify model functionality',
   },
 };
 
