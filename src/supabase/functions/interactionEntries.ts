@@ -7,7 +7,7 @@ interface TweetInteractionData {
   userTweetTimestamp: string;
   userId: string;
   context?: {
-    type: 'mention' | 'reply_to_bot' | 'reply_to_others' | null;
+    type: 'mention' | 'reply_to_bot' | 'reply_to_others' | 'quote_tweet' | 'retweet' | null;
     parentTweetId?: string;
     parentTweetAuthor?: string;
   };

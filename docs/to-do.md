@@ -45,8 +45,23 @@ next steps:
 8. create media generation agent systems for images/videos that save to supabase bucket
 9. DONE WITH v2
 
-- maybe think about incorporating the result of a send tweet or send tweet with media data, so we can include that in the short term memory buffer that gets sent to the memory agent. easier to deal with users in an instant way rather than waiting for dream reflection
+- maybe think about incorporating the result of a send tweet or send tweet with media data, so we can include that in the short term memory buffer that gets sent to the memory agent. easier to deal with users in an instant way rather than waiting for dream reflection (wtf does this mean on re-read ???)
 
 supabase functions i need:
-- adding the diff types of send tweets (main tweets, main tweets w media, quote tweets, retweets, reply tweets)
-- adding follow user
+- if it is a quote tweet, retweet, or reply tweet to a user, we need to keep track of that in the twitter_interactions table (DONE, we keep track in the twitter_tweets table)
+- i need to add an idle status database field for the terminal agent (DONE)
+- adding the diff types of bot sent tweets (
+    - main tweets w/wo media (DONE), 
+    - reply tweets w/wo media (DONE),
+    - quote tweets w/wo media (DONE),
+    - retweets (DONE),
+- make it so the bot likes the post automatically on every reaction (DONE)
+- tracking follow user to the database
+
+functions that:
+1. track if the bot is following a user so we can load in the (FOLLOWING) data to a user
+2. track tweets the bot has already replied to so we can filter them out of get-mentions/homepage/search/get-tweets
+3. track tweets & actions the bot has already done so it can't do the same action on a tweet twice
+4. track the idle status of the terminal agent [supabase table done, need to add actual function to index.ts]
+5. track the command history of the terminal agent (DONE)
+6. save media the bot creates to the supabase bucket (DONE)

@@ -63,12 +63,11 @@
 - **Purpose**: Logs terminal interactions and commands
 - **Fields**:
   - `id` BIGSERIAL PRIMARY KEY: Unique identifier
-  - `session_id` UUID: Groups related entries
-  - `command` TEXT: Command or entry type
-  - `content` TEXT: Command content/output
-  - `parent_id` BIGINT: References terminal_history(id)
-  - `metadata` JSONB: Additional context data
-  - `created_at` TIMESTAMPTZ: Entry creation time (default NOW())
+  - `session_id` UUID: References sessions(id)
+  - `internal_thought` TEXT: Agent's internal thought
+  - `plan` TEXT: Agent's plan
+  - `command` TEXT: Command executed
+  - `terminal_log` TEXT: Command output log
 
 ### 2. `agent_responses` Table
 - **Purpose**: Stores AI agent responses and outputs
@@ -235,13 +234,14 @@ CREATE TABLE twitter_interactions (
   UNIQUE(tweet_id)                  -- Prevent duplicate entries for same tweet
 );
 
+-- Terminal history table with new structure
 CREATE TABLE terminal_history (
-  id BIGSERIAL PRIMARY KEY,  -- This auto-increments for each new entry
-  session_id UUID NOT NULL,   -- This stays same for related entries
+  id BIGSERIAL PRIMARY KEY,
+  session_id UUID NOT NULL,
+  internal_thought TEXT,
+  plan TEXT,
   command TEXT NOT NULL,
-  content TEXT,
-  parent_id BIGINT REFERENCES terminal_history(id),
-  metadata JSONB,
+  terminal_log TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -267,7 +267,6 @@ CREATE INDEX idx_user_accounts_user_id ON user_accounts(user_id);
 CREATE INDEX idx_user_accounts_platform ON user_accounts(platform);
 CREATE INDEX idx_twitter_interactions_user_id ON twitter_interactions(user_id);
 CREATE INDEX idx_twitter_interactions_tweet_id ON twitter_interactions(tweet_id);
-CREATE INDEX idx_twitter_interactions_action ON twitter_interactions(action);
 CREATE INDEX idx_twitter_interactions_bot_account ON twitter_interactions(bot_username);
 CREATE INDEX idx_twitter_tweets_created_at ON twitter_tweets(created_at);
 CREATE INDEX idx_terminal_history_session_id ON terminal_history(session_id);

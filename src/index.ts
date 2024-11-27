@@ -8,9 +8,9 @@ import { executeCommand } from './terminal/executeCommand';
 import { ensureAuthenticated } from './twitter/twitterClient';
 import { ModelType } from './ai/types/agentSystem';
 import dotenv from 'dotenv';
-import { logTerminalInteraction, logCommandResponse } from './supabase/functions/terminalEntries';
 import { v4 as uuidv4 } from 'uuid';
 import { Logger } from './utils/logger';
+import { createTerminalEntry, updateTerminalResponse } from './supabase/functions/terminalEntries';
 
 Logger.enable();
 
@@ -84,22 +84,22 @@ export async function startAISystem() {
         throw new Error(functionResult.error);
       }
 
-      // Now TypeScript knows the exact shape of the output
-      const commandId = await logTerminalInteraction(sessionId, {
+      // Create initial terminal entry
+      const entryId = await createTerminalEntry(sessionId, {
         internal_thought: functionResult.output.internal_thought,
         plan: functionResult.output.plan,
         terminal_command: functionResult.output.terminal_command
       });
 
-      if (commandId === null) {
-        throw new Error('Failed to log terminal interaction');
+      if (!entryId) {
+        throw new Error('Failed to create terminal entry');
       }
 
       // Execute command
       const commandOutput = await executeCommand(functionResult.output.terminal_command);
 
-      // Log the command response
-      await logCommandResponse(sessionId, commandOutput.output, commandId);
+      // Update the same entry with the response
+      await updateTerminalResponse(entryId, commandOutput.output);
 
       // Update agent's message history
       terminalAgent.addMessage({
@@ -110,7 +110,6 @@ export async function startAISystem() {
       await new Promise((resolve) => setTimeout(resolve, 15000));
       actionCount++;
     } catch (error) {
-      await logCommandResponse(sessionId, `Error: ${error.message}`);
       console.error('Error in AI system loop:', error);
       await new Promise((resolve) => setTimeout(resolve, 5000));
     }

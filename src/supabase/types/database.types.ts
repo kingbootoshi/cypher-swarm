@@ -66,40 +66,32 @@ export type Database = {
       terminal_history: {
         Row: {
           command: string
-          content: string | null
+          terminal_log: string | null
           created_at: string | null
           id: number
-          metadata: Json | null
-          parent_id: number | null
+          internal_thought: string | null
+          plan: string | null
           session_id: string
         }
         Insert: {
           command: string
-          content?: string | null
+          terminal_log?: string | null
           created_at?: string | null
           id?: number
-          metadata?: Json | null
-          parent_id?: number | null
+          internal_thought?: string | null
+          plan?: string | null
           session_id: string
         }
         Update: {
           command?: string
-          content?: string | null
+          terminal_log?: string | null
           created_at?: string | null
           id?: number
-          metadata?: Json | null
-          parent_id?: number | null
+          internal_thought?: string | null
+          plan?: string | null
           session_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "terminal_history_parent_id_fkey"
-            columns: ["parent_id"]
-            isOneToOne: false
-            referencedRelation: "terminal_history"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       terminal_status: {
         Row: {

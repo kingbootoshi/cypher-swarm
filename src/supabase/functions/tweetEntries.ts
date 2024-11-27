@@ -3,7 +3,7 @@ import { uploadAndLogMedia } from './mediaEntries';
 import { Logger } from '../../utils/logger';
 
 interface TweetData {
-  tweet_id: string;
+  tweet_id?: string | null;
   text: string;
   tweet_type: 'main' | 'reply' | 'quote' | 'retweet';
   has_media?: boolean;
@@ -24,12 +24,12 @@ export async function logTweet(
   try {
     let mediaIds: string[] | null = null;
 
-    // Process and upload media if provided
-    if (mediaData && mediaData.length > 0) {
+    // Process and upload media if provided and tweet_id is available
+    if (mediaData && mediaData.length > 0 && data.tweet_id) {
       const mediaIdResults = await Promise.all(
         mediaData.map(async ({ data: mediaBuffer, mediaType }) => {
           try {
-            return await uploadAndLogMedia(mediaBuffer, data.tweet_id, mediaType);
+            return await uploadAndLogMedia(mediaBuffer, data.tweet_id!, mediaType);
           } catch (error) {
             Logger.log('Error processing media:', error);
             return null;
@@ -43,7 +43,7 @@ export async function logTweet(
 
     // Build insert data
     const insertData = {
-      tweet_id: data.tweet_id,
+      tweet_id: data.tweet_id || null,
       text: data.text.trim(),
       tweet_type: data.tweet_type,
       has_media: data.has_media || false,
@@ -59,7 +59,7 @@ export async function logTweet(
       .from('twitter_tweets')
       .insert(insertData)
       .select('tweet_id')
-      .single();
+      .maybeSingle();
 
     if (error) {
       Logger.log('Error logging tweet to Supabase:', error.message);
@@ -68,11 +68,11 @@ export async function logTweet(
       return null;
     }
 
-    // If we have media, create the tweet_media relationships
-    if (mediaIds && mediaIds.length > 0) {
-      const mediaRelations = mediaIds.map(mediaId => ({
-        tweet_id: data.tweet_id,
-        media_id: mediaId
+    // If we have media and tweet_id, create the tweet_media relationships
+    if (mediaIds && mediaIds.length > 0 && data.tweet_id) {
+      const mediaRelations = mediaIds.map((mediaId) => ({
+        tweet_id: data.tweet_id!,
+        media_id: mediaId,
       }));
 
       const { error: mediaRelationError } = await supabase
@@ -85,7 +85,7 @@ export async function logTweet(
     }
 
     Logger.log('Successfully logged tweet to Supabase:', tweet);
-    return tweet.tweet_id;
+    return tweet?.tweet_id || null;
   } catch (error) {
     Logger.log('Exception in logTweet:', error);
     return null;

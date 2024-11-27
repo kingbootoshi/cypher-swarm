@@ -144,3 +144,15 @@ export async function getTwitterUserInfo(username: string): Promise<{
     return null;
   }
 } 
+
+// Function to like a tweet
+export async function likeTweet(tweetId: string): Promise<boolean> {
+    try {
+      await scraper.likeTweet(tweetId);
+      console.log(`Successfully liked tweet ${tweetId}`);
+      return true;
+    } catch (error) {
+      console.error('Error liking tweet:', error);
+      return false;
+  }
+}

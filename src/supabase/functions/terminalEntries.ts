@@ -5,67 +5,51 @@ import { terminalToolSchema } from '../../ai/agents/TerminalAgent/terminalTool';
 type TerminalToolOutput = ToolOutputFromSchema<typeof terminalToolSchema>;
 
 /**
- * Logs a terminal interaction with its related entries
+ * Creates a new terminal entry and returns its ID
+ * The entry starts with null content which will be updated when we get the response
  */
-export async function logTerminalInteraction(
+export async function createTerminalEntry(
   sessionId: string,
   output: TerminalToolOutput
 ) {
   try {
-    // Log thought and get its ID
-    const { data: thoughtEntry } = await supabase
+    const { data: entry } = await supabase
       .from('terminal_history')
       .insert({
         session_id: sessionId,
-        command: 'THOUGHT',
-        content: output.internal_thought,
-        metadata: { plan: output.plan }
-      })
-      .select('id')
-      .single();
-
-    // Log command with thought as parent
-    const { data: commandEntry } = await supabase
-      .from('terminal_history')
-      .insert({
-        session_id: sessionId,
+        internal_thought: output.internal_thought,
+        plan: output.plan,
         command: output.terminal_command,
-        content: null,
-        parent_id: thoughtEntry?.id
+        terminal_log: null // Will be updated when we get response
       })
       .select('id')
       .single();
 
-    return commandEntry?.id;
+    return entry?.id;
   } catch (error) {
-    console.error('Error logging terminal interaction:', error);
+    console.error('Error creating terminal entry:', error);
     return null;
   }
 }
 
 /**
- * Logs a command response
+ * Updates the terminal entry with the command response
  */
-export async function logCommandResponse(
-  sessionId: string,
-  response: string,
-  parentId?: number
+export async function updateTerminalResponse(
+  entryId: number,
+  response: string
 ) {
   try {
     const { data } = await supabase
       .from('terminal_history')
-      .insert({
-        session_id: sessionId,
-        command: 'RESPONSE',
-        content: response,
-        parent_id: parentId
-      })
-      .select('id')
+      .update({ terminal_log: response })
+      .eq('id', entryId)
+      .select()
       .single();
 
     return data?.id;
   } catch (error) {
-    console.error('Error logging command response:', error);
+    console.error('Error updating terminal response:', error);
     return null;
   }
 } 

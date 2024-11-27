@@ -1,5 +1,6 @@
 import { scraper } from '../twitterClient';
 import { prepareMediaData } from '../utils/mediaUtils';
+import { likeTweet } from './likeTweet';
 import { analyzeTweetContext, getTwitterUserInfo } from '../utils/tweetUtils';
 import { findOrCreateTwitterUser } from '../../supabase/functions/userEntries';
 import { logTwitterInteraction } from '../../supabase/functions/interactionEntries';
@@ -19,6 +20,9 @@ export async function replyToTweet(
   mediaUrls?: string[]
 ): Promise<string | null> {
   try {
+    // Like the tweet before replying
+    await likeTweet(replyToTweetId);
+
     // Get the tweet we're replying to
     const targetTweet = await scraper.getTweet(replyToTweetId);
     if (!targetTweet || !targetTweet.username) {
