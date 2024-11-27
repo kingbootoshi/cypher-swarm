@@ -65,3 +65,5 @@ functions that:
 4. track the idle status of the terminal agent [supabase table done, need to add actual function to index.ts]
 5. track the command history of the terminal agent (DONE)
 6. save media the bot creates to the supabase bucket (DONE)
+
+// we added a context field to twitter_interactions, right now it tracks if the og tweet was a mention, reply, or other tweet to the bot. parent tweets are marked null. make sure to use this field to add further context like tweet thread, users involved etc.

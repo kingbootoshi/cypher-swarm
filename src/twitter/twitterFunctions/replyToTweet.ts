@@ -1,11 +1,11 @@
 import { scraper } from '../twitterClient';
 import { prepareMediaData } from '../utils/mediaUtils';
 import { likeTweet } from './likeTweet';
-import { analyzeTweetContext, getTwitterUserInfo } from '../utils/tweetUtils';
-import { findOrCreateTwitterUser } from '../../supabase/functions/userEntries';
-import { logTwitterInteraction } from '../../supabase/functions/interactionEntries';
+import { analyzeTweetContext } from '../utils/tweetUtils';
+import { findOrCreateUserFromTweet } from '../utils/profileUtils';
 import { Logger } from '../../utils/logger';
 import { logTweet } from '../../supabase/functions/tweetEntries';
+import { logTwitterInteraction } from '../../supabase/functions/interactionEntries';
 
 /**
  * Replies to a specific tweet and logs the interaction
@@ -20,9 +20,6 @@ export async function replyToTweet(
   mediaUrls?: string[]
 ): Promise<string | null> {
   try {
-    // Like the tweet before replying
-    await likeTweet(replyToTweetId);
-
     // Get the tweet we're replying to
     const targetTweet = await scraper.getTweet(replyToTweetId);
     if (!targetTweet || !targetTweet.username) {
@@ -32,6 +29,9 @@ export async function replyToTweet(
 
     // Prepare media data for Twitter API
     const mediaData = mediaUrls ? await prepareMediaData(mediaUrls) : undefined;
+
+    // Like the tweet before replying
+    await likeTweet(replyToTweetId);
 
     // Send the reply using the Twitter client
     const response = await scraper.sendTweet(text, replyToTweetId, mediaData);
@@ -57,20 +57,10 @@ export async function replyToTweet(
       Logger.log('Failed to log reply tweet');
     }
 
-    // Get Twitter user ID and create/find user records
-    const userInfo = await getTwitterUserInfo(targetTweet.username);
-    if (!userInfo) {
-      Logger.log('Failed to get Twitter user info:', targetTweet.username);
-      return null;
-    }
-
-    const userAccounts = await findOrCreateTwitterUser(
-      userInfo.username,
-      userInfo.userId,
-      userInfo.profile
-    );
+    // Find or create user account
+    const userAccounts = await findOrCreateUserFromTweet(targetTweet);
     if (!userAccounts) {
-      Logger.log('Failed to process user accounts');
+      Logger.log('Failed to process user account');
       return null;
     }
 

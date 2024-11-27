@@ -11,19 +11,18 @@ function sanitizeProfileForJson(profile: Partial<Profile>): Record<string, any> 
   };
 }
 
-/**
- * Finds or creates Twitter user records in our database
- */
-export async function findOrCreateTwitterUser(
-  username: string,
-  twitterId: string,
-  profileData?: Partial<Profile>
-): Promise<{
+type TwitterUserResult = {
   userAccountId: number;
   userId: string | null;
-} | null> {
+} | null;
+
+/**
+ * Finds a Twitter user in our database
+ */
+export async function findTwitterUser(
+  twitterId: string
+): Promise<TwitterUserResult> {
   try {
-    // Check if user already exists
     const { data: existingAccount } = await supabase
       .from('user_accounts')
       .select('id, user_id')
@@ -31,25 +30,53 @@ export async function findOrCreateTwitterUser(
       .eq('platform_user_id', twitterId)
       .single();
 
-    if (existingAccount) {
-      // Update profile data if provided
-      if (profileData) {
-        await supabase
-          .from('twitter_user_accounts')
-          .update({ 
-            profile_data: sanitizeProfileForJson(profileData),
-            last_profile_update: new Date().toISOString()
-          })
-          .eq('user_account_id', existingAccount.id);
-      }
-      
-      return {
-        userAccountId: existingAccount.id,
-        userId: existingAccount.user_id
-      };
+    if (!existingAccount) {
+      return null;
     }
 
-    // Create new user and accounts
+    return {
+      userAccountId: existingAccount.id,
+      userId: existingAccount.user_id
+    };
+  } catch (error) {
+    Logger.log('Error in findTwitterUser:', error);
+    return null;
+  }
+}
+
+/**
+ * Updates a Twitter user's profile data
+ */
+export async function updateTwitterUserProfile(
+  userAccountId: number,
+  profileData: Partial<Profile>
+): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('twitter_user_accounts')
+      .update({ 
+        profile_data: sanitizeProfileForJson(profileData),
+        last_profile_update: new Date().toISOString()
+      })
+      .eq('user_account_id', userAccountId);
+
+    return !error;
+  } catch (error) {
+    Logger.log('Error updating Twitter user profile:', error);
+    return false;
+  }
+}
+
+/**
+ * Creates a new Twitter user in our database
+ */
+export async function createTwitterUser(
+  username: string,
+  twitterId: string,
+  profileData?: Partial<Profile>
+): Promise<TwitterUserResult> {
+  try {
+    // Create new user
     const { data: newUser } = await supabase
       .from('users')
       .insert({
@@ -82,7 +109,7 @@ export async function findOrCreateTwitterUser(
       return null;
     }
 
-    // Create twitter_user_account entry with sanitized profile data
+    // Create twitter_user_account entry
     const { error: twitterError } = await supabase
       .from('twitter_user_accounts')
       .insert({
@@ -102,7 +129,7 @@ export async function findOrCreateTwitterUser(
       userId: newUser.id
     };
   } catch (error) {
-    Logger.log('Error in findOrCreateTwitterUser:', error);
+    Logger.log('Error in createTwitterUser:', error);
     return null;
   }
-} 
+}

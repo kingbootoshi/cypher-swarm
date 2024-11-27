@@ -1,10 +1,10 @@
 import { scraper } from '../twitterClient';
 import { likeTweet } from './likeTweet';
-import { analyzeTweetContext, getTwitterUserInfo } from '../utils/tweetUtils';
-import { findOrCreateTwitterUser } from '../../supabase/functions/userEntries';
-import { logTwitterInteraction } from '../../supabase/functions/interactionEntries';
+import { analyzeTweetContext } from '../utils/tweetUtils';
+import { findOrCreateUserFromTweet } from '../utils/profileUtils';
 import { Logger } from '../../utils/logger';
 import { logTweet } from '../../supabase/functions/tweetEntries';
+import { logTwitterInteraction } from '../../supabase/functions/interactionEntries';
 
 /**
  * Retweets a specific tweet
@@ -13,15 +13,15 @@ import { logTweet } from '../../supabase/functions/tweetEntries';
  */
 export async function retweet(tweetId: string): Promise<boolean> {
   try {
-    // Like the tweet before retweeting
-    await likeTweet(tweetId);
-
     // Fetch the tweet we're retweeting
     const targetTweet = await scraper.getTweet(tweetId);
     if (!targetTweet || !targetTweet.username) {
       Logger.log('Failed to fetch target tweet');
       return false;
     }
+
+    // Like the tweet before retweeting
+    await likeTweet(tweetId);
 
     // Retweet the tweet
     await scraper.retweet(tweetId);
@@ -36,27 +36,14 @@ export async function retweet(tweetId: string): Promise<boolean> {
       created_at: new Date().toISOString(),
     });
 
-    // Get information about the user who posted the original tweet
-    const userInfo = await getTwitterUserInfo(targetTweet.username);
-    if (!userInfo) {
-      Logger.log('Failed to get Twitter user info:', targetTweet.username);
-      return false;
-    }
-
-    // Find or create the user in the database
-    const userAccounts = await findOrCreateTwitterUser(
-      userInfo.username,
-      userInfo.userId,
-      userInfo.profile
-    );
-
+    // Find or create user account
+    const userAccounts = await findOrCreateUserFromTweet(targetTweet);
     if (!userAccounts) {
-      Logger.log('Failed to process user accounts');
+      Logger.log('Failed to process user account');
       return false;
     }
 
     // Analyze the context of the tweet for logging
-    // Analyze tweet context
     const context = await analyzeTweetContext(targetTweet);
 
     // Log the interaction with the user
