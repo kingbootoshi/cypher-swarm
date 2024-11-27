@@ -96,3 +96,47 @@ This document captures the development process, including summaries of conversat
   - Updated agent documentation to reflect new capabilities
   - Added examples for both tool and non-tool agent implementations
 
+---
+
+## Date: 2024-11-27
+
+### Summary
+
+- **Topic**: Database Optimization and Twitter Interaction Logging
+
+- **Description**: Improved the database schema and interaction logging system to better handle Twitter interactions and user profiles. Made significant changes to handle edge cases and prevent duplicate entries while maintaining data integrity.
+
+- **Key Changes**:
+  1. Database Schema Improvements:
+     - Modified `twitter_tweets` to handle nullable tweet_ids for retweets
+     - Added UNIQUE constraint with NULLS NOT DISTINCT for tweet_ids
+     - Added profile_data (JSONB) to twitter_user_accounts
+     - Optimized twitter_interactions table structure
+
+  2. Profile Data Management:
+     - Added comprehensive Twitter profile storage
+     - Created sanitizeProfileForJson utility for JSON-safe storage
+     - Added last_profile_update tracking
+
+  3. Interaction Logging:
+     - Implemented upsert-based duplicate prevention
+     - Improved error handling for constraint violations
+     - Streamlined interaction logging process
+
+- **Technical Details**:
+  - Added JSONB storage for rich profile data
+  - Implemented proper null handling for retweets
+  - Created utility functions for data sanitization
+  - Added database constraints for data integrity
+  - Optimized indexes for common queries
+
+- **Design Decisions**:
+  - Store complete Twitter profile data for future AI context
+  - Use natural keys (tweet_id) with proper null handling
+  - Prevent duplicate interactions at database level
+  - Keep interaction logging code simple, let database handle constraints
+
+- **Documentation**:
+  - Updated database schema documentation
+  - Added comments explaining null handling and constraints
+  - Documented profile data structure and usage

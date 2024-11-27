@@ -1,33 +1,52 @@
 import { scraper } from '../twitterClient';
 import { prepareMediaData } from '../utils/mediaUtils';
+import { logTweet } from '../../supabase/functions/tweetEntries';
+import { Logger } from '../../utils/logger';
 
 /**
- * Sends a tweet with optional media attachments
+ * Sends a main tweet with optional media and logs it to the database.
  * @param text - The text content of the tweet
- * @param mediaUrls - Optional array of media URLs (images, GIFs, or videos)
- * @param replyToTweetId - Optional tweet ID to reply to
+ * @param mediaUrls - Optional array of media URLs
  * @returns The ID of the sent tweet, or null if failed
  */
 export async function sendTweet(
   text: string,
-  mediaUrls?: string[],
-  replyToTweetId?: string
+  mediaUrls?: string[]
 ): Promise<string | null> {
   try {
+    // Prepare media data for Twitter API
     const mediaData = mediaUrls ? await prepareMediaData(mediaUrls) : undefined;
 
-    const response = await scraper.sendTweet(text, replyToTweetId, mediaData);
+    // Send the tweet using the Twitter client
+    const response = await scraper.sendTweet(text, undefined, mediaData);
     const responseData = await response.json();
     const tweetId = responseData?.data?.create_tweet?.tweet_results?.result?.rest_id;
 
     if (tweetId) {
-      console.log(`Tweet sent successfully (ID: ${tweetId})`);
+      Logger.log(`Tweet sent successfully (ID: ${tweetId})`);
+
+      // Log the tweet to the database with prepared media data
+      const logResult = await logTweet({
+        tweet_id: tweetId,
+        text: text,
+        tweet_type: 'main',
+        has_media: !!mediaData,
+        created_at: new Date().toISOString()
+      }, mediaData);
+
+      if (logResult) {
+        Logger.log(`Tweet logged with ID: ${logResult}`);
+      } else {
+        Logger.log('Failed to log tweet to Supabase.');
+      }
+
       return tweetId;
+    } else {
+      Logger.log('Failed to retrieve tweet ID from response:', responseData);
+      return null;
     }
-    
-    return null;
   } catch (error) {
-    console.error('Error sending tweet:', error);
+    Logger.log('Error sending tweet:', error);
     return null;
   }
 }

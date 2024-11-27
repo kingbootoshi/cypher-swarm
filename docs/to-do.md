@@ -36,9 +36,9 @@ some agents can have tool output, some might not have tool output but only has a
 note: be careful to not OD it with too much tokens and calls lol, balance creativity x cost
 
 next steps:
-1. finish making it so base agent is flexible to handle tool output or direct response (+ in how to make chat history better)
-2. add supabase table for custom agent responses
-3. give supabase tables RLS, then add all the tables
+1. finish making it so base agent is flexible to handle tool output or direct response (+ in how to make chat history better) (DONE)
+2. add supabase table for custom agent responses (DONE)
+3. give supabase tables RLS, then add all the tables (DONE)
 4. build supabase functions for each functionality in our current code base
 5. intergrate current code checking against supabase data, exactly like satoshAI framework
 6. create memory system. involves creating memory agent that interacts with mem0 to save/load memory, and a dynamic way to load the correct memory for each agent depending on the task (which depends on command/agent) which includes creating a memory entry in DB (saves agent's memory for long term). need supabase table for summaries, learnings, dream data
@@ -46,3 +46,7 @@ next steps:
 9. DONE WITH v2
 
 - maybe think about incorporating the result of a send tweet or send tweet with media data, so we can include that in the short term memory buffer that gets sent to the memory agent. easier to deal with users in an instant way rather than waiting for dream reflection
+
+supabase functions i need:
+- adding the diff types of send tweets (main tweets, main tweets w media, quote tweets, retweets, reply tweets)
+- adding follow user

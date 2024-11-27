@@ -3,6 +3,9 @@
 import readline from 'readline';
 import { executeCommand } from './terminal/executeCommand';
 import { ensureAuthenticated } from './twitter/twitterClient';
+import { Logger } from './utils/logger';
+
+Logger.enable();
 
 /**
  * Initializes the CLI application for manual use to test AI functions

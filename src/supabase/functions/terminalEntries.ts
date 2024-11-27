@@ -17,7 +17,7 @@ export async function logTerminalInteraction(
       .from('terminal_history')
       .insert({
         session_id: sessionId,
-        entry_type: 'thought',
+        command: 'THOUGHT',
         content: output.internal_thought,
         metadata: { plan: output.plan }
       })
@@ -29,8 +29,8 @@ export async function logTerminalInteraction(
       .from('terminal_history')
       .insert({
         session_id: sessionId,
-        entry_type: 'command',
-        content: output.terminal_command,
+        command: output.terminal_command,
+        content: null,
         parent_id: thoughtEntry?.id
       })
       .select('id')
@@ -56,7 +56,7 @@ export async function logCommandResponse(
       .from('terminal_history')
       .insert({
         session_id: sessionId,
-        entry_type: 'response',
+        command: 'RESPONSE',
         content: response,
         parent_id: parentId
       })

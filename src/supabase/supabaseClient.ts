@@ -2,6 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
+import { Database } from './types/database.types';  // We'll need to generate this
 
 // Load environment variables
 dotenv.config();
@@ -12,13 +13,25 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
 }
 
 // Create Supabase client with service role key for full database access
-export const supabase = createClient(
+export const supabase = createClient<Database>(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY,
   {
     auth: {
-      autoRefreshToken: false,
-      persistSession: false
+      autoRefreshToken: true,
+      persistSession: false  // Since this is running server-side
+    },
+    db: {
+      schema: 'public'
     }
   }
 );
+
+// Verify connection
+supabase.auth.getSession().then(({ data, error }) => {
+  if (error) {
+    console.error('Error initializing Supabase client:', error.message);
+    throw error;
+  }
+  console.log('Supabase client initialized successfully');
+});

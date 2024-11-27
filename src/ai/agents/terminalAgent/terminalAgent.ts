@@ -4,17 +4,9 @@ import { terminalAgentConfig } from './terminalAgentConfig';
 import { ModelClient } from '../../types/agentSystem';
 import { terminalToolSchema, TerminalTool } from './terminalTool';
 
-export class TerminalAgent extends BaseAgent {
+export class TerminalAgent extends BaseAgent<typeof terminalToolSchema> {
   constructor(modelClient: ModelClient) {
-    console.log('\n🤖 Initializing TerminalAgent:');
-    console.log('⚙️ Terminal Agent Config:', {
-      dynamicVars: terminalAgentConfig.dynamicVariables,
-      mainGoal: terminalAgentConfig.mainGoal
-    });
-    
     super(terminalAgentConfig, modelClient, terminalToolSchema);
-    
-    console.log('✅ TerminalAgent initialized');
   }
 
   protected defineTools(): void {

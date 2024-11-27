@@ -91,6 +91,10 @@ export async function startAISystem() {
         terminal_command: functionResult.output.terminal_command
       });
 
+      if (commandId === null) {
+        throw new Error('Failed to log terminal interaction');
+      }
+
       // Execute command
       const commandOutput = await executeCommand(functionResult.output.terminal_command);
 
