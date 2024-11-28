@@ -1,69 +1,27 @@
-to-do
-- setup the terminal (DONE)
-- setup the twitter logic with the database (DONE)
-- setup supabase client database (DONE)
-- setup the AI core that interacts with the terminal (DONE, CREATED AI AGENT SYSTEM)
-- setup SUPABASE functions for the service
-- implement boop's memory into the AI core (prob involves creating a memory agent that saves/loads memory)
+to-do:
+1. create memory system. involves creating memory agent that interacts with mem0 to save/load memory, and a dynamic way to load the correct memory for each agent depending on the task (which depends on command/agent) which includes creating a memory entry in DB (saves agent's memory for long term). need supabase table for summaries, learnings, dream data
+2. create media generation agent systems for images/videos that save to supabase bucket
+3. DONE WITH v2, PUSH LIVE TO GIT, UPDATE DOCS, AND ANNOUNCE IT
 
 misc:
 - have to enable vision tech for the new system (if images are provided as an input)
-- make it so genned videos/urls get saved to the supabase bucket so we can display them on site
 - enhance media generation pipeline
-- make it easy to visualize all internal thoughts from the sub-agents
 - make sure to include a similar "fetchAndFormatTweetMemory" function when we're replying/quote-tweeting for deeper context and save this to supabase db
 - log the token usage per agent, somehow
 
-current dev log:
-- finished talking with o1 to optimize the supbase data, came to the re-structure idea of making a user system in the code base which can connect a user profile across all platforms for AI's memory & connection with users
-tweet logic is optimized for supabase db, so we'd need to make a module for all those interactions
-- database.md file is not finished, it needs logic of storing command log interactions + the bot's internal thought processes between core and sub-agents
-
-nov 25
-i made more database structure progress and got terminal agent database function too
-
-im trying to get it so we that:
-1. its important for the ai agent class to not NEED tool output, but handle tool output strictly if provided
-
-some agents can have tool output, some might not have tool output but only has a direct response, and some agents might have both. we want to be flexible
-
-- itd be crucial to be able to go promptEnhancerAgent.run("some input") and have it return a response with tool output or direct response based on the prompt
-
-- we'd need to make chat history more manageable, so that we can have chains of ai agents that just converse and interact with each other. this should even allow group chat discussions. this is good for talking to an agent self as well, and planning out creative ideas, etc which can then be fed into direct tool output as a final result
-
-- finally, i want to be able to save to the database the complete creative agent responses. that way we can easily display each agent's internal process and creative output in a front end UI. makes it flexible
-
-note: be careful to not OD it with too much tokens and calls lol, balance creativity x cost
-
-next steps:
-1. finish making it so base agent is flexible to handle tool output or direct response (+ in how to make chat history better) (DONE)
-2. add supabase table for custom agent responses (DONE)
-3. give supabase tables RLS, then add all the tables (DONE)
-4. build supabase functions for each functionality in our current code base (DONE)
-5. intergrate current code checking against supabase data, exactly like satoshAI framework (DONE)
-6. create memory system. involves creating memory agent that interacts with mem0 to save/load memory, and a dynamic way to load the correct memory for each agent depending on the task (which depends on command/agent) which includes creating a memory entry in DB (saves agent's memory for long term). need supabase table for summaries, learnings, dream data
-8. create media generation agent systems for images/videos that save to supabase bucket
-9. DONE WITH v2
-
+notes:
 - maybe think about incorporating the result of a send tweet or send tweet with media data, so we can include that in the short term memory buffer that gets sent to the memory agent. easier to deal with users in an instant way rather than waiting for dream reflection (wtf does this mean on re-read ???)
+- we added a context field to twitter_interactions, right now it tracks if the og tweet was a mention, reply, or other tweet to the bot. parent tweets are marked null. make sure to use this field to add further context like tweet thread, users involved etc.
 
-supabase functions i need:
-- if it is a quote tweet, retweet, or reply tweet to a user, we need to keep track of that in the twitter_interactions table (DONE, we keep track in the twitter_tweets table)
-- i need to add an idle status database field for the terminal agent (DONE)
-- adding the diff types of bot sent tweets
-    - main tweets w/wo media (DONE), 
-    - reply tweets w/wo media (DONE),
-    - quote tweets w/wo media (DONE),
-    - retweets (DONE),
-- make it so the bot likes the post automatically on every reaction (DONE)
-- tracking follow user to the database (DONE)
+MEMORY SYSTEM:
+- summarize the short-term terminal logs (this is the AI's main state of mind)
+- extract learnings from the terminal logs (how to extract learnings about specific users ?? maybe extract from tweet interactions - we can see what interactions the bot uses in terminal logs via the commands it uses! then cross-check the tweets database for more context)
+- store learnings into the mem0 database (general learnings, self learnings, user specific learnings)
+- store summaries into the supabase db
+- create dream system - an agent that loads in learnings daily per category [and each user], reflects/summarizes, and stores in supabase db. every day the new learnings condense into the existing learnings, adjusting the core system prompt on a daily basis.
 
-functions that:
-1. track if the bot is following a user so we can load in the (FOLLOWING) data to a user (DONE)
-2. track tweets the bot has already replied to so we can filter them out of get-mentions/homepage/search/get-tweets (DONE)
-3. track tweets & actions the bot has already done so it can't do the same action on a tweet twice (DONE)
-4. track the idle status of the terminal agent [supabase table done, need to add actual function to index.ts]
-5. track the command history of the terminal agent (DONE)
-6. save media the bot creates to the supabase bucket (DONE)
+additional:
+- do we need to store main tweets in mem0 database & supabase (yohei method, to allow versatility tweets)? because if the bot stores a main tweet, that'd be added to self learnings?
 
-// we added a context field to twitter_interactions, right now it tracks if the og tweet was a mention, reply, or other tweet to the bot. parent tweets are marked null. make sure to use this field to add further context like tweet thread, users involved etc.
+how to pull memories?
+- memory agent that decides which memories to load in based on the task at hand (which depends on command/agent)
