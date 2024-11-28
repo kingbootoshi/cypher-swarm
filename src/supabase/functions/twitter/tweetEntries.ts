@@ -43,7 +43,8 @@ export async function logTweet(
 
     // Build insert data
     const insertData = {
-      tweet_id: data.tweet_id || null,
+      tweet_id: data.tweet_id || (data.tweet_type === 'retweet' ? 
+        `rt_${data.retweeted_tweet_id}` : null),
       text: data.text.trim(),
       tweet_type: data.tweet_type,
       has_media: data.has_media || false,

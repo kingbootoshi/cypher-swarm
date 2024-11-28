@@ -56,9 +56,12 @@ export async function retweet(tweetId: string): Promise<RetweetResult> {
 
     Logger.log(`Successfully retweeted tweet ${tweetId}`);
 
-    // Log the bot's retweet in the database
+    // Generate a unique composite ID for the retweet entry
+    const uniqueRetweetId = `rt_${tweetId}`;
+
+    // Log the bot's retweet in the database with the unique composite ID
     const logResult = await logTweet({
-      tweet_id: null, // Retweets don't have their own tweet ID
+      tweet_id: uniqueRetweetId, // Use composite ID instead of null
       text: targetTweet.text || '',
       tweet_type: 'retweet',
       retweeted_tweet_id: tweetId,
