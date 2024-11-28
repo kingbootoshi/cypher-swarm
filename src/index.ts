@@ -10,14 +10,21 @@ import { ModelType } from './ai/types/agentSystem';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 import { Logger } from './utils/logger';
-import { createTerminalEntry, updateTerminalResponse } from './supabase/functions/terminalEntries';
+import { createTerminalEntry, updateTerminalResponse, updateTerminalStatus } from './supabase/functions/terminal/terminalEntries';
 
 Logger.enable();
 
 dotenv.config();
 
 /**
- * Starts the AI system, which will run indefinitely until the maximum number of actions is reached.
+ * Returns a random number between min and max (inclusive)
+ */
+function getRandomInt(min: number, max: number) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+/**
+ * Starts the AI system, which will run indefinitely with idle periods.
  */ 
 
 // Helper function to get model client based on user selection, for initial testing.
@@ -65,7 +72,6 @@ export async function startAISystem() {
   console.log(`Using ${modelType} model client...`);
   const modelClient = getModelClient(modelType);
   const terminalAgent = new TerminalAgent(modelClient);
-  
 
   // Add a default user message to initialize the conversation
   terminalAgent.addMessage({
@@ -73,42 +79,62 @@ export async function startAISystem() {
     content: 'TERMINAL ONLINE',
   });
 
-  let actionCount = 0;
-  const MAX_ACTIONS = 30;
+  // Set initial active status
+  await updateTerminalStatus(true);
+  Logger.log('Terminal status set to active');
 
-  while (actionCount < MAX_ACTIONS) {
+  while (true) { // Run indefinitely with idle periods
     try {
-      const functionResult = await terminalAgent.run();
-      
-      if (!functionResult.success) {
-        throw new Error(functionResult.error);
+      let actionCount = 0;
+      const MAX_ACTIONS = 10; // Reduced for testing
+
+      // Active period
+      while (actionCount < MAX_ACTIONS) {
+        const functionResult = await terminalAgent.run();
+        
+        if (!functionResult.success) {
+          throw new Error(functionResult.error);
+        }
+
+        // Create initial terminal entry
+        const entryId = await createTerminalEntry(sessionId, {
+          internal_thought: functionResult.output.internal_thought,
+          plan: functionResult.output.plan,
+          terminal_command: functionResult.output.terminal_command
+        });
+
+        if (!entryId) {
+          throw new Error('Failed to create terminal entry');
+        }
+
+        // Execute command
+        const commandOutput = await executeCommand(functionResult.output.terminal_command);
+
+        // Update the same entry with the response
+        await updateTerminalResponse(entryId, commandOutput.output);
+
+        // Update agent's message history
+        terminalAgent.addMessage({
+          role: 'user',
+          content: `TERMINAL OUTPUT: ${commandOutput.output}`,
+        });
+
+        await new Promise((resolve) => setTimeout(resolve, 15000));
+        actionCount++;
       }
 
-      // Create initial terminal entry
-      const entryId = await createTerminalEntry(sessionId, {
-        internal_thought: functionResult.output.internal_thought,
-        plan: functionResult.output.plan,
-        terminal_command: functionResult.output.terminal_command
-      });
+      // Enter idle mode
+      const idleMinutes = getRandomInt(30, 60);
+      Logger.log(`Entering idle mode for ${idleMinutes} minutes`);
+      await updateTerminalStatus(false);
 
-      if (!entryId) {
-        throw new Error('Failed to create terminal entry');
-      }
+      // Idle period
+      await new Promise((resolve) => setTimeout(resolve, idleMinutes * 60 * 1000));
 
-      // Execute command
-      const commandOutput = await executeCommand(functionResult.output.terminal_command);
+      // Resume active mode
+      Logger.log('Resuming active mode');
+      await updateTerminalStatus(true);
 
-      // Update the same entry with the response
-      await updateTerminalResponse(entryId, commandOutput.output);
-
-      // Update agent's message history
-      terminalAgent.addMessage({
-        role: 'user',
-        content: `TERMINAL OUTPUT: ${commandOutput.output}`,
-      });
-
-      await new Promise((resolve) => setTimeout(resolve, 15000));
-      actionCount++;
     } catch (error) {
       console.error('Error in AI system loop:', error);
       await new Promise((resolve) => setTimeout(resolve, 5000));
