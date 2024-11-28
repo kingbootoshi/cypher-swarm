@@ -1,5 +1,5 @@
 import { Command } from '../types/commands';
-import { followUser } from '../../twitter/twitterFunctions/followUser';
+import { followUser, FollowResult } from '../../twitter/twitterFunctions/followUser';
 
 /**
  * @command twitter-follow
@@ -18,11 +18,20 @@ export const twitterFollow: Command = {
   ],
   handler: async (args) => {
     try {
-      const success = await followUser(args.username);
+      const result: FollowResult = await followUser(args.username);
+
+      // Format output based on status
+      const statusEmoji = {
+        success: '✅',
+        already_following: 'ℹ️',
+        user_not_found: '❌',
+        error: '❌'
+      }[result.status];
+
       return {
-        output: success 
-          ? `✅ Action: Follow User\nTarget: @${args.username}\nStatus: Success\nDetails: Successfully followed user @${args.username}`
-          : `❌ Action: Follow User\nTarget: @${args.username}\nStatus: Failed\nDetails: Unable to follow user @${args.username}`
+        output: `${statusEmoji} Action: Follow User\nTarget: @${args.username}\nStatus: ${result.status}\nDetails: ${result.message}${
+          result.error ? `\nError: ${result.error}` : ''
+        }`
       };
     } catch (error) {
       return {

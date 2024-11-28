@@ -17,9 +17,9 @@ type TwitterUserResult = {
 } | null;
 
 /**
- * Finds a Twitter user in our database
+ * Finds a Twitter user in our database by Twitter ID
  */
-export async function findTwitterUser(
+export async function findTwitterUserByTwitterId(
   twitterId: string
 ): Promise<TwitterUserResult> {
   try {
@@ -40,6 +40,34 @@ export async function findTwitterUser(
     };
   } catch (error) {
     Logger.log('Error in findTwitterUser:', error);
+    return null;
+  }
+}
+
+/**
+ * Finds a Twitter user in our database by username
+ */
+export async function findTwitterUserByUsername(
+  username: string
+): Promise<TwitterUserResult> {
+  try {
+    const { data: existingAccount } = await supabase
+      .from('user_accounts')
+      .select('id, user_id')
+      .eq('platform', 'twitter')
+      .eq('username', username)
+      .single();
+
+    if (!existingAccount) {
+      return null;
+    }
+
+    return {
+      userAccountId: existingAccount.id,
+      userId: existingAccount.user_id
+    };
+  } catch (error) {
+    Logger.log('Error in findTwitterUserByUsername:', error);
     return null;
   }
 }

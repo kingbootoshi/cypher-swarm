@@ -1,7 +1,7 @@
 import { Profile, Tweet } from 'goat-x';
 import { Logger } from '../../utils/logger';
 import { scraper } from '../twitterClient';
-import { findTwitterUser, createTwitterUser } from '../../supabase/functions/userEntries';
+import { findTwitterUserByTwitterId, createTwitterUser } from '../../supabase/functions/userEntries';
 
 /**
  * Converts Twitter Profile data to JSON-safe format
@@ -76,7 +76,7 @@ export async function findOrCreateUserFromTweet(tweet: Tweet): Promise<{
   }
 
   // First check if user exists in database
-  let userAccounts = await findTwitterUser(tweet.userId);
+  let userAccounts = await findTwitterUserByTwitterId(tweet.userId);
 
   if (userAccounts) {
     Logger.log(`Found existing user in database: @${tweet.username} (${tweet.userId})`);

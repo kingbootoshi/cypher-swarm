@@ -226,7 +226,7 @@ CREATE TABLE tweet_media (
 CREATE TABLE twitter_interactions (
   id SERIAL PRIMARY KEY,
   tweet_id VARCHAR,
-  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   bot_username TEXT,         
   text TEXT,                        -- User's tweet text
   context JSONB,                    -- Store any additional context

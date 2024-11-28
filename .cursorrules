@@ -30,6 +30,7 @@
 
 - **Code Quality**:
   - Write concise, efficient code with clear comments explaining the "why" and "how".
+  - Use Logger.log() to log messages to the console. Log logic pipeline always. Import via import { Logger } from './utils/logger';
   - Preserve the original code's formatting and structure when making changes.
   - Avoid redundancy by modularizing code and reusing components where possible.
 
