@@ -50,18 +50,18 @@ next steps:
 supabase functions i need:
 - if it is a quote tweet, retweet, or reply tweet to a user, we need to keep track of that in the twitter_interactions table (DONE, we keep track in the twitter_tweets table)
 - i need to add an idle status database field for the terminal agent (DONE)
-- adding the diff types of bot sent tweets (
+- adding the diff types of bot sent tweets
     - main tweets w/wo media (DONE), 
     - reply tweets w/wo media (DONE),
     - quote tweets w/wo media (DONE),
     - retweets (DONE),
 - make it so the bot likes the post automatically on every reaction (DONE)
-- tracking follow user to the database
+- tracking follow user to the database (DONE)
 
 functions that:
-1. track if the bot is following a user so we can load in the (FOLLOWING) data to a user
+1. track if the bot is following a user so we can load in the (FOLLOWING) data to a user (DONE)
 2. track tweets the bot has already replied to so we can filter them out of get-mentions/homepage/search/get-tweets
-3. track tweets & actions the bot has already done so it can't do the same action on a tweet twice
+3. track tweets & actions the bot has already done so it can't do the same action on a tweet twice (DONE)
 4. track the idle status of the terminal agent [supabase table done, need to add actual function to index.ts]
 5. track the command history of the terminal agent (DONE)
 6. save media the bot creates to the supabase bucket (DONE)

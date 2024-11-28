@@ -1,5 +1,5 @@
 import { Command } from '../types/commands';
-import { searchTwitter } from '../../twitter/twitterFunctions';
+import { searchTwitter } from '../../twitter/functions/searchTwitter';
 
 /**
  * @command search-twitter
@@ -27,11 +27,11 @@ export const twitterSearch: Command = {
     try {
       const results = await searchTwitter(args.query, args.limit);
       return {
-        output: results
+        output: results.startsWith('Error') ? `❌ ${results}` : `🔍 ${results}`
       };
     } catch (error) {
       return {
-        output: `Error searching tweets: ${error.message}`
+        output: `❌ Error searching tweets: ${error.message}`
       };
     }
   }

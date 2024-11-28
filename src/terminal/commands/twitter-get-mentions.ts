@@ -1,5 +1,5 @@
 import { Command } from '../types/commands';
-import { getMentions } from '../../twitter/twitterFunctions';
+import { getMentions } from '../../twitter/functions/getMentions';
 
 /**
  * @command get-mentions
@@ -22,15 +22,15 @@ export const twitterGetMentions: Command = {
       const mentions = await getMentions(args.limit);
       if (mentions.length === 0) {
         return {
-          output: 'No recent mentions found.'
+          output: '📭 No unhandled mentions found.'
         };
       }
       return {
-        output: `📫 Recent Mentions:\n${mentions.join('\n')}`
+        output: `📫 Found ${mentions.length} unhandled mention${mentions.length === 1 ? '' : 's'}:\n${mentions.join('\n')}`
       };
     } catch (error) {
       return {
-        output: `Error fetching mentions: ${error.message}`
+        output: `❌ Error fetching mentions: ${error.message}`
       };
     }
   }

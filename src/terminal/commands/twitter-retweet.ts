@@ -1,5 +1,5 @@
 import { Command } from '../types/commands';
-import { retweet } from '../../twitter/twitterFunctions/retweet';
+import { retweet } from '../../twitter/functions/retweet';
 
 /**
  * @command twitter-retweet
@@ -18,15 +18,20 @@ export const twitterRetweet: Command = {
   ],
   handler: async (args) => {
     try {
-      const success = await retweet(args.tweetId);
+      const result = await retweet(args.tweetId);
+      
       return {
-        output: success 
-          ? `✅ Action: Retweet\nTweet ID: ${args.tweetId}\nStatus: Success\nDetails: Successfully retweeted`
-          : `❌ Action: Retweet\nTweet ID: ${args.tweetId}\nStatus: Failed\nDetails: Unable to retweet`
+        output: `${result.success ? '✅' : '❌'} Action: Retweet\n` +
+               `Tweet ID: ${args.tweetId}\n` +
+               `Status: ${result.success ? 'Success' : 'Failed'}\n` +
+               `Details: ${result.message}`
       };
     } catch (error) {
       return {
-        output: `❌ Action: Retweet\nTweet ID: ${args.tweetId}\nStatus: Error\nDetails: ${error.message}`
+        output: `❌ Action: Retweet\n` +
+               `Tweet ID: ${args.tweetId}\n` +
+               `Status: Error\n` +
+               `Details: ${error.message}`
       };
     }
   }

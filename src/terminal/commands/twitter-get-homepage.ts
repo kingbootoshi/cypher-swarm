@@ -1,5 +1,5 @@
 import { Command } from '../types/commands';
-import { getHomepage } from '../../twitter/twitterFunctions';
+import { getHomepage } from '../../twitter/functions/getHomepage';
 
 /**
  * @command get-homepage
@@ -22,15 +22,15 @@ export const twitterGetHomepage: Command = {
       const tweets = await getHomepage(args.limit);
       if (tweets.length === 0) {
         return {
-          output: 'No tweets found in your homepage timeline.'
+          output: '📭 No unhandled tweets found in your homepage timeline.'
         };
       }
       return {
-        output: `📱 Homepage Timeline:\n${tweets.join('\n')}`
+        output: `📱 Found ${tweets.length} unhandled tweet${tweets.length === 1 ? '' : 's'} in timeline:\n${tweets.join('\n')}`
       };
     } catch (error) {
       return {
-        output: `Error fetching homepage: ${error.message}`
+        output: `❌ Error fetching homepage: ${error.message}`
       };
     }
   }

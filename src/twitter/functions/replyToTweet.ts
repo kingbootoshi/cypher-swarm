@@ -6,6 +6,8 @@ import { findOrCreateUserFromTweet } from '../utils/profileUtils';
 import { Logger } from '../../utils/logger';
 import { logTweet } from '../../supabase/functions/tweetEntries';
 import { logTwitterInteraction } from '../../supabase/functions/interactionEntries';
+import { hasAlreadyActioned } from '../../supabase/functions/tweetInteractionChecks';
+import { ReplyResult } from '../types/tweetResults';
 
 /**
  * Replies to a specific tweet and logs the interaction
@@ -18,13 +20,26 @@ export async function replyToTweet(
   replyToTweetId: string,
   text: string,
   mediaUrls?: string[]
-): Promise<string | null> {
+): Promise<ReplyResult> {
   try {
+    // Check if the bot has already replied to the tweet
+    const hasReplied = await hasAlreadyActioned(replyToTweetId, 'reply');
+    if (hasReplied) {
+      Logger.log(`Already replied to tweet ${replyToTweetId}`);
+      return {
+        success: false,
+        message: 'Already replied to this tweet'
+      };
+    }
+
     // Get the tweet we're replying to
     const targetTweet = await scraper.getTweet(replyToTweetId);
     if (!targetTweet || !targetTweet.username) {
       Logger.log('Failed to fetch target tweet');
-      return null;
+      return {
+        success: false,
+        message: 'Failed to fetch target tweet'
+      };
     }
 
     // Prepare media data for Twitter API
@@ -40,7 +55,10 @@ export async function replyToTweet(
 
     if (!replyTweetId) {
       Logger.log('Failed to retrieve reply tweet ID from response:', responseData);
-      return null;
+      return {
+        success: false,
+        message: 'Failed to retrieve reply tweet ID from response'
+      };
     }
 
     // Log the bot's reply tweet
@@ -61,7 +79,10 @@ export async function replyToTweet(
     const userAccounts = await findOrCreateUserFromTweet(targetTweet);
     if (!userAccounts) {
       Logger.log('Failed to process user account');
-      return null;
+      return {
+        success: false,
+        message: 'Failed to process user account'
+      };
     }
 
     // Analyze tweet context
@@ -77,10 +98,17 @@ export async function replyToTweet(
     });
 
     Logger.log(`Reply sent successfully (ID: ${replyTweetId})`);
-    return replyTweetId;
+    return {
+      success: true,
+      message: 'Successfully replied to tweet',
+      tweetId: replyTweetId
+    };
 
   } catch (error) {
     Logger.log('Error sending reply:', error);
-    return null;
+    return {
+      success: false,
+      message: `Failed to reply: ${error.message}`
+    };
   }
 } 

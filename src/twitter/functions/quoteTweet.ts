@@ -6,25 +6,40 @@ import { findOrCreateUserFromTweet } from '../utils/profileUtils';
 import { Logger } from '../../utils/logger';
 import { logTweet } from '../../supabase/functions/tweetEntries';
 import { logTwitterInteraction } from '../../supabase/functions/interactionEntries';
+import { hasAlreadyActioned } from '../../supabase/functions/tweetInteractionChecks';
+import { QuoteResult } from '../types/tweetResults';
 
 /**
  * Sends a quote tweet with optional media attachments
  * @param quotedTweetId - The ID of the tweet being quoted
  * @param text - The text content of the quote tweet
  * @param mediaUrls - Optional array of media URLs (images, GIFs, or videos)
- * @returns The ID of the sent quote tweet, or null if failed
+ * @returns Promise<QuoteResult> with status and tweet ID if successful
  */
 export async function quoteTweet(
   quotedTweetId: string,
   text: string,
   mediaUrls?: string[]
-): Promise<string | null> {
+): Promise<QuoteResult> {
   try {
+    // Check if already quoted this tweet
+    const hasQuoted = await hasAlreadyActioned(quotedTweetId, 'quote');
+    if (hasQuoted) {
+      Logger.log(`Already quote tweeted ${quotedTweetId}`);
+      return {
+        success: false,
+        message: 'Already quote tweeted this tweet'
+      };
+    }
+
     // Fetch the tweet we're quoting
     const targetTweet = await scraper.getTweet(quotedTweetId);
     if (!targetTweet || !targetTweet.username) {
       Logger.log('Failed to fetch target tweet');
-      return null;
+      return {
+        success: false,
+        message: 'Failed to fetch target tweet'
+      };
     }
 
     // Prepare media data if any
@@ -43,7 +58,10 @@ export async function quoteTweet(
 
     if (!tweetId) {
       Logger.log('Failed to retrieve tweet ID from response:', responseData);
-      return null;
+      return {
+        success: false,
+        message: 'Failed to retrieve tweet ID from response'
+      };
     }
 
     // Log the bot's quote tweet in the database
@@ -60,7 +78,10 @@ export async function quoteTweet(
     const userAccounts = await findOrCreateUserFromTweet(targetTweet);
     if (!userAccounts) {
       Logger.log('Failed to process user account');
-      return null;
+      return {
+        success: false,
+        message: 'Failed to process user account'
+      };
     }
 
     // Analyze tweet context
@@ -76,10 +97,17 @@ export async function quoteTweet(
     });
 
     Logger.log(`Quote tweet sent successfully (ID: ${tweetId})`);
-    return tweetId;
+    return {
+      success: true,
+      message: 'Successfully quote tweeted',
+      tweetId: tweetId
+    };
 
   } catch (error) {
     Logger.log('Error sending quote tweet:', error);
-    return null;
+    return {
+      success: false,
+      message: `Failed to quote tweet: ${error.message}`
+    };
   }
 } 

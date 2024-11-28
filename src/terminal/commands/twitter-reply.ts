@@ -1,5 +1,5 @@
 import { Command } from '../types/commands';
-import { replyToTweet } from '../../twitter/twitterFunctions/replyToTweet';
+import { replyToTweet } from '../../twitter/functions/replyToTweet';
 
 /**
  * @command twitter-reply
@@ -31,16 +31,23 @@ export const twitterReply: Command = {
   handler: async (args) => {
     try {
       const mediaUrls = args.mediaUrls ? args.mediaUrls.split(',').map(url => url.trim()) : undefined;
-      const replyId = await replyToTweet(args.tweetId, args.text, mediaUrls);
+      const result = await replyToTweet(args.tweetId, args.text, mediaUrls);
       
       return {
-        output: replyId 
-          ? `✅ Action: Reply Tweet\nParent Tweet ID: ${args.tweetId}\nReply Tweet ID: ${replyId}\nStatus: Success\nText: ${args.text}\nMedia: ${mediaUrls ? mediaUrls.join(', ') : 'None'}\nDetails: Successfully sent reply`
-          : `❌ Action: Reply Tweet\nParent Tweet ID: ${args.tweetId}\nStatus: Failed\nDetails: Unable to send reply`
+        output: `${result.success ? '✅' : '❌'} Action: Reply Tweet\n` +
+               `Parent Tweet ID: ${args.tweetId}\n` +
+               `${result.tweetId ? `Reply Tweet ID: ${result.tweetId}\n` : ''}` +
+               `Status: ${result.success ? 'Success' : 'Failed'}\n` +
+               `Text: ${args.text}\n` +
+               `Media: ${mediaUrls ? mediaUrls.join(', ') : 'None'}\n` +
+               `Details: ${result.message}`
       };
     } catch (error) {
       return {
-        output: `❌ Action: Reply Tweet\nParent Tweet ID: ${args.tweetId}\nStatus: Error\nDetails: ${error.message}`
+        output: `❌ Action: Reply Tweet\n` +
+               `Parent Tweet ID: ${args.tweetId}\n` +
+               `Status: Error\n` +
+               `Details: ${error.message}`
       };
     }
   }

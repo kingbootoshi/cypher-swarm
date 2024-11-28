@@ -1,5 +1,5 @@
 import { Command } from '../types/commands';
-import { quoteTweet } from '../../twitter/twitterFunctions/quoteTweet';
+import { quoteTweet } from '../../twitter/functions/quoteTweet';
 
 /**
  * @command twitter-quote
@@ -31,16 +31,23 @@ export const twitterQuote: Command = {
   handler: async (args) => {
     try {
       const mediaUrls = args.mediaUrls ? args.mediaUrls.split(',').map(url => url.trim()) : undefined;
-      const tweetId = await quoteTweet(args.tweetId, args.text, mediaUrls);
+      const result = await quoteTweet(args.tweetId, args.text, mediaUrls);
       
       return {
-        output: tweetId 
-          ? `✅ Action: Quote Tweet\nQuoted Tweet ID: ${args.tweetId}\nNew Tweet ID: ${tweetId}\nStatus: Success\nText: ${args.text}\nMedia: ${mediaUrls ? mediaUrls.join(', ') : 'None'}\nDetails: Successfully created quote tweet`
-          : `❌ Action: Quote Tweet\nQuoted Tweet ID: ${args.tweetId}\nStatus: Failed\nDetails: Unable to create quote tweet`
+        output: `${result.success ? '✅' : '❌'} Action: Quote Tweet\n` +
+               `Quoted Tweet ID: ${args.tweetId}\n` +
+               `${result.tweetId ? `New Tweet ID: ${result.tweetId}\n` : ''}` +
+               `Status: ${result.success ? 'Success' : 'Failed'}\n` +
+               `Text: ${args.text}\n` +
+               `Media: ${mediaUrls ? mediaUrls.join(', ') : 'None'}\n` +
+               `Details: ${result.message}`
       };
     } catch (error) {
       return {
-        output: `❌ Action: Quote Tweet\nQuoted Tweet ID: ${args.tweetId}\nStatus: Error\nDetails: ${error.message}`
+        output: `❌ Action: Quote Tweet\n` +
+               `Quoted Tweet ID: ${args.tweetId}\n` +
+               `Status: Error\n` +
+               `Details: ${error.message}`
       };
     }
   }

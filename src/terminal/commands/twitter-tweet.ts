@@ -1,5 +1,5 @@
 import { Command } from '../types/commands';
-import { sendTweet } from '../../twitter/twitterFunctions/sendTweet';
+import { sendTweet } from '../../twitter/functions/sendTweet';
 
 /**
  * @command twitter-tweet

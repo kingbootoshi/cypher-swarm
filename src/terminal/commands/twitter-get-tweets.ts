@@ -1,5 +1,5 @@
 import { Command } from '../types/commands';
-import { getTweets } from '../../twitter/twitterFunctions';
+import { getTweets } from '../../twitter/functions/getTweets';
 
 /**
  * @command get-tweets
@@ -27,11 +27,11 @@ export const twitterGetTweets: Command = {
     try {
       const result = await getTweets(args.username, args.limit);
       return {
-        output: result
+        output: result.startsWith('Error') ? `❌ ${result}` : `📝 ${result}`
       };
     } catch (error) {
       return {
-        output: `Error fetching tweets: ${error.message}`
+        output: `❌ Error fetching tweets: ${error.message}`
       };
     }
   }

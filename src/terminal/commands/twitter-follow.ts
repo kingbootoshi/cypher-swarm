@@ -1,5 +1,5 @@
 import { Command } from '../types/commands';
-import { followUser, FollowResult } from '../../twitter/twitterFunctions/followUser';
+import { followUser, FollowResult } from '../../twitter/functions/followUser';
 
 /**
  * @command twitter-follow
