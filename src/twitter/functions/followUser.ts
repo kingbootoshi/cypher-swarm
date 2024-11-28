@@ -1,6 +1,6 @@
 import { scraper } from '../twitterClient';
 import { Logger } from '../../utils/logger';
-import { isUserFollowedByBot, updateUserFollowStatus } from '../../supabase/functions/followEntries';
+import { isUserFollowedByBot, updateUserFollowStatus } from '../../supabase/functions/twitter/followEntries';
 
 // Define possible follow result statuses
 export type FollowResultStatus = 'success' | 'already_following' | 'user_not_found' | 'error';

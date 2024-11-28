@@ -1,8 +1,8 @@
 import { scraper } from '../twitterClient';
 import type { Tweet } from 'goat-x';
 import { formatTimestamp } from '../../utils/formatTimestamps';
-import { hasInteractedWithTweet, debugTweetInteractions } from '../../supabase/functions/tweetInteractionChecks';
-import { isUserFollowedByBot } from '../../supabase/functions/followEntries';
+import { hasInteractedWithTweet, debugTweetInteractions } from '../../supabase/functions/twitter/tweetInteractionChecks';
+import { isUserFollowedByBot } from '../../supabase/functions/twitter/followEntries';
 import { Logger } from '../../utils/logger';
 
 interface ExtendedTweet extends Tweet {

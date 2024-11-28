@@ -1,7 +1,7 @@
 import { Profile, Tweet } from 'goat-x';
 import { Logger } from '../../utils/logger';
 import { scraper } from '../twitterClient';
-import { findTwitterUserByTwitterId, createTwitterUser } from '../../supabase/functions/userEntries';
+import { findTwitterUserByTwitterId, createTwitterUser } from '../../supabase/functions/twitter/userEntries';
 
 /**
  * Converts Twitter Profile data to JSON-safe format

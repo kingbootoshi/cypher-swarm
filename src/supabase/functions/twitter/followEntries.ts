@@ -1,7 +1,7 @@
-import { supabase } from '../supabaseClient';
-import { Logger } from '../../utils/logger';
+import { supabase } from '../../supabaseClient';
+import { Logger } from '../../../utils/logger';
 import { findTwitterUserByTwitterId, createTwitterUser } from './userEntries';
-import { getTwitterUserInfo } from '../../twitter/utils/profileUtils';
+import { getTwitterUserInfo } from '../../../twitter/utils/profileUtils';
 
 /**
  * Checks if a user is already being followed by the bot

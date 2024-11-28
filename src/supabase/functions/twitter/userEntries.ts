@@ -1,5 +1,5 @@
-import { supabase } from '../supabaseClient';
-import { Logger } from '../../utils/logger';
+import { supabase } from '../../supabaseClient';
+import { Logger } from '../../../utils/logger';
 import { Profile } from 'goat-x';
 
 function sanitizeProfileForJson(profile: Partial<Profile>): Record<string, any> {

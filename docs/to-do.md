@@ -39,8 +39,8 @@ next steps:
 1. finish making it so base agent is flexible to handle tool output or direct response (+ in how to make chat history better) (DONE)
 2. add supabase table for custom agent responses (DONE)
 3. give supabase tables RLS, then add all the tables (DONE)
-4. build supabase functions for each functionality in our current code base
-5. intergrate current code checking against supabase data, exactly like satoshAI framework
+4. build supabase functions for each functionality in our current code base (DONE)
+5. intergrate current code checking against supabase data, exactly like satoshAI framework (DONE)
 6. create memory system. involves creating memory agent that interacts with mem0 to save/load memory, and a dynamic way to load the correct memory for each agent depending on the task (which depends on command/agent) which includes creating a memory entry in DB (saves agent's memory for long term). need supabase table for summaries, learnings, dream data
 8. create media generation agent systems for images/videos that save to supabase bucket
 9. DONE WITH v2
@@ -60,7 +60,7 @@ supabase functions i need:
 
 functions that:
 1. track if the bot is following a user so we can load in the (FOLLOWING) data to a user (DONE)
-2. track tweets the bot has already replied to so we can filter them out of get-mentions/homepage/search/get-tweets
+2. track tweets the bot has already replied to so we can filter them out of get-mentions/homepage/search/get-tweets (DONE)
 3. track tweets & actions the bot has already done so it can't do the same action on a tweet twice (DONE)
 4. track the idle status of the terminal agent [supabase table done, need to add actual function to index.ts]
 5. track the command history of the terminal agent (DONE)

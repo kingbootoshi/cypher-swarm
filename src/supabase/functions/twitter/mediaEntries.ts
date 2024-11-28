@@ -1,5 +1,5 @@
-import { supabase } from '../supabaseClient';
-import { Logger } from '../../utils/logger';
+import { supabase } from '../../supabaseClient';
+import { Logger } from '../../../utils/logger';
 
 /**
  * Uploads media to bucket and logs it in the media table.

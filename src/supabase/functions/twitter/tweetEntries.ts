@@ -1,6 +1,6 @@
-import { supabase } from '../supabaseClient';
+import { supabase } from '../../supabaseClient';
 import { uploadAndLogMedia } from './mediaEntries';
-import { Logger } from '../../utils/logger';
+import { Logger } from '../../../utils/logger';
 
 interface TweetData {
   tweet_id?: string | null;

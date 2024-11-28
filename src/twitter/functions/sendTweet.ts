@@ -1,6 +1,6 @@
 import { scraper } from '../twitterClient';
 import { prepareMediaData } from '../utils/mediaUtils';
-import { logTweet } from '../../supabase/functions/tweetEntries';
+import { logTweet } from '../../supabase/functions/twitter/tweetEntries';
 import { Logger } from '../../utils/logger';
 
 /**

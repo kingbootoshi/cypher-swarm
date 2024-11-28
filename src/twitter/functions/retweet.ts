@@ -3,9 +3,9 @@ import { likeTweet } from './likeTweet';
 import { analyzeTweetContext } from '../utils/tweetUtils';
 import { findOrCreateUserFromTweet } from '../utils/profileUtils';
 import { Logger } from '../../utils/logger';
-import { logTweet } from '../../supabase/functions/tweetEntries';
-import { logTwitterInteraction } from '../../supabase/functions/interactionEntries';
-import { hasAlreadyActioned } from '../../supabase/functions/tweetInteractionChecks';
+import { logTweet } from '../../supabase/functions/twitter/tweetEntries';
+import { logTwitterInteraction } from '../../supabase/functions/twitter/interactionEntries';
+import { hasAlreadyActioned } from '../../supabase/functions/twitter/tweetInteractionChecks';
 import { RetweetResult } from '../types/tweetResults';
 
 /**

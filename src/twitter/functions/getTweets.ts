@@ -1,7 +1,7 @@
 import { scraper } from '../twitterClient';
 import type { Tweet } from 'goat-x';
 import { formatTimestamp } from '../../utils/formatTimestamps';
-import { hasInteractedWithTweet, debugTweetInteractions } from '../../supabase/functions/tweetInteractionChecks';
+import { hasInteractedWithTweet, debugTweetInteractions } from '../../supabase/functions/twitter/tweetInteractionChecks';
 import { Logger } from '../../utils/logger';
 
 /**
