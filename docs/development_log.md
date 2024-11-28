@@ -193,3 +193,47 @@ This document captures the development process, including summaries of conversat
   - Added logging examples and debug information
   - Documented interaction checking process
   - Added examples of filtered output format
+
+---
+
+## Date: 2024-11-29
+
+### Summary
+
+- **Topic**: Implemented Short-Term Terminal History Buffer System
+
+- **Description**: Created a new short-term buffer system for terminal chat history to maintain conversation context across terminal restarts, while keeping the main terminal history as a permanent log.
+
+- **Key Components**:
+  1. Database Changes:
+     - Added `short_term_terminal_history` table for temporary chat buffer
+     - Configured proper typing in database.types.ts
+     - Maintained existing `terminal_history` as permanent log
+
+  2. Terminal History Functions:
+     - Implemented `storeTerminalMessage` for adding to buffer
+     - Created `getShortTermHistory` for loading all recent messages
+     - Added `clearShortTermHistory` for buffer cleanup
+     - Added role validation to handle function messages
+
+  3. BaseAgent Enhancement:
+     - Added `loadChatHistory` method to BaseAgent
+     - Made it storage-agnostic for flexibility
+     - Preserved system messages during history loading
+
+- **Technical Details**:
+  - Used existing Supabase client for database operations
+  - Implemented proper type safety for message roles
+  - Maintained chronological order of messages
+  - Skip storing function messages in history
+
+- **Design Decisions**:
+  - Keep short-term history separate from permanent logs
+  - Use session IDs for archiving but not for loading
+  - Make BaseAgent storage-agnostic for flexibility
+  - Filter out function messages from history
+
+- **Documentation**:
+  - Added implementation instructions for terminal integration
+  - Documented the separation of concerns between history types
+  - Added testing steps for verification

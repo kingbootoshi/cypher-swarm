@@ -31,10 +31,18 @@ export class FireworksAdapter implements ModelAdapter {
   buildParams(
     messageHistory: Message[],
     formattedTools: any[],
-    toolChoice: any
+    toolChoice: any,
+    systemPrompt: string
   ): any {
+    // Replace or update the system message in the message history
+    const updatedMessageHistory = messageHistory.map(msg =>
+      msg.role === 'system'
+        ? { ...msg, content: systemPrompt }
+        : msg
+    );
+
     const params: any = {
-      messages: messageHistory.map((msg) => ({
+      messages: updatedMessageHistory.map((msg) => ({
         role: msg.role,
         content: msg.content,
         name: msg.name,

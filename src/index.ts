@@ -6,11 +6,16 @@ import { OpenAIClient } from './ai/models/clients/OpenAiClient';
 import { AnthropicClient } from './ai/models/clients/AnthropicClient';
 import { executeCommand } from './terminal/executeCommand';
 import { ensureAuthenticated } from './twitter/twitterClient';
-import { ModelType } from './ai/types/agentSystem';
+import { ModelType, Message } from './ai/types/agentSystem';
 import dotenv from 'dotenv';
 import { v4 as uuidv4 } from 'uuid';
 import { Logger } from './utils/logger';
 import { createTerminalEntry, updateTerminalResponse, updateTerminalStatus } from './supabase/functions/terminal/terminalEntries';
+import { 
+  storeTerminalMessage, 
+  getShortTermHistory, 
+  clearShortTermHistory 
+} from './supabase/functions/terminal/terminalHistory';
 
 Logger.enable();
 
@@ -40,7 +45,6 @@ function getModelClient(modelType: ModelType) {
       throw new Error('Invalid model type. Please choose "openai", "firework", or "anthropic"');
   }
 }
-
 export async function startAISystem() {
   const sessionId = uuidv4();
   await ensureAuthenticated();
@@ -73,11 +77,16 @@ export async function startAISystem() {
   const modelClient = getModelClient(modelType);
   const terminalAgent = new TerminalAgent(modelClient);
 
-  // Add a default user message to initialize the conversation
-  terminalAgent.addMessage({
-    role: 'user',
-    content: 'TERMINAL ONLINE',
-  });
+  // Load existing short-term history
+  try {
+    const shortTermHistory = await getShortTermHistory();
+    if (shortTermHistory.length > 0) {
+      Logger.log('Loading existing short-term history...');
+      terminalAgent.loadChatHistory(shortTermHistory);
+    }
+  } catch (error) {
+    Logger.log('Error loading short-term history:', error);
+  }
 
   // Set initial active status
   await updateTerminalStatus(true);
@@ -113,15 +122,28 @@ export async function startAISystem() {
         // Update the same entry with the response
         await updateTerminalResponse(entryId, commandOutput.output);
 
-        // Update agent's message history
-        terminalAgent.addMessage({
+        // Retrieve the last assistant message from the agent's message history
+        const lastAssistantMessage = terminalAgent.getLastAgentMessage();
+
+        if (lastAssistantMessage) {
+          // Store agent's response in short-term history
+          await storeTerminalMessage(lastAssistantMessage, sessionId);
+        }
+
+        // Store terminal output in short-term history and update agent's message history
+        const terminalOutputMessage: Message = {
           role: 'user',
           content: `TERMINAL OUTPUT: ${commandOutput.output}`,
-        });
+        };
+        terminalAgent.addMessage(terminalOutputMessage);
+        await storeTerminalMessage(terminalOutputMessage, sessionId);
 
-        await new Promise((resolve) => setTimeout(resolve, 15000));
+        await new Promise((resolve) => setTimeout(resolve, 5000));
         actionCount++;
       }
+
+      // Before entering idle mode, initiate the memory process, and wipe the short term history
+      // CODE HERE
 
       // Enter idle mode
       const idleMinutes = getRandomInt(30, 60);

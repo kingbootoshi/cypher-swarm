@@ -1,7 +1,7 @@
 // Core terminal command execution logic with parameter parsing
 
 import { parse } from 'shell-quote';
-import { getCommand } from './commandRegistry';
+import { getAllCommands, getCommand } from './commandRegistry';
 import { logTerminalOutput } from '../logs/terminalLogger';
 import type { CommandParameter } from './types/commands';
 

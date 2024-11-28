@@ -14,14 +14,12 @@ export class OpenAIAdapter implements ModelAdapter {
     return undefined;
   }
 
-  // Format tools including the 'strict' parameter
+  // Format tools according to OpenAI's requirements (do not include 'strict' parameter)
   formatTools(tools: Tool[]): any[] {
     return tools.map((tool) => ({
-      ...tool,
-      function: {
-        ...tool.function,
-        strict: tool.function.strict ?? true, // Default 'strict' to true if not set
-      },
+      name: tool.function.name,
+      description: tool.function.description,
+      parameters: tool.function.parameters,
     }));
   }
 
@@ -29,21 +27,29 @@ export class OpenAIAdapter implements ModelAdapter {
   buildParams(
     messageHistory: Message[],
     formattedTools: any[],
-    toolChoice: any
+    toolChoice: any,
+    systemPrompt: string
   ): any {
+    // Replace or update the system message in the message history
+    const updatedMessageHistory = messageHistory.map(msg =>
+      msg.role === 'system'
+        ? { ...msg, content: systemPrompt }
+        : msg
+    );
+
     const params: any = {
-      messages: messageHistory.map((msg) => ({
+      messages: updatedMessageHistory.map((msg) => ({
         role: msg.role,
         content: msg.content,
         name: msg.name,
       })),
     };
 
-    // Include tools and tool_choice only if tools are provided
+    // Include functions and function_call only if tools are provided
     if (formattedTools.length > 0) {
-      params.tools = formattedTools;
+      params.functions = formattedTools;
       if (toolChoice) {
-        params.tool_choice = toolChoice;
+        params.function_call = toolChoice.function;
       }
     }
 
@@ -53,13 +59,13 @@ export class OpenAIAdapter implements ModelAdapter {
   // Process the OpenAI response to extract AI message and function call
   processResponse(response: any): { aiMessage: any; functionCall?: any } {
     const aiMessage = response.choices[0]?.message;
-    if (aiMessage?.tool_calls?.[0]) {
-      const toolCall = aiMessage.tool_calls[0];
+    if (aiMessage?.function_call) {
+      const functionCall = aiMessage.function_call;
       return {
         aiMessage,
         functionCall: {
-          functionName: toolCall.function.name,
-          functionArgs: JSON.parse(toolCall.function.arguments),
+          functionName: functionCall.name,
+          functionArgs: JSON.parse(functionCall.arguments),
         },
       };
     }

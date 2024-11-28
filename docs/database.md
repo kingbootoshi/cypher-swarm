@@ -245,6 +245,18 @@ CREATE TABLE terminal_history (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Create terminal_history table for active short-term history
+CREATE TABLE short_term_terminal_history (
+    id BIGSERIAL PRIMARY KEY,
+    role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
+    content TEXT NOT NULL,
+    session_id TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    
+    -- Index for faster queries
+    CONSTRAINT terminal_history_session_idx UNIQUE (id, session_id)
+);
+
 CREATE TABLE agent_responses (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   agent_id VARCHAR NOT NULL,
@@ -277,6 +289,7 @@ CREATE INDEX idx_twitter_tweets_type ON twitter_tweets(tweet_type);
 CREATE INDEX idx_twitter_tweets_reply_to ON twitter_tweets(in_reply_to_tweet_id);
 CREATE INDEX idx_twitter_tweets_quoted ON twitter_tweets(quoted_tweet_id);
 CREATE INDEX idx_twitter_tweets_retweeted ON twitter_tweets(retweeted_tweet_id);
+CREATE INDEX short_term_terminal_history_session_id_idx ON terminal_history(session_id);
 
 -- Enable RLS on all tables
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
@@ -289,7 +302,7 @@ ALTER TABLE twitter_interactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE terminal_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE agent_responses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE terminal_status ENABLE ROW LEVEL SECURITY;
-
+ALTER TABLE short_term_terminal_history ENABLE ROW LEVEL SECURITY;
 -- Private tables (only service role can access)
 -- Users table
 CREATE POLICY "Service role only" ON users
@@ -350,6 +363,11 @@ CREATE POLICY "Service role modification" ON agent_responses
 CREATE POLICY "Public read access" ON terminal_status
   FOR SELECT USING (true);
 CREATE POLICY "Service role modification" ON terminal_status
+  FOR ALL USING (auth.role() = 'service_role')
+  WITH CHECK (auth.role() = 'service_role');
+
+-- Short term terminal history table
+CREATE POLICY "Service role modification" ON short_term_terminal_history
   FOR ALL USING (auth.role() = 'service_role')
   WITH CHECK (auth.role() = 'service_role');
 

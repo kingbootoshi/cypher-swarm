@@ -14,6 +14,7 @@ notes:
 - we added a context field to twitter_interactions, right now it tracks if the og tweet was a mention, reply, or other tweet to the bot. parent tweets are marked null. make sure to use this field to add further context like tweet thread, users involved etc.
 
 MEMORY SYSTEM:
+- create a supabase table for the short term chat history, so we can use this to load into the terminal agent
 - summarize the short-term terminal logs (this is the AI's main state of mind)
 - extract learnings from the terminal logs (how to extract learnings about specific users ?? maybe extract from tweet interactions - we can see what interactions the bot uses in terminal logs via the commands it uses! then cross-check the tweets database for more context)
 - store learnings into the mem0 database (general learnings, self learnings, user specific learnings)

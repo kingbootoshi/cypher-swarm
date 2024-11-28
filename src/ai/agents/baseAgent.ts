@@ -61,35 +61,68 @@ export abstract class BaseAgent<T extends z.ZodTypeAny | null = null> {
     this.messageHistory.push(message);
   }
 
-    // Helper method to add user messages with correct role
-    public addUserMessage(content: string) {
-      this.messageHistory.push({
-        role: 'user',
-        content: content
-      });
-    }
-  
-    // Helper method to add AI responses with correct role 
-    public addAgentMessage(content: string) {
-      this.messageHistory.push({
-        role: 'assistant', 
-        content: content
-      });
-    }
-
-// src/ai/agents/BaseAgent.ts
-
-protected compileSystemPrompt(): string {
-  const { systemPromptTemplate, dynamicVariables } = this.config;
-  let prompt = systemPromptTemplate;
-
-  if (dynamicVariables) {
-    for (const [key, value] of Object.entries(dynamicVariables)) {
-      // Replace all instances of {{key}} with the corresponding value
-      const placeholder = `{{${key}}}`;
-      prompt = prompt.replace(new RegExp(placeholder, 'g'), value);
-    }
+  // Helper method to add user messages with correct role
+  public addUserMessage(content: string) {
+    this.messageHistory.push({
+      role: 'user',
+      content: content
+    });
   }
+
+  // Helper method to add AI responses with correct role 
+  public addAgentMessage(content: string) {
+    this.messageHistory.push({
+      role: 'assistant',
+      content: content
+    });
+  }
+
+  public getLastAgentMessage(): Message | null {
+    for (let i = this.messageHistory.length - 1; i >= 0; i--) {
+      if (this.messageHistory[i].role === 'assistant') {
+        return this.messageHistory[i];
+      }
+    }
+    return null;
+  }
+
+  public getLastUserMessage(): Message | null {
+    for (let i = this.messageHistory.length - 1; i >= 0; i--) {
+      if (this.messageHistory[i].role === 'user') {
+        return this.messageHistory[i];
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Loads chat history into the agent's message history
+   * Preserves the system message and appends the new history
+   */
+  public loadChatHistory(messages: Message[]): void {
+    // Preserve system message if it exists
+    const systemMessage = this.messageHistory.find(msg => msg.role === 'system');
+    
+    // Reset message history
+    this.messageHistory = systemMessage ? [systemMessage] : [];
+    
+    // Add new messages
+    this.messageHistory.push(...messages);
+    
+    Logger.log(`Loaded ${messages.length} messages into chat history`);
+  }
+
+  protected compileSystemPrompt(): string {
+    const { systemPromptTemplate, dynamicVariables } = this.config;
+    let prompt = systemPromptTemplate;
+
+    if (dynamicVariables) {
+      for (const [key, value] of Object.entries(dynamicVariables)) {
+        // Replace all instances of {{key}} with the corresponding value
+        const placeholder = `{{${key}}}`;
+        prompt = prompt.replace(new RegExp(placeholder, 'g'), value);
+      }
+    }
 
     return prompt;
   }
@@ -112,6 +145,9 @@ protected compileSystemPrompt(): string {
 
   public async run(inputMessage?: string): Promise<AgentRunResult<T>> {
     try {
+      // Recompile the system prompt to update dynamic variables
+      const updatedSystemPrompt = this.compileSystemPrompt();
+
       this.defineTools();
       this.buildToolChoice();
 
@@ -122,7 +158,8 @@ protected compileSystemPrompt(): string {
       const params = this.modelAdapter.buildParams(
         this.messageHistory,
         this.formatTools(),
-        this.toolChoice
+        this.toolChoice,
+        updatedSystemPrompt  // Always pass the updated system prompt
       );
 
       Logger.log('\n🤖 Params Sent to Model:', JSON.stringify(params, null, 2));

@@ -13,23 +13,36 @@ export const TerminalTool: Tool = {
   type: 'function',
   function: {
     name: 'use_terminal',
-    strict: true,
-    description: 'Executes a terminal command based on internal thoughts & plans.',
+    description: `
+      Executes a terminal command based on internal thoughts and plans.
+      **IMPORTANT**:
+      - Only the parameters \`internal_thought\`, \`plan\`, and \`terminal_command\` are accepted.
+      - **Do NOT include any additional parameters**.
+      - All command arguments and options **must be included within the \`terminal_command\` string**.
+      - The \`terminal_command\` should be the full command as you would type it in the terminal, including any flags and arguments.
+      - When sending a tweet, include the tweet text within the command string, e.g., \`send-tweet --text "Your tweet content"\`.
+    `,
     parameters: {
       type: 'object',
       required: ['internal_thought', 'plan', 'terminal_command'],
       properties: {
         internal_thought: {
           type: 'string',
-          description: 'My internal reasoning process about what terminal command to run next and why',
+          description: 'Your internal reasoning process about what terminal command to run next and why.',
         },
         plan: {
           type: 'string',
-          description: 'A short plan of what I am going to do next. If planning to respond to a tweet, I must include the tweet ID in the plan.',
+          description: 'A short plan of what you are going to do next. If planning to respond to a tweet, include the tweet ID in the plan.',
         },
         terminal_command: {
           type: 'string',
-          description: 'The FULL terminal command I want to run, based on my previous internal thought processes & plan. ONLY ONE COMMAND AT A TIME.',
+          description: `
+            The full terminal command you want to execute, including all arguments and options.
+            **Only one command at a time**.
+            Examples:
+            - \`send-tweet --text "Your tweet here."\`
+            - \`check-mentions --since "2023-10-23"\`
+          `,
         },
       },
       additionalProperties: false,

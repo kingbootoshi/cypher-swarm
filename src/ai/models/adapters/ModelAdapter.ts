@@ -14,7 +14,8 @@ export interface ModelAdapter {
   buildParams(
     messageHistory: Message[],
     formattedTools: any[],
-    toolChoice: any
+    toolChoice: any,
+    systemPrompt: string
   ): any;
 
   // Process the model's response to extract AI message and function call

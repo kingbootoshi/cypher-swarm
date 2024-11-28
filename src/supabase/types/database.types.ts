@@ -309,6 +309,30 @@ export type Database = {
         }
         Relationships: []
       }
+      short_term_terminal_history: {
+        Row: {
+          id: number
+          role: 'user' | 'assistant' | 'system'
+          content: string
+          session_id: string
+          created_at: string | null
+        }
+        Insert: {
+          id?: number
+          role: 'user' | 'assistant' | 'system'
+          content: string
+          session_id: string
+          created_at?: string | null
+        }
+        Update: {
+          id?: number
+          role?: 'user' | 'assistant' | 'system'
+          content?: string
+          session_id?: string
+          created_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

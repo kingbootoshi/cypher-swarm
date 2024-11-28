@@ -23,21 +23,31 @@ export class AnthropicAdapter implements ModelAdapter {
     }));
   }
 
-  // Build parameters for the Anthropic chat completion method
+  // Updated buildParams method to handle empty message history
   buildParams(
     messageHistory: Message[],
     formattedTools: any[],
-    toolChoice: any
+    toolChoice: any,
+    systemPrompt: string
   ): any {
+    // Filter out system messages and check if we have any user/assistant messages
+    const nonSystemMessages = messageHistory.filter((msg) => msg.role !== 'system');
+    
+    // If no messages exist, add a blank user message
+    if (nonSystemMessages.length === 0) {
+      nonSystemMessages.push({
+        role: 'user',
+        content: ' ', // Anthropic requires at least one character
+      });
+    }
+
     const params: any = {
-      system: messageHistory.find((msg) => msg.role === 'system')?.content || '',
-      messages: messageHistory
-        .filter((msg) => msg.role !== 'system')
-        .map((msg) => ({
-          role: msg.role,
-          content: [{ type: 'text', text: msg.content }],
-          name: msg.name,
-        })),
+      system: systemPrompt,
+      messages: nonSystemMessages.map((msg) => ({
+        role: msg.role,
+        content: [{ type: 'text', text: msg.content }],
+        name: msg.name,
+      })),
     };
 
     // Include tools and tool_choice only if tools are provided
