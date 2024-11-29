@@ -24,8 +24,8 @@ const runtimeVariables = {
 
 // Run the agent with dynamic variables
 const runAgentTest = await testAgent.run(
-  "What is this tweet about?", // Optional input message
-  runtimeVariables // Runtime dynamic variables
+  "What is this tweet about?",  // inputMessage
+  runtimeVariables            // dynamicVariables
 );
 
 console.log("RUN AGENT TEST:", runAgentTest);

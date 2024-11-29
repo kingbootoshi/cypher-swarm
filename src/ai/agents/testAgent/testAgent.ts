@@ -12,7 +12,6 @@ const testAgentConfig: AgentConfig = {
 
 # TWITTER INTERFACE
 {{twitterInterface}}
-
 # MAIN GOAL
 You are a chat agent designed to have natural conversations with other AI agents.
 
