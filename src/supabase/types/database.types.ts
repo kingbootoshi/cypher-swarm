@@ -63,33 +63,87 @@ export type Database = {
         }
         Relationships: []
       }
+      memory_summaries: {
+        Row: {
+          created_at: string | null
+          id: number
+          last_updated: string | null
+          processed: boolean | null
+          session_id: string | null
+          summary: string
+          summary_type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          last_updated?: string | null
+          processed?: boolean | null
+          session_id?: string | null
+          summary: string
+          summary_type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          last_updated?: string | null
+          processed?: boolean | null
+          session_id?: string | null
+          summary?: string
+          summary_type?: string
+        }
+        Relationships: []
+      }
+      short_term_terminal_history: {
+        Row: {
+          content: string
+          created_at: string | null
+          id: number
+          role: string
+          session_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          id?: number
+          role: string
+          session_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          id?: number
+          role?: string
+          session_id?: string
+        }
+        Relationships: []
+      }
       terminal_history: {
         Row: {
           command: string
-          terminal_log: string | null
           created_at: string | null
           id: number
           internal_thought: string | null
           plan: string | null
           session_id: string
+          terminal_log: string | null
         }
         Insert: {
           command: string
-          terminal_log?: string | null
           created_at?: string | null
           id?: number
           internal_thought?: string | null
           plan?: string | null
           session_id: string
+          terminal_log?: string | null
         }
         Update: {
           command?: string
-          terminal_log?: string | null
           created_at?: string | null
           id?: number
           internal_thought?: string | null
           plan?: string | null
           session_id?: string
+          terminal_log?: string | null
         }
         Relationships: []
       }
@@ -306,30 +360,6 @@ export type Database = {
           is_registered?: boolean | null
           registered_at?: string | null
           updated_at?: string | null
-        }
-        Relationships: []
-      }
-      short_term_terminal_history: {
-        Row: {
-          id: number
-          role: 'user' | 'assistant' | 'system'
-          content: string
-          session_id: string
-          created_at: string | null
-        }
-        Insert: {
-          id?: number
-          role: 'user' | 'assistant' | 'system'
-          content: string
-          session_id: string
-          created_at?: string | null
-        }
-        Update: {
-          id?: number
-          role?: 'user' | 'assistant' | 'system'
-          content?: string
-          session_id?: string
-          created_at?: string | null
         }
         Relationships: []
       }

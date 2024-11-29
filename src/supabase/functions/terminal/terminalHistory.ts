@@ -55,7 +55,7 @@ export async function getShortTermHistory(): Promise<Message[]> {
     }
 
     return data.map(entry => ({
-      role: entry.role,
+      role: entry.role as Message['role'],
       content: entry.content
     }));
   } catch (error) {

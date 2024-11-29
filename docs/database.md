@@ -373,6 +373,61 @@ CREATE POLICY "Service role modification" ON short_term_terminal_history
 
 -- Insert the initial row
 INSERT INTO terminal_status (id, is_active) VALUES (TRUE, FALSE);
+
+-- A single unified memory table for all summaries
+CREATE TABLE memory_summaries (
+    id SERIAL PRIMARY KEY,
+    summary_type TEXT NOT NULL CHECK (summary_type IN ('short', 'mid', 'long')),
+    summary TEXT NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    processed BOOLEAN DEFAULT FALSE,
+    session_id TEXT,  -- NULL for long-term summaries
+    last_updated TIMESTAMPTZ DEFAULT NOW(),
+    
+    -- Session ID required for short and mid terms only
+    CONSTRAINT session_id_required 
+        CHECK (
+            (summary_type = 'long' AND session_id IS NULL) OR 
+            (summary_type != 'long' AND session_id IS NOT NULL)
+        )
+);
+
+-- Indexes for performance
+-- General index for type and processed status
+CREATE INDEX idx_memory_summaries_type_processed 
+    ON memory_summaries(summary_type, processed);
+
+-- Index for chronological ordering
+CREATE INDEX idx_memory_summaries_created 
+    ON memory_summaries(created_at);
+
+-- Specific indexes for each summary type to optimize common queries
+CREATE INDEX idx_memory_summaries_short_term 
+    ON memory_summaries(created_at DESC) 
+    WHERE summary_type = 'short' AND processed = false;
+
+CREATE INDEX idx_memory_summaries_mid_term 
+    ON memory_summaries(created_at DESC) 
+    WHERE summary_type = 'mid' AND processed = false;
+
+CREATE INDEX idx_memory_summaries_long_term 
+    ON memory_summaries(created_at DESC) 
+    WHERE summary_type = 'long' AND processed = false;
+
+-- Session-based index for retrieving context
+CREATE INDEX idx_memory_summaries_session 
+    ON memory_summaries(session_id) 
+    WHERE session_id IS NOT NULL;
+
+-- Enable RLS
+ALTER TABLE memory_summaries ENABLE ROW LEVEL SECURITY;
+
+-- Add RLS policies
+CREATE POLICY "Public read access" ON memory_summaries
+    FOR SELECT USING (true);
+CREATE POLICY "Service role modification" ON memory_summaries
+    FOR ALL USING (auth.role() = 'service_role')
+    WITH CHECK (auth.role() = 'service_role');
 ```
 
 Example of adding another platform (e.g., Discord)

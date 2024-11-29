@@ -37,7 +37,7 @@ export class AnthropicAdapter implements ModelAdapter {
     if (nonSystemMessages.length === 0) {
       nonSystemMessages.push({
         role: 'user',
-        content: ' ', // Anthropic requires at least one character
+        content: 'AGENT INITIALIZED', // Anthropic requires at least one character
       });
     }
 

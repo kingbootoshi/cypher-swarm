@@ -22,6 +22,9 @@ Handles model-specific formatting for:
 ### 3. Tools
 
 All tool schemas are made to match OpenAI's: https://platform.openai.com/docs/guides/function-calling
+
+** NOTE: I noticed Anthropic was making up new parameters in a tool call, because the additionalProperties: false parameter is not used by Claude at all. You have to reinforce the tool config to NOT make new properties in claude!
+ 
 Function definitions that agents can use to interact with external systems:
 ```typescript
 const ExampleTool = {

@@ -11,6 +11,5 @@ export class TerminalAgent extends BaseAgent<typeof terminalToolSchema> {
 
   protected defineTools(): void {
     this.tools = [TerminalTool];
-    console.log('🛠️ Terminal Tools Defined:', this.tools.map(t => t.function.name));
   }
 }
