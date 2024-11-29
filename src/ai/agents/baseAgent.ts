@@ -50,10 +50,10 @@ export abstract class BaseAgent<T extends z.ZodTypeAny | null = null> {
         throw new Error(`Unsupported model type: ${this.modelType}`);
     }
 
-    const systemPrompt = this.compileSystemPrompt();
+    // Initialize with empty system message - will be populated in first run
     this.messageHistory.push({
       role: 'system',
-      content: systemPrompt,
+      content: '',
     });
   }
 
@@ -131,7 +131,10 @@ export abstract class BaseAgent<T extends z.ZodTypeAny | null = null> {
       ...dynamicVariables,
     };
 
-    Logger.log('\n🔄 Merged Variables:', mergedVariables);
+    Logger.log('\n🔄 Merged Variables:', {
+      total: Object.keys(mergedVariables).length,
+      keys: Object.keys(mergedVariables),
+    });
 
     // Replace placeholders with their corresponding values
     for (const [key, value] of Object.entries(mergedVariables)) {
@@ -140,7 +143,7 @@ export abstract class BaseAgent<T extends z.ZodTypeAny | null = null> {
       const matches = prompt.match(regex);
       
       if (matches) {
-        Logger.log(`\n🔎 Replacing ${placeholder} with value:`, value);
+        Logger.log(`\n🔎 Found ${matches.length} instances of ${placeholder}`);
         prompt = prompt.replace(regex, value);
       }
     }
