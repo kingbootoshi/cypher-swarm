@@ -3,6 +3,8 @@ import { Message, Tool } from '../../types/agentSystem';
 
 // Adapter for OpenAI models
 export class OpenAIAdapter implements ModelAdapter {
+  supportsImages = true;
+
   // Build tool choice specific to OpenAI
   buildToolChoice(tools: Tool[]): any {
     if (tools.length > 0) {
@@ -30,22 +32,37 @@ export class OpenAIAdapter implements ModelAdapter {
     toolChoice: any,
     systemPrompt: string
   ): any {
-    // Replace or update the system message in the message history
-    const updatedMessageHistory = messageHistory.map(msg =>
-      msg.role === 'system'
-        ? { ...msg, content: systemPrompt }
-        : msg
-    );
+    const updatedMessageHistory = messageHistory.map((msg) => {
+      if (msg.role === 'system') {
+        return { ...msg, content: systemPrompt };
+      }
+
+      // Format messages with image data for OpenAI
+      if (msg.image) {
+        return {
+          role: msg.role,
+          content: [
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:${msg.image.mime};base64,${msg.image.data.toString('base64')}`
+              }
+            },
+            ...(msg.content ? [{ type: 'text', text: msg.content }] : [])
+          ]
+        };
+      }
+
+      return {
+        role: msg.role,
+        content: msg.content
+      };
+    });
 
     const params: any = {
-      messages: updatedMessageHistory.map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-        name: msg.name,
-      })),
+      messages: updatedMessageHistory
     };
 
-    // Include functions and function_call only if tools are provided
     if (formattedTools.length > 0) {
       params.functions = formattedTools;
       if (toolChoice) {

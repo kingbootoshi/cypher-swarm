@@ -3,9 +3,14 @@
 import { z } from 'zod';
 
 export interface Message {
-  role: 'system' | 'user' | 'assistant' | 'function';
-  content: string;
-  name?: string; // For function calls
+  role: 'system' | 'assistant' | 'user';
+  content?: string;
+  name?: string;
+  image?: {
+    name: string;
+    mime: string;
+    data: Buffer | string;
+  };
 }
 
 export interface AgentConfig {

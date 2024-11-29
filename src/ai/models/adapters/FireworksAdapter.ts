@@ -3,6 +3,8 @@ import { Message, Tool } from '../../types/agentSystem';
 
 // Adapter for Fireworks models
 export class FireworksAdapter implements ModelAdapter {
+  supportsImages = false;  // Fireworks doesn't support images
+
   // Build tool choice specific to Fireworks
   buildToolChoice(tools: Tool[]): any {
     if (tools.length > 0) {
@@ -34,8 +36,11 @@ export class FireworksAdapter implements ModelAdapter {
     toolChoice: any,
     systemPrompt: string
   ): any {
+    // Filter out messages with images since Fireworks doesn't support them
+    const filteredMessages = messageHistory.filter(msg => !msg.image);
+    
     // Replace or update the system message in the message history
-    const updatedMessageHistory = messageHistory.map(msg =>
+    const updatedMessageHistory = filteredMessages.map(msg =>
       msg.role === 'system'
         ? { ...msg, content: systemPrompt }
         : msg

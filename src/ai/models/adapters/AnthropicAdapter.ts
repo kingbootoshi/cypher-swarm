@@ -3,6 +3,8 @@ import { Message, Tool } from '../../types/agentSystem';
 
 // Adapter for Anthropic models
 export class AnthropicAdapter implements ModelAdapter {
+  supportsImages = true;
+
   // Build tool choice specific to Anthropic
   buildToolChoice(tools: Tool[]): any {
     if (tools.length > 0) {
@@ -23,7 +25,7 @@ export class AnthropicAdapter implements ModelAdapter {
     }));
   }
 
-  // Updated buildParams method to handle empty message history
+  // Updated buildParams method to handle empty message history and images
   buildParams(
     messageHistory: Message[],
     formattedTools: any[],
@@ -43,11 +45,43 @@ export class AnthropicAdapter implements ModelAdapter {
 
     const params: any = {
       system: systemPrompt,
-      messages: nonSystemMessages.map((msg) => ({
-        role: msg.role,
-        content: [{ type: 'text', text: msg.content }],
-        name: msg.name,
-      })),
+      messages: nonSystemMessages.map((msg) => {
+        // Initialize content array
+        const content: any[] = [];
+
+        // Add image if present
+        if (msg.image) {
+          content.push({
+            type: "image",
+            source: {
+              type: "base64",
+              media_type: msg.image.mime,
+              data: msg.image.data.toString('base64')
+            }
+          });
+        }
+
+        // Add text content if present
+        if (msg.content) {
+          content.push({
+            type: "text",
+            text: msg.content
+          });
+        }
+        // If no content or image, add empty text to satisfy Anthropic's requirements
+        if (content.length === 0) {
+          content.push({
+            type: "text",
+            text: " "
+          });
+        }
+
+        return {
+          role: msg.role,
+          content,
+          name: msg.name,
+        };
+      }),
     };
 
     // Include tools and tool_choice only if tools are provided

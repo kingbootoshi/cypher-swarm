@@ -4,6 +4,9 @@ import { Tool, Message } from '../../types/agentSystem';
 
 // Define an interface for model-specific adapters
 export interface ModelAdapter {
+  // Add capability check for images
+  supportsImages?: boolean;
+
   // Build tool choice based on the provided tools
   buildToolChoice(tools: Tool[]): any;
 

@@ -61,19 +61,21 @@ export abstract class BaseAgent<T extends z.ZodTypeAny | null = null> {
     this.messageHistory.push(message);
   }
 
-  // Helper method to add user messages with correct role
-  public addUserMessage(content: string) {
+  // Helper method to add user messages with optional image content
+  public addUserMessage(content?: string, image?: Message['image']) {
     this.messageHistory.push({
       role: 'user',
-      content: content
+      content,
+      image,
     });
   }
 
-  // Helper method to add AI responses with correct role 
-  public addAgentMessage(content: string) {
+  // Helper method to add AI responses with optional image content
+  public addAgentMessage(content?: string, image?: Message['image']) {
     this.messageHistory.push({
       role: 'assistant',
-      content: content
+      content,
+      image,
     });
   }
 
@@ -183,7 +185,7 @@ export abstract class BaseAgent<T extends z.ZodTypeAny | null = null> {
 
       // Log the system prompt before and after compilation
       Logger.log('\n🔄 System Prompt Compilation:', {
-        original: this.messageHistory.find(msg => msg.role === 'system')?.content.slice(0, 100) + '...',
+        original: this.messageHistory.find(msg => msg.role === 'system')?.content?.slice(0, 100) + '...',
         updated: updatedSystemPrompt.slice(0, 100) + '...',
       });
 
@@ -269,5 +271,45 @@ export abstract class BaseAgent<T extends z.ZodTypeAny | null = null> {
         error: (error as Error).message,
       };
     }
+  }
+
+  /**
+   * Adds one or more images to the conversation history
+   * @param images Single image or array of images to be added
+   * @param content Optional text content to accompany the images
+   * @param role Message role (defaults to 'user')
+   */
+  public addImage(
+    images: Message['image'] | Message['image'][],
+    content?: string,
+    role: 'user' | 'assistant' = 'user'
+  ) {
+    // Check if model supports images
+    if (!this.modelAdapter.supportsImages) {
+      Logger.log('❌ Current model does not support image input');
+      return;
+    }
+
+    // Convert single image to array for consistent handling
+    const imageArray = Array.isArray(images) ? images : [images];
+
+    // Validate all images
+    const invalidImages = imageArray.filter(img => !img || !img.data || !img.mime);
+    if (invalidImages.length > 0) {
+      Logger.log('❌ Invalid image data provided to addImage');
+      return;
+    }
+
+    // Add each image to message history
+    imageArray.forEach((image, index) => {
+      this.messageHistory.push({
+        role,
+        // Only add content with first image if multiple images
+        content: index === 0 ? content : undefined,
+        image,
+      });
+    });
+
+    Logger.log(`✅ Added ${imageArray.length} ${role} image message(s)${content ? ' with text' : ''}`);
   }
 }

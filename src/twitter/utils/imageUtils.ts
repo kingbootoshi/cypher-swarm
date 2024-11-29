@@ -20,7 +20,7 @@ interface QuoteContext {
  */
 export async function getImageAsBase64(imageUrl: string): Promise<{
     media_type: string;
-    data: string;
+    data: Buffer;
 } | null> {
     try {
         const response = await axios.get(imageUrl, {
@@ -30,8 +30,8 @@ export async function getImageAsBase64(imageUrl: string): Promise<{
         // Get media type from content-type header
         const media_type = response.headers['content-type'] || 'image/jpeg';
 
-        // Convert to base64
-        const data = Buffer.from(response.data, 'binary').toString('base64');
+        // Return Buffer directly instead of converting to base64
+        const data = Buffer.from(response.data);
 
         return { media_type, data };
     } catch (error) {
@@ -290,7 +290,7 @@ export async function assembleTwitterInterface(
     imageContents: Array<{
         sender: string;
         media_type: string;
-        data: string;
+        data: Buffer;
     }>;
 }> {
     const tweetMemoryResult = await fetchAndFormatTweetMemory(tweetId);
@@ -298,7 +298,7 @@ export async function assembleTwitterInterface(
     const imageContents: Array<{
         sender: string;
         media_type: string;
-        data: string;
+        data: Buffer;
     }> = [];
 
     // Keep track of processed photo URLs to avoid duplicates
