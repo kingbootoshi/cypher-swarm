@@ -14,12 +14,14 @@ import { ReplyResult } from '../types/tweetResults';
  * @param replyToTweetId - The ID of the tweet to reply to
  * @param text - The text content of the reply
  * @param mediaUrls - Optional array of media URLs
+ * @param twitterInterface - Optional Twitter interface context
  * @returns The ID of the reply tweet, or null if failed
  */
 export async function replyToTweet(
   replyToTweetId: string,
   text: string,
-  mediaUrls?: string[]
+  mediaUrls?: string[],
+  twitterInterface?: string
 ): Promise<ReplyResult> {
   try {
     // Check if the bot has already replied to the tweet
@@ -86,9 +88,12 @@ export async function replyToTweet(
     }
 
     // Analyze tweet context
-    const context = await analyzeTweetContext(targetTweet);
+    const context = {
+      ...(await analyzeTweetContext(targetTweet)),
+      twitterInterface: twitterInterface
+    };
 
-    // Log the interaction
+    // Log the interaction with enhanced context
     await logTwitterInteraction({
       tweetId: replyToTweetId,
       userTweetText: targetTweet.text || '',

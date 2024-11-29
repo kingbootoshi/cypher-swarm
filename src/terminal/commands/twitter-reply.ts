@@ -1,5 +1,7 @@
 import { Command } from '../types/commands';
 import { replyToTweet } from '../../twitter/functions/replyToTweet';
+import { generateTweetReply } from '../../tests/replyTest';
+import { assembleTwitterInterface } from '../../twitter/utils/imageUtils';
 
 /**
  * @command twitter-reply
@@ -14,24 +16,20 @@ export const twitterReply: Command = {
       description: 'ID of the tweet to reply to',
       required: true,
       type: 'string'
-    },
-    {
-      name: 'text',
-      description: 'Text content of your reply',
-      required: true,
-      type: 'string'
-    },
-    {
-      name: 'mediaUrls',
-      description: 'Comma-separated list of media URLs (images, GIFs, or videos)',
-      required: false,
-      type: 'string'
     }
   ],
   handler: async (args) => {
     try {
       const mediaUrls = args.mediaUrls ? args.mediaUrls.split(',').map(url => url.trim()) : undefined;
-      const result = await replyToTweet(args.tweetId, args.text, mediaUrls);
+      
+      // Get the Twitter interface
+      const { textContent } = await assembleTwitterInterface(".", args.tweetId);
+      
+      // Generate reply with interface context
+      const reply = await generateTweetReply(args.tweetId);
+      
+      // Pass interface to replyToTweet
+      const result = await replyToTweet(args.tweetId, reply, mediaUrls, textContent);
       
       return {
         output: `${result.success ? '✅' : '❌'} Action: Reply Tweet\n` +

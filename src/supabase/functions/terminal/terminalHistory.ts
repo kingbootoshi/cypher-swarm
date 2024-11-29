@@ -24,7 +24,7 @@ export async function storeTerminalMessage(
       .from('short_term_terminal_history')
       .insert({
         role: message.role as ValidRole,
-        content: message.content,
+        content: message.content || '',
         session_id: sessionId
       });
 

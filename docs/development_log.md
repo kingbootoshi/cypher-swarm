@@ -397,3 +397,105 @@ This document captures the development process, including summaries of conversat
   - Documented variable precedence rules
   - Added examples of runtime variable usage
   - Included testing procedures
+
+## Date: 2024-12-02
+
+### Summary
+
+- **Topic**: Implemented Cross-Model Vision Capabilities
+
+- **Description**: Added support for image processing across different AI models (OpenAI and Anthropic), with graceful degradation for models that don't support vision (Fireworks). Implemented proper image handling in the BaseAgent and model-specific adapters.
+
+- **Key Components**:
+  1. BaseAgent Enhancement:
+     - Added flexible `addImage` method supporting single/multiple images
+     - Implemented model capability checking via `supportsImages` flag
+     - Enhanced message history to handle image data
+     - Added validation and logging for image processing
+
+  2. Model Adapters:
+     - OpenAI: Implemented vision format with `image_url` type
+     - Anthropic: Added Claude vision format with source-based images
+     - Fireworks: Added graceful degradation for image messages
+
+  3. Message Types:
+     - Enhanced Message interface to support image data
+     - Added proper typing for image content
+     - Implemented Buffer-based image data handling
+     - Added MIME type support for different image formats
+
+- **Technical Details**:
+  - OpenAI Format:
+    ```typescript
+    {
+      type: "image_url",
+      image_url: {
+        url: `data:${mime};base64,${data}`
+      }
+    }
+    ```
+  - Anthropic Format:
+    ```typescript
+    {
+      type: "image",
+      source: {
+        type: "base64",
+        media_type: mime,
+        data: base64Data
+      }
+    }
+    ```
+  - Fireworks: Filters out image messages while preserving text content
+
+- **Design Decisions**:
+  1. Image Handling:
+     - Use Buffer for image data to ensure proper binary handling
+     - Convert to base64 only when sending to AI providers
+     - Maintain original MIME types for proper image format support
+     - Add sender attribution to images for context
+
+  2. Adapter Pattern:
+     - Each adapter handles its own image format requirements
+     - `supportsImages` flag for capability checking
+     - Graceful degradation for non-supporting models
+     - Consistent interface across all adapters
+
+  3. Error Handling:
+     - Validate image data before processing
+     - Log warnings for unsupported models
+     - Maintain conversation flow even with unsupported images
+     - Clear error messages for debugging
+
+- **Testing**:
+  - Created test script in `dynamicVariable.ts`
+  - Verified image processing across different models
+  - Tested multiple image handling
+  - Confirmed graceful degradation in Fireworks
+
+- **Documentation**:
+  - Added image handling documentation
+  - Documented model-specific format requirements
+  - Added examples of image processing
+  - Included error handling guidelines
+
+## Date: 2024-12-03
+
+### Summary
+
+- **Topic**: Enhanced Twitter Interface Context Storage
+
+- **Description**: Implemented storage of dynamic Twitter interface context in interaction logs, allowing for complete preservation of the AI's conversation context when replying to tweets.
+
+- **Key Changes**:
+  - Added TwitterInteractionContext interface with twitterInterface field
+  - Modified replyToTweet to accept and store interface context
+  - Updated twitter-reply command to pass interface context through pipeline
+  - Enhanced database schema to properly handle extended JSON context
+
+- **Technical Details**:
+  - Added JSONB support for storing rich interface context
+  - Preserved full conversation context in interaction logs
+  - Maintained backward compatibility with existing context types
+  - Integrated with existing assembleTwitterInterface utility
+
+- **Impact**: This change enables complete reconstruction of the AI's decision context for any tweet interaction, improving debugging and analysis capabilities.

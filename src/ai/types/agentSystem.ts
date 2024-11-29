@@ -3,7 +3,7 @@
 import { z } from 'zod';
 
 export interface Message {
-  role: 'system' | 'assistant' | 'user';
+  role: 'system' | 'assistant' | 'user' | 'function';
   content?: string;
   name?: string;
   image?: {
