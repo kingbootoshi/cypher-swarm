@@ -112,15 +112,36 @@ export abstract class BaseAgent<T extends z.ZodTypeAny | null = null> {
     Logger.log(`Loaded ${messages.length} messages into chat history`);
   }
 
-  protected compileSystemPrompt(): string {
-    const { systemPromptTemplate, dynamicVariables } = this.config;
+  protected compileSystemPrompt(
+    dynamicVariables?: { [key: string]: string }
+  ): string {
+    const { systemPromptTemplate } = this.config;
+    
+    // Log the variables we're working with
+    Logger.log('\n🔍 Compiling System Prompt:', {
+      configVariables: this.config.dynamicVariables,
+      runtimeVariables: dynamicVariables,
+    });
+
     let prompt = systemPromptTemplate;
 
-    if (dynamicVariables) {
-      for (const [key, value] of Object.entries(dynamicVariables)) {
-        // Replace all instances of {{key}} with the corresponding value
-        const placeholder = `{{${key}}}`;
-        prompt = prompt.replace(new RegExp(placeholder, 'g'), value);
+    // Merge config dynamic variables with those passed in
+    const mergedVariables = {
+      ...this.config.dynamicVariables,
+      ...dynamicVariables,
+    };
+
+    Logger.log('\n🔄 Merged Variables:', mergedVariables);
+
+    // Replace placeholders with their corresponding values
+    for (const [key, value] of Object.entries(mergedVariables)) {
+      const placeholder = `{{${key}}}`;
+      const regex = new RegExp(placeholder, 'g');
+      const matches = prompt.match(regex);
+      
+      if (matches) {
+        Logger.log(`\n🔎 Replacing ${placeholder} with value:`, value);
+        prompt = prompt.replace(regex, value);
       }
     }
 
@@ -143,10 +164,32 @@ export abstract class BaseAgent<T extends z.ZodTypeAny | null = null> {
     return this.modelAdapter.formatTools(this.tools);
   }
 
-  public async run(inputMessage?: string): Promise<AgentRunResult<T>> {
+  public async run(
+    inputMessage?: string,
+    dynamicVariables?: { [key: string]: string }
+  ): Promise<AgentRunResult<T>> {
     try {
-      // Recompile the system prompt to update dynamic variables
-      const updatedSystemPrompt = this.compileSystemPrompt();
+      // Log incoming dynamic variables
+      Logger.log('\n📥 Run Called With Dynamic Variables:', {
+        inputMessage,
+        dynamicVariables,
+      });
+
+      // Recompile the system prompt with dynamic variables from the run call
+      const updatedSystemPrompt = this.compileSystemPrompt(dynamicVariables);
+
+      // Log the system prompt before and after compilation
+      Logger.log('\n🔄 System Prompt Compilation:', {
+        original: this.messageHistory.find(msg => msg.role === 'system')?.content.slice(0, 100) + '...',
+        updated: updatedSystemPrompt.slice(0, 100) + '...',
+      });
+
+      // Update the system message in message history
+      const systemMessageIndex = this.messageHistory.findIndex(msg => msg.role === 'system');
+      if (systemMessageIndex !== -1) {
+        this.messageHistory[systemMessageIndex].content = updatedSystemPrompt;
+        Logger.log('\n✅ Updated system message in history');
+      }
 
       this.defineTools();
       this.buildToolChoice();
