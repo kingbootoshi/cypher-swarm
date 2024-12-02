@@ -132,23 +132,32 @@ export async function getConversationThread(tweetId: string): Promise<any[]> {
 /**
  * Formats the memory string for the tweet conversation.
  * @param threadMessages - Messages from the tweet thread.
- * @param historyMessages - Historical messages between the user and agent.
+ * @param historyData - Historical messages between the user and agent.
  * @returns A formatted string representing the conversation memory.
  */
-export function formatMemory(threadMessages: any[], historyMessages: any[]): string {
+export function formatMemory(
+    threadMessages: any[],
+    historyData: { userProfile: any; conversation: any[] }
+): string {
+    const { userProfile, conversation: historyMessages } = historyData;
+
     // Helper function to format a single message
     const formatMessage = (msg: any): string => {
         const formattedTimestamp = formatTimestamp(msg.timestamp);
-        const isAgent = msg.sender.toLowerCase() === 'agent' ||
+        const isAgent =
+            msg.sender.toLowerCase() === 'agent' ||
             msg.sender === process.env.TWITTER_USERNAME;
         const senderDisplay = isAgent ? '(YOU)' : msg.sender;
         let messageText = `[${formattedTimestamp}] ${senderDisplay}: ${msg.text}`;
 
         // Add quote context if present
         if (msg.quoteContext) {
-            const quoteIsAgent = msg.quoteContext.sender.toLowerCase() === 'agent' ||
+            const quoteIsAgent =
+                msg.quoteContext.sender.toLowerCase() === 'agent' ||
                 msg.quoteContext.sender === process.env.TWITTER_USERNAME;
-            const quoteSenderDisplay = quoteIsAgent ? '(YOU)' : msg.quoteContext.sender;
+            const quoteSenderDisplay = quoteIsAgent
+                ? '(YOU)'
+                : msg.quoteContext.sender;
             messageText += `\n    📝 Quoting ${quoteSenderDisplay}: ${msg.quoteContext.text}`;
             if (msg.quoteContext.photos && msg.quoteContext.photos.length > 0) {
                 messageText += `\n    🖼️ Quote tweet contains ${msg.quoteContext.photos.length} image(s)`;
@@ -158,33 +167,64 @@ export function formatMemory(threadMessages: any[], historyMessages: any[]): str
         return messageText;
     };
 
+    // Build the user profile section
+    let userProfileSection = '';
+    if (userProfile) {
+        userProfileSection = `
+## User Profile:
+- **Name**: ${userProfile.name || 'N/A'}
+- **Bio**: ${userProfile.biography || 'N/A'}
+- **Location**: ${userProfile.location || 'N/A'}
+`;
+    }
+
     // Separate the thread messages
     const [parentTweet, ...restThreadMessages] = threadMessages;
     const focusTweet = restThreadMessages.pop(); // The last message is the focus tweet
     const repliesAbove = restThreadMessages;
 
-    // Format the parent tweet
-    const parentTweetSection = parentTweet ? `Parent Tweet:\n${formatMessage(parentTweet)}\n` : '';
+    // Initialize an array to hold the thread memory sections
+    const threadMemorySections: string[] = [];
 
-    // Format replies above
-    const repliesAboveSection = repliesAbove.length > 0
-        ? 'Replies Above the Tweet You Are Replying To:\n' + repliesAbove.map(formatMessage).join('\n') + '\n'
-        : '';
+    // Add 'Current Tweet Thread' heading
+    threadMemorySections.push('## Current Tweet Thread:\n');
 
-    // Format focus tweet
-    const focusTweetSection = focusTweet ? `The Tweet You Are Replying To:\n${formatMessage(focusTweet)}\n` : '';
+    // Format parent tweet
+    if (parentTweet) {
+        threadMemorySections.push('### Parent Tweet:');
+        threadMemorySections.push(formatMessage(parentTweet));
+        threadMemorySections.push(''); // Add an empty line
+    }
 
-    // Combine the sections for the thread
-    const threadMemory = `Current Tweet Thread:\n\n${parentTweetSection}${repliesAboveSection}${focusTweetSection}`;
+    // Format replies above if any
+    if (repliesAbove.length > 0) {
+        threadMemorySections.push('### Replies Above the Tweet You Are Replying To:');
+        threadMemorySections.push(repliesAbove.map(formatMessage).join('\n'));
+        threadMemorySections.push('');
+    }
+
+    // Format focus tweet with the special heading
+    if (focusTweet) {
+        threadMemorySections.push(
+            '## THIS IS THE CURRENT TWEET YOU ARE REPLYING TO. GIVE YOUR FULL FOCUS TO REPLYING TO THIS TWEET.'
+        );
+        threadMemorySections.push(formatMessage(focusTweet));
+        threadMemorySections.push('');
+    }
+
+    // Combine the thread sections into one string
+    const threadMemory = threadMemorySections.join('\n');
 
     // Format history messages
     const formattedHistory = historyMessages.map(formatMessage).join('\n');
-    const historyMemory = formattedHistory ?
-        `Past Conversation History:\n\n${formattedHistory}` :
-        'No previous conversation history.';
+    const historyMemory = formattedHistory
+        ? `## Recent Tweet History Between You and ${focusTweet ? focusTweet.sender : 'the user'}\n\n${formattedHistory}`
+        : 'No previous conversation history.';
 
-    // Combine both memories
-    return `${threadMemory}\n\n${historyMemory}`;
+    // Combine all sections
+    const memory = `${userProfileSection}\n${threadMemory}\n${historyMemory}`;
+
+    return memory;
 }
 
 /**
@@ -217,8 +257,9 @@ export async function fetchAndFormatTweetMemory(tweetId: string): Promise<{
             return null;
         }
 
-        // Get conversation with user from Supabase
+        // Get conversation with user from Supabase, now includes userProfile and conversation
         const conversationWithUser = await getConversationWithUser(tweet.username);
+
         // Get conversation thread from Twitter
         const conversationThread = await getConversationThread(tweetId);
 
@@ -265,13 +306,7 @@ export async function fetchAndFormatTweetMemory(tweetId: string): Promise<{
             } : undefined
         };
     } catch (error) {
-        if (error instanceof Error) {
-            console.log(`❌ Error fetching memory context: ${error.message}`);
-            console.error(error);
-        } else {
-            console.log('❌ An unknown error occurred');
-            console.error(error);
-        }
+        console.error('Error fetching memory context:', error);
         return null;
     }
 }
@@ -358,31 +393,14 @@ export async function assembleTwitterInterface(
         }
     }
 
-    // Create the text content with enhanced quote tweet context and proper sender handling
-    const focusTweetSection = tweetMemoryResult?.focusTweet ? `
-## THIS IS THE CURRENT TWEET YOU ARE REPLYING TO. GIVE YOUR FULL FOCUS TO REPLYING TO THIS TWEET.
-Sender: ${tweetMemoryResult.focusTweet.sender || 'Unknown User'}
-Time: ${tweetMemoryResult.focusTweet.timestamp}
-Content: ${tweetMemoryResult.focusTweet.text}
-${tweetMemoryResult.focusTweet.quoteContext ? `
-Quote Tweet Context:
-  Sender: ${tweetMemoryResult.focusTweet.quoteContext.sender || 'Unknown User'}
-  Time: ${tweetMemoryResult.focusTweet.quoteContext.timestamp}
-  Content: ${tweetMemoryResult.focusTweet.quoteContext.text}
-  ${tweetMemoryResult.focusTweet.quoteContext.photos?.length ?
-        `Images: Contains ${tweetMemoryResult.focusTweet.quoteContext.photos.length} image(s)` :
-        ''}` : ''}` : '';
-
+    // Create the text content with the updated memory
     const textContent = `
 # TWITTER INTERFACE
 This section contains your LIVE Twitter interface featuring context you need to reply to the current tweet.
 
-## RECENT CHAT HISTORY BETWEEN YOU AND ${tweetMemoryResult?.focusTweet?.sender || 'THE USER'}
 ${tweetMemory}
 
-${focusTweetSection}
-
-${imageContents.length > 0 ? `\n## IMAGES IN CONVERSATION\nThe following messages contain ${imageContents.length} images that provide additional context.\n` : ''}
+${imageContents.length > 0 ? `## IMAGES IN CONVERSATION\nThe following messages contain ${imageContents.length} images that provide additional context.` : ''}
 `;
 
     return { textContent, imageContents };

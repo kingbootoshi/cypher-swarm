@@ -1,11 +1,15 @@
 import { supabase } from '../../supabaseClient';
 
 /**
- * Retrieves the conversation between the agent and a user from the database.
+ * Retrieves the conversation between the agent and a user from the database,
+ * including user profile information and arranging messages in a back-and-forth order.
  * @param username - The Twitter username of the user.
- * @returns An array of conversation messages.
+ * @returns An object containing user profile data and an array of conversation messages.
  */
-export async function getConversationWithUser(username: string): Promise<any[]> {
+export async function getConversationWithUser(username: string): Promise<{
+    userProfile: any;
+    conversation: any[];
+}> {
     try {
         // Fetch the user's account based on username and platform
         const { data: userAccount, error: userAccountError } = await supabase
@@ -17,15 +21,30 @@ export async function getConversationWithUser(username: string): Promise<any[]> 
 
         if (userAccountError || !userAccount) {
             console.error('Error fetching user account:', userAccountError?.message);
-            return [];
+            return { userProfile: null, conversation: [] };
         }
 
         const userId = userAccount.user_id;
+        const userAccountId = userAccount.id;
 
-        if (!userId) {
-            console.error('User ID is null or undefined.');
-            return [];
+        if (!userId || !userAccountId) {
+            console.error('User ID or User Account ID is null or undefined.');
+            return { userProfile: null, conversation: [] };
         }
+
+        // Fetch user profile data from twitter_user_accounts
+        const { data: twitterUserAccount, error: twitterUserAccountError } = await supabase
+            .from('twitter_user_accounts')
+            .select('profile_data')
+            .eq('user_account_id', userAccountId)
+            .single();
+
+        if (twitterUserAccountError || !twitterUserAccount) {
+            console.error('Error fetching Twitter user account:', twitterUserAccountError?.message);
+            return { userProfile: null, conversation: [] };
+        }
+
+        const userProfile = twitterUserAccount.profile_data;
 
         // Fetch user interactions (tweets from the user)
         const { data: userInteractions, error: interactionsError } = await supabase
@@ -36,79 +55,60 @@ export async function getConversationWithUser(username: string): Promise<any[]> 
 
         if (interactionsError) {
             console.error('Error fetching user interactions:', interactionsError);
-            return [];
+            return { userProfile, conversation: [] };
         }
 
-        // Collect IDs of the user's tweets
-        const userTweetIds = userInteractions
-            .map(tweet => tweet.tweet_id)
-            .filter(id => id !== null) as string[];
+        // Fetch bot's replies to the user's tweets
+        const userTweetIds = userInteractions.map(tweet => tweet.tweet_id).filter(id => id !== null) as string[];
 
-        // Fetch agent's tweets that are replies to the user's tweets
-        const { data: agentReplies, error: agentRepliesError } = await supabase
+        const { data: botReplies, error: botRepliesError } = await supabase
             .from('twitter_tweets')
             .select('tweet_id, text, created_at, in_reply_to_tweet_id')
             .in('in_reply_to_tweet_id', userTweetIds)
             .order('created_at', { ascending: true });
 
-        if (agentRepliesError) {
-            console.error('Error fetching agent replies:', agentRepliesError);
-            return [];
+        if (botRepliesError) {
+            console.error('Error fetching bot replies:', botRepliesError);
+            return { userProfile, conversation: [] };
         }
 
-        // Map user interactions to a common format
-        const userMessages = userInteractions.map(interaction => ({
-            sender: username,
-            tweet_id: interaction.tweet_id,
-            text: interaction.text,
-            timestamp: interaction.timestamp
-        }));
-
-        // Map agent replies to a common format
-        const agentMessages = agentReplies.map(reply => ({
-            sender: process.env.TWITTER_USERNAME || 'agent',
-            tweet_id: reply.tweet_id,
-            text: reply.text,
-            timestamp: reply.created_at
-        }));
-
-        // Combine and sort messages chronologically
-        const allMessages = [...userMessages, ...agentMessages];
-        allMessages.sort((a, b) => {
-            // Default to 0 if timestamps are null, or compare if both exist
-            const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
-            const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
-            return timeA - timeB;
+        // Create a map of user tweets by tweet_id for quick access
+        const userTweetsMap = new Map<string, any>();
+        userInteractions.forEach(tweet => {
+            if (tweet.tweet_id) {
+                userTweetsMap.set(tweet.tweet_id, tweet);
+            }
         });
 
-        // Limit conversation to the most recent 5 messages from each sender
-        const limitedConversation: any[] = [];
-        let userCount = 0;
-        let agentCount = 0;
+        // Build the conversation as a back-and-forth
+        const conversation: any[] = [];
 
-        for (let i = allMessages.length - 1; i >= 0; i--) {
-            const msg = allMessages[i];
+        for (const userTweet of userInteractions) {
+            // Add the user's message
+            conversation.push({
+                sender: username,
+                tweet_id: userTweet.tweet_id,
+                text: userTweet.text,
+                timestamp: userTweet.timestamp
+            });
 
-            if (msg.sender === username && userCount < 5) {
-                limitedConversation.push(msg);
-                userCount++;
-            } else if ((msg.sender === process.env.TWITTER_USERNAME || msg.sender === 'agent') && agentCount < 5) {
-                limitedConversation.push(msg);
-                agentCount++;
-            }
+            // Find the bot's reply to this tweet, if any
+            const botReply = botReplies.find(reply => reply.in_reply_to_tweet_id === userTweet.tweet_id);
 
-            if (userCount >= 5 && agentCount >= 5) {
-                break;
+            if (botReply) {
+                conversation.push({
+                    sender: process.env.TWITTER_USERNAME || 'agent',
+                    tweet_id: botReply.tweet_id,
+                    text: botReply.text,
+                    timestamp: botReply.created_at
+                });
             }
         }
 
-        // Reverse to maintain chronological order
-        limitedConversation.reverse();
-
-        return limitedConversation;
+        return { userProfile, conversation };
 
     } catch (error) {
         console.error('Error in getConversationWithUser:', error);
-        return [];
+        return { userProfile: null, conversation: [] };
     }
 }

@@ -3,11 +3,15 @@
 import { AgentConfig } from '../../types/agentSystem';
 import { corePersonalityPrompt } from '../corePersonality';
 import { generateHelpText } from '../../../terminal/commandRegistry';
+import { getCurrentTimestamp } from '../../../utils/formatTimestamps';
 
 export const terminalAgentConfig: AgentConfig = {
   systemPromptTemplate: `
 # PERSONALITY
 {{corePersonalityPrompt}}
+
+## TIME
+{{current_timestamp}}
 
 # MAIN GOAL
 You are hooked up to a terminal, and you are able to run commands to interact with the world. This terminal currently gives you access to your mentions, and the ability to send tweets. Prioritize sending a main tweet if you can...
@@ -20,6 +24,7 @@ You MUST use your use_terminal function tool at all times - you will ONLY be giv
 `,
   dynamicVariables: {
     corePersonalityPrompt: corePersonalityPrompt,
+    current_timestamp: getCurrentTimestamp(),
     terminal_commands: generateHelpText()
   },
 };

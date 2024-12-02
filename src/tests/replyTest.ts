@@ -4,13 +4,23 @@ import { Logger } from '../utils/logger';
 import { OpenAIClient } from '../ai/models/clients/OpenAiClient';
 
 // Function to generate AI reply to a tweet
-export async function generateTweetReply(tweetId: string, prompt = "What would you reply to this tweet?"): Promise<string> {
+export async function generateTweetReply(
+  tweetId: string,
+  prompt = "What would you reply to this tweet?",
+  textContent?: string,
+  imageContents?: any[]
+): Promise<string> {
   Logger.enable();
 
-  // Assemble Twitter interface with tweet content and images
-  const { textContent, imageContents } = await assembleTwitterInterface(".", tweetId);
+  // Use preassembled interface data if provided
+  if (!textContent || !imageContents) {
+    // Assemble Twitter interface if not provided
+    const interfaceData = await assembleTwitterInterface(".", tweetId);
+    textContent = interfaceData.textContent;
+    imageContents = interfaceData.imageContents;
+  }
 
-  // Configure agent with pirate personality
+  // Configure agent with runtime variables
   const runtimeVariables = {
     twitterInterface: textContent,
   };
@@ -19,14 +29,14 @@ export async function generateTweetReply(tweetId: string, prompt = "What would y
   const openAIClient = new OpenAIClient("gpt-4o");
   const replyAgent = new ReplyAgent(openAIClient);
 
-  // Add any images from the tweet to the agent's context
+  // Add images to the agent's context if available
   if (imageContents && imageContents.length > 0) {
     replyAgent.addImage(
       imageContents.map(img => ({
         name: img.sender,
         mime: img.media_type,
         data: img.data,
-      })),
+      }))
     );
   }
 

@@ -22,13 +22,13 @@ export const twitterReply: Command = {
     try {
       const mediaUrls = args.mediaUrls ? args.mediaUrls.split(',').map(url => url.trim()) : undefined;
       
-      // Get the Twitter interface
-      const { textContent } = await assembleTwitterInterface(".", args.tweetId);
+      // Assemble Twitter interface once
+      const { textContent, imageContents } = await assembleTwitterInterface(".", args.tweetId);
       
-      // Generate reply with interface context
-      const reply = await generateTweetReply(args.tweetId);
+      // Generate reply using the preassembled interface
+      const reply = await generateTweetReply(args.tweetId, "What would you reply to this tweet?", textContent, imageContents);
       
-      // Pass interface to replyToTweet
+      // Pass textContent to replyToTweet
       const result = await replyToTweet(args.tweetId, reply, mediaUrls, textContent);
       
       return {

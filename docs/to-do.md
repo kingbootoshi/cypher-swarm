@@ -31,3 +31,17 @@ but we don't need to do this... with the new load chat history function + short 
 - make the bot do 30 actions, and sleep for an hour. every time it goes idle it runs the memory extraction + save process
 - if we can figure out some way to link twitter interactions/twitter tweets with terminal session ID, then that's how we can extract information about each user that satoshi interacted with in that session. save it into mem0 database under twitter ID
 additionally, we can use the tweet context and input that into the context column of twitter_interactions, so the bot can REALLY understand the tweet context + user and use that to save knowledge.
+
+ok so action plans:
+1. load in twitter interface dynamic variable based on the tweet the bot is replying/quote-tweeting (we also grab images, so update base agent so openai/anthropic client can read images input) (DONE)
+2. add this dynamic variable into the database when replying/quote-tweeting a tweet for further context for extractor agent (DONE, TESTED FOR REPLYING, ADD FOR QUOTE TWEETS AND WTV ELSE)
+3. finish the process of grabbing specific users from filtered tweet actions + context to load into the extractor agent process
+4. finish the summarization process (get summary from extractor agent, save to supabase, make a summary agent to summarize short term summaries into mid term summaries, mid summaries into 1 condensed long term memory)
+5. load in current summaries as a dynamic variable to terminal agent/any tweet agents
+6. create supabase table for extracted learnings
+7. create mem0 logic to store learnings, tweets the bot sends, (main/reply/quotes), image prompts the bot gens
+8. create a memory agent that 
+a. takes last 5 short term terminal message history + current summary as input
+b. outputs a function of 3 queries to pull from the mem0 database, which should pull in each category of memory + main tweets/media gens
+c. turn the memory outputs into a dynamic variable to put into tweet agents
+9. implement tweet agents into the tweet commands to handle tweets
