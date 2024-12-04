@@ -36,7 +36,7 @@ export const twitterReply: Command = {
                `Parent Tweet ID: ${args.tweetId}\n` +
                `${result.tweetId ? `Reply Tweet ID: ${result.tweetId}\n` : ''}` +
                `Status: ${result.success ? 'Success' : 'Failed'}\n` +
-               `Text: ${args.text}\n` +
+               `Text: ${reply}\n` +
                `Media: ${mediaUrls ? mediaUrls.join(', ') : 'None'}\n` +
                `Details: ${result.message}`
       };

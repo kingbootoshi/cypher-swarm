@@ -19,7 +19,8 @@ import { QuoteResult } from '../types/tweetResults';
 export async function quoteTweet(
   quotedTweetId: string,
   text: string,
-  mediaUrls?: string[]
+  mediaUrls?: string[],
+  twitterInterface?: string
 ): Promise<QuoteResult> {
   try {
     // Check if already quoted this tweet
@@ -85,7 +86,10 @@ export async function quoteTweet(
     }
 
     // Analyze tweet context
-    const context = await analyzeTweetContext(targetTweet);
+    const context = {
+      ...(await analyzeTweetContext(targetTweet)),
+      twitterInterface: twitterInterface
+    };
 
     // Log the interaction with the user
     await logTwitterInteraction({

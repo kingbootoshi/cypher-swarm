@@ -1,7 +1,9 @@
 // scripts/extractTweetActions.ts
 
+import { linkTwitterInteractions } from '../supabase/functions/twitter/linkInteractions';
 import { supabase } from '../supabase/supabaseClient';
 import { Logger } from '../utils/logger';
+import { TwitterInteractionResult } from '../supabase/functions/twitter/linkInteractions';
 
 Logger.enable();
 
@@ -14,6 +16,11 @@ interface TweetAction {
   details: string;
   textContent?: string;
   mediaUrls?: string[];
+}
+
+interface CombinedUserInteraction {
+  userId: string;
+  interactions: string[];
 }
 
 /**
@@ -86,10 +93,71 @@ async function extractTweetActions(): Promise<TweetAction[]> {
   }
 }
 
+/**
+ * Gathers all unique user interactions based on tweet actions.
+ * Combines multiple interactions from the same user into a single record.
+ */
+async function gatherUserInteractions(): Promise<CombinedUserInteraction[]> {
+  // Extract tweet actions from the short-term history
+  const tweetActions = await extractTweetActions();
+
+  // Collect unique tweet IDs from the actions
+  const uniqueTweetIds = new Set<string>();
+  for (const action of tweetActions) {
+    uniqueTweetIds.add(action.tweetId);
+  }
+
+  // Map to temporarily group interactions by user ID
+  const tempUserInteractionsMap = new Map<string, string[]>();
+
+  // Iterate over each unique tweet ID
+  for (const tweetId of uniqueTweetIds) {
+    // Retrieve interaction summary and user ID for the tweet
+    const interactionResult = await linkTwitterInteractions(tweetId);
+
+    if (interactionResult) {
+      const userId = interactionResult.userId;
+
+      // Initialize array if user ID is encountered for the first time
+      if (!tempUserInteractionsMap.has(userId)) {
+        tempUserInteractionsMap.set(userId, []);
+      }
+
+      // Add the formatted string to the user's array of interactions
+      tempUserInteractionsMap.get(userId)?.push(interactionResult.formattedString);
+    } else {
+      Logger.log(`No interaction found for tweet ID: ${tweetId}`);
+    }
+  }
+
+  // Convert map to desired array format
+  const combinedInteractions: CombinedUserInteraction[] = Array.from(tempUserInteractionsMap.entries())
+    .map(([userId, interactions]) => ({
+      userId,
+      interactions
+    }));
+
+  // Log the grouped user interactions
+  Logger.log('Combined User Interactions:', combinedInteractions);
+
+  return combinedInteractions;
+}
+
 // Export the function for use in other files
 export { extractTweetActions };
 
 // If running directly, execute the function
 if (require.main === module) {
-  extractTweetActions();
+  (async () => {
+    const userInteractions = await gatherUserInteractions();
+
+    // Pretty print the results
+    userInteractions.forEach(({ userId, interactions }) => {
+      console.log(`\nUser ID: ${userId}`);
+      interactions.forEach((interaction, index) => {
+        console.log(`\nInteraction ${index + 1}:`);
+        console.log(interaction);
+      });
+    });
+  })();
 }
