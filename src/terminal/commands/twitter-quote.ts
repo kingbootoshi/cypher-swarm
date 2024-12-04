@@ -1,7 +1,6 @@
 import { Command } from '../types/commands';
-import { quoteTweet } from '../../twitter/functions/quoteTweet';
-import { assembleTwitterInterface } from '../../twitter/utils/imageUtils';
-import { generateQuoteTweet } from '../../tests/quoteTest';
+import { generateAndPostQuoteTweet } from '../../pipelines/generateQuote';
+
 /**
  * @command twitter-quote
  * @description Creates a quote tweet
@@ -20,21 +19,17 @@ export const twitterQuote: Command = {
   handler: async (args) => {
     try {
       const mediaUrls = args.mediaUrls ? args.mediaUrls.split(',').map(url => url.trim()) : undefined;
-      // Assemble Twitter interface once
-      const { textContent, imageContents } = await assembleTwitterInterface(".", args.tweetId);
-
-      // Generate reply using the preassembled interface
-      const quote = await generateQuoteTweet(args.tweetId, "What would you quote this tweet?", textContent, imageContents);
       
-      const result = await quoteTweet(args.tweetId, quote, mediaUrls, textContent);
+      // Use the enhanced pipeline
+      const result = await generateAndPostQuoteTweet(args.tweetId, mediaUrls);
       
       return {
         output: `${result.success ? '✅' : '❌'} Action: Quote Tweet\n` +
                `Quoted Tweet ID: ${args.tweetId}\n` +
                `${result.tweetId ? `New Tweet ID: ${result.tweetId}\n` : ''}` +
                `Status: ${result.success ? 'Success' : 'Failed'}\n` +
-               `Text: ${quote}\n` +
-               `Media: ${mediaUrls ? mediaUrls.join(', ') : 'None'}\n` +
+               `Text: ${result.quoteText}\n` +
+               `Media: ${result.mediaUrls ? result.mediaUrls.join(', ') : 'None'}\n` +
                `Details: ${result.message}`
       };
     } catch (error) {

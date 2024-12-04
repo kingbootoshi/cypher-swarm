@@ -1,9 +1,8 @@
 // scripts/extractTweetActions.ts
 
-import { linkTwitterInteractions } from '../supabase/functions/twitter/linkInteractions';
+import { linkTwitterInteractions, TwitterInteractionResult } from '../supabase/functions/twitter/linkInteractions';
 import { supabase } from '../supabase/supabaseClient';
 import { Logger } from '../utils/logger';
-import { TwitterInteractionResult } from '../supabase/functions/twitter/linkInteractions';
 
 Logger.enable();
 
@@ -16,11 +15,6 @@ interface TweetAction {
   details: string;
   textContent?: string;
   mediaUrls?: string[];
-}
-
-interface CombinedUserInteraction {
-  userId: string;
-  interactions: string[];
 }
 
 /**
@@ -95,9 +89,9 @@ async function extractTweetActions(): Promise<TweetAction[]> {
 
 /**
  * Gathers all unique user interactions based on tweet actions.
- * Combines multiple interactions from the same user into a single record.
+ * Groups interactions by user ID to facilitate learning extraction.
  */
-async function gatherUserInteractions(): Promise<CombinedUserInteraction[]> {
+async function gatherUserInteractions(): Promise<Map<string, TwitterInteractionResult[]>> {
   // Extract tweet actions from the short-term history
   const tweetActions = await extractTweetActions();
 
@@ -107,8 +101,8 @@ async function gatherUserInteractions(): Promise<CombinedUserInteraction[]> {
     uniqueTweetIds.add(action.tweetId);
   }
 
-  // Map to temporarily group interactions by user ID
-  const tempUserInteractionsMap = new Map<string, string[]>();
+  // Map to group interactions by user ID
+  const userInteractionsMap = new Map<string, TwitterInteractionResult[]>();
 
   // Iterate over each unique tweet ID
   for (const tweetId of uniqueTweetIds) {
@@ -119,28 +113,23 @@ async function gatherUserInteractions(): Promise<CombinedUserInteraction[]> {
       const userId = interactionResult.userId;
 
       // Initialize array if user ID is encountered for the first time
-      if (!tempUserInteractionsMap.has(userId)) {
-        tempUserInteractionsMap.set(userId, []);
+      if (!userInteractionsMap.has(userId)) {
+        userInteractionsMap.set(userId, []);
       }
 
-      // Add the formatted string to the user's array of interactions
-      tempUserInteractionsMap.get(userId)?.push(interactionResult.formattedString);
+      // Add the interaction to the user's array of interactions
+      userInteractionsMap.get(userId)?.push(interactionResult);
     } else {
+      // Log if no interaction is found for the tweet ID
       Logger.log(`No interaction found for tweet ID: ${tweetId}`);
     }
   }
 
-  // Convert map to desired array format
-  const combinedInteractions: CombinedUserInteraction[] = Array.from(tempUserInteractionsMap.entries())
-    .map(([userId, interactions]) => ({
-      userId,
-      interactions
-    }));
-
   // Log the grouped user interactions
-  Logger.log('Combined User Interactions:', combinedInteractions);
+  Logger.log('User Interactions Map:', userInteractionsMap);
 
-  return combinedInteractions;
+  // Return the map containing user interactions grouped by user ID
+  return userInteractionsMap;
 }
 
 // Export the function for use in other files
@@ -151,13 +140,12 @@ if (require.main === module) {
   (async () => {
     const userInteractions = await gatherUserInteractions();
 
-    // Pretty print the results
-    userInteractions.forEach(({ userId, interactions }) => {
+    // Iterate over each user and their interactions
+    for (const [userId, interactions] of userInteractions.entries()) {
       console.log(`\nUser ID: ${userId}`);
-      interactions.forEach((interaction, index) => {
-        console.log(`\nInteraction ${index + 1}:`);
-        console.log(interaction);
+      interactions.forEach(interaction => {
+        console.log(interaction.formattedString);
       });
-    });
+    }
   })();
 }

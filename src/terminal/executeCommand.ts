@@ -2,7 +2,7 @@
 
 import { parse } from 'shell-quote';
 import { getAllCommands, getCommand } from './commandRegistry';
-import { logTerminalOutput } from '../logs/terminalLogger';
+import { logTerminalOutput } from '../utils/terminalLogger';
 import type { CommandParameter } from './types/commands';
 
 /**

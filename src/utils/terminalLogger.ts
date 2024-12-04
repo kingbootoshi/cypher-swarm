@@ -1,6 +1,6 @@
 // Terminal logging utility
 
-import { formatTimestamp } from '../utils/formatTimestamps';
+import { formatTimestamp } from './formatTimestamps';
 /**
  * Logs terminal commands and their outputs.
  * @param command - The command that was executed.

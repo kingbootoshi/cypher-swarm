@@ -2,11 +2,57 @@ import { assembleTwitterInterface } from '../twitter/utils/imageUtils';
 import { QuoteAgent } from '../ai/agents/quoteAgent/quoteAgent';
 import { Logger } from '../utils/logger';
 import { OpenAIClient } from '../ai/models/clients/OpenAiClient';
+import { quoteTweet } from '../twitter/functions/quoteTweet';
 
-// Function to generate AI reply to a tweet
-export async function generateQuoteTweet(
+// Type for the quote result
+interface QuoteResult {
+  success: boolean;
+  tweetId?: string;
+  message: string;
+  quoteText: string;
+  mediaUrls?: string[];
+}
+
+/**
+ * Enhanced pipeline that handles the entire quote process including:
+ * - Interface assembly
+ * - Quote generation
+ * - Tweet posting
+ * - Result formatting
+ */
+export async function generateAndPostQuoteTweet(
   tweetId: string,
-  prompt = "What would you quote this tweet?",
+  mediaUrls?: string[],
+  prompt = "What would you quote this tweet?"
+): Promise<QuoteResult> {
+  Logger.enable();
+  try {
+    // Assemble Twitter interface
+    const { textContent, imageContents } = await assembleTwitterInterface(".", tweetId);
+    
+    // Generate AI quote
+    const quoteText = await generateQuoteTweet(tweetId, prompt, textContent, imageContents);
+    
+    // Post the quote
+    const result = await quoteTweet(tweetId, quoteText, mediaUrls, textContent);
+    
+    return {
+      success: result.success,
+      tweetId: result.tweetId,
+      message: result.message,
+      quoteText,
+      mediaUrls
+    };
+  } catch (error) {
+    Logger.log('Failed to generate and post quote:', error);
+    throw error;
+  }
+}
+
+// Original function now focused solely on AI generation
+async function generateQuoteTweet(
+  tweetId: string,
+  prompt: string,
   textContent?: string,
   imageContents?: any[]
 ): Promise<string> {
