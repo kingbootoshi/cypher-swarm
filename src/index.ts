@@ -16,6 +16,7 @@ import {
   getShortTermHistory, 
   clearShortTermHistory 
 } from './supabase/functions/terminal/terminalHistory';
+import { extractAndSaveLearnings } from './pipelines/extractLearnings';
 
 Logger.enable();
 
@@ -143,7 +144,14 @@ export async function startAISystem() {
       }
 
       // Before entering idle mode, initiate the memory process, and wipe the short term history
-      // CODE HERE
+      try {
+        Logger.log('Initiating memory processing...');
+        await extractAndSaveLearnings(sessionId);
+        await clearShortTermHistory();
+        Logger.log('Memory processing complete, short-term history cleared');
+      } catch (error) {
+        Logger.log('Error during memory processing:', error);
+      }
 
       // Enter idle mode
       const idleMinutes = getRandomInt(30, 60);

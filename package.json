@@ -17,6 +17,7 @@
     "file-type": "^19.6.0",
     "fs": "^0.0.1-security",
     "goat-x": "^1.1.0",
+    "mem0ai": "^1.0.29",
     "node-fetch": "^3.3.2",
     "openai": "^4.73.0",
     "path": "^0.12.7",

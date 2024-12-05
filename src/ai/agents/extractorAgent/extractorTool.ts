@@ -34,7 +34,7 @@ export const ExtractorTool: Tool = {
       "properties": {
         "summary": {
           "type": "string",
-          "description": "A concise paragraph summarizing the entire terminal log, focusing on key actions and events"
+          "description": "A concise paragraph summarizing your actions from the current terminal log, focusing on key actions and events. This acts as your sense of time in the present."
         },
         "world_knowledge": {
           "type": "array",
@@ -48,14 +48,14 @@ export const ExtractorTool: Tool = {
           "items": {
             "type": "string"
           },
-          "description": "A list of knowledge learned about the crypto ecosystem it's culture. can be about specific projects, people, events, or other facts and concepts learned from the terminal logs"
+          "description": "A list of knowledge learned about the crypto ecosystem and its culture."
         },
         "satoshi_self": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "description": "AI agent's personal growth, new perspectives, feelings, or opinions developed from the current terminal log"
+          "description": "learnings about your personal growth, new perspectives, feelings, or opinions developed from the current terminal log"
         },
         "user_specific": {
           "type": "array",
@@ -65,14 +65,14 @@ export const ExtractorTool: Tool = {
             "properties": {
               "user_id": {
                 "type": "string",
-                "description": "The unique identifier of the user"
+                "description": "The unique identifier of the user. Labeled as 'USER ID:' in the [SPECIFIC USER INTERACTIONS] section of the terminal logs"
               },
               "learnings": {
                 "type": "array",
                 "items": {
                   "type": "string"
                 },
-                "description": "Specific learnings and observations about this user"
+                "description": "Specific learnings and observations about this user. Leave empty array if nothing. Please use the platform's username of the user when writing learnings about them. "
               }
             }
           },

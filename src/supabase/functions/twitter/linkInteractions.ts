@@ -207,10 +207,3 @@ function getResponseType(response: any): string {
   
   return types.length ? `${types.join(' + ')}` : 'Main Tweet';
 }
-
-// Example usage:
-const result = await linkTwitterInteractions('1863668566874059010');
-if (result) {
-  console.log(result.formattedString);
-  console.log('\nUser ID for memory handling:', result.userId);
-}

@@ -161,6 +161,31 @@ All tables have Row Level Security (RLS) enabled with the following policies:
   - agent_responses
   - terminal_status
 
+## Memory Management
+
+### 1. `memory_summaries` Table
+- **Purpose**: Stores summaries of conversations and interactions
+- **Fields**:
+  - `id` SERIAL PRIMARY KEY: Unique identifier
+  - `summary_type` TEXT NOT NULL: Type of summary ('short', 'mid', 'long')
+  - `summary` TEXT NOT NULL: Summary text
+  - `created_at` TIMESTAMPTZ: Timestamp of when the summary was created
+  - `processed` BOOLEAN: Indicates if the summary has been processed
+  - `session_id` TEXT: Session ID for short and mid-term summaries (nullable for long-term summaries)
+  - `last_updated` TIMESTAMPTZ: Timestamp of when the summary was last updated
+- **Constraints**:
+  - `session_id` must be provided for short and mid-term summaries
+
+### 2. `learnings` Table
+- **Purpose**: Stores all extracted learnings, including user-specific learnings
+- **Fields**:
+  - `id` SERIAL PRIMARY KEY: Unique identifier
+  - `session_id` TEXT: References session ID for learning extraction (nullable for global learnings)
+  - `user_id` UUID: References users(id), nullable for non-user-specific learnings
+  - `learning_type` TEXT NOT NULL: Learning category ('world_knowledge', 'crypto_ecosystem_knowledge', 'satoshi_self', 'user_specific')
+  - `content` TEXT NOT NULL: Extracted learning content
+  - `created_at` TIMESTAMPTZ: Learning creation timestamp (default NOW())
+
 ## SQL Schema
 
 ```sql
@@ -374,60 +399,83 @@ CREATE POLICY "Service role modification" ON short_term_terminal_history
 -- Insert the initial row
 INSERT INTO terminal_status (id, is_active) VALUES (TRUE, FALSE);
 
--- A single unified memory table for all summaries
-CREATE TABLE memory_summaries (
-    id SERIAL PRIMARY KEY,
-    summary_type TEXT NOT NULL CHECK (summary_type IN ('short', 'mid', 'long')),
-    summary TEXT NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    processed BOOLEAN DEFAULT FALSE,
-    session_id TEXT,  -- NULL for long-term summaries
-    last_updated TIMESTAMPTZ DEFAULT NOW(),
-    
-    -- Session ID required for short and mid terms only
-    CONSTRAINT session_id_required 
-        CHECK (
-            (summary_type = 'long' AND session_id IS NULL) OR 
-            (summary_type != 'long' AND session_id IS NOT NULL)
-        )
+-- Learning system
+CREATE TABLE learnings (
+  id SERIAL PRIMARY KEY,
+  session_id TEXT,
+  user_id UUID NULL REFERENCES users(id) ON DELETE SET NULL,
+  learning_type TEXT NOT NULL,
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for learnings
+CREATE INDEX idx_learnings_session ON learnings(session_id);
+CREATE INDEX idx_learnings_user_id ON learnings(user_id);
+CREATE INDEX idx_learnings_type ON learnings(learning_type);
+
+-- Enable RLS
+ALTER TABLE learnings ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies
+CREATE POLICY "Public read access" ON learnings
+  FOR SELECT USING (true);
+CREATE POLICY "Service role modification" ON learnings
+  FOR ALL USING (auth.role() = 'service_role')
+  WITH CHECK (auth.role() = 'service_role');
+
+-- Memory and Learnings
+
+### 1. `learnings` Table
+- **Purpose**: Stores all extracted learnings, including user-specific learnings.
+- **Fields**:
+  - `id` SERIAL PRIMARY KEY: Unique identifier.
+  - `session_id` TEXT: References the session from which the learning was extracted; nullable for global learnings.
+  - `user_id` UUID NULL REFERENCES users(id): References a specific user if the learning is user-specific; nullable.
+  - `learning_type` TEXT NOT NULL: Category of learning (`'world_knowledge'`, `'crypto_ecosystem_knowledge'`, `'satoshi_self'`, `'user_specific'`).
+  - `content` TEXT NOT NULL: The extracted learning content.
+  - `created_at` TIMESTAMPTZ DEFAULT NOW(): Timestamp of when the learning was saved.
+
+### Indexes
+- `learnings(session_id)`: For efficient querying by session.
+- `learnings(user_id)`: For efficient querying of user-specific learnings.
+- `learnings(learning_type)`: To filter learnings by type.
+
+### Security
+
+- **Row Level Security (RLS)**: Enabled for the `learnings` table.
+- **Policies**:
+  - **Public read access**: Anyone can read from the `learnings` table.
+  - **Service role modification**: Only the service role can insert, update, or delete records.
+
+### SQL Schema
+
+```sql
+-- Table to store extracted learnings
+CREATE TABLE learnings (
+  id SERIAL PRIMARY KEY,
+  session_id TEXT, -- Nullable, references session ID
+  user_id UUID NULL REFERENCES users(id) ON DELETE SET NULL,
+  learning_type TEXT NOT NULL, -- 'world_knowledge', 'crypto_ecosystem_knowledge', 'satoshi_self', 'user_specific'
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Indexes for performance
--- General index for type and processed status
-CREATE INDEX idx_memory_summaries_type_processed 
-    ON memory_summaries(summary_type, processed);
-
--- Index for chronological ordering
-CREATE INDEX idx_memory_summaries_created 
-    ON memory_summaries(created_at);
-
--- Specific indexes for each summary type to optimize common queries
-CREATE INDEX idx_memory_summaries_short_term 
-    ON memory_summaries(created_at DESC) 
-    WHERE summary_type = 'short' AND processed = false;
-
-CREATE INDEX idx_memory_summaries_mid_term 
-    ON memory_summaries(created_at DESC) 
-    WHERE summary_type = 'mid' AND processed = false;
-
-CREATE INDEX idx_memory_summaries_long_term 
-    ON memory_summaries(created_at DESC) 
-    WHERE summary_type = 'long' AND processed = false;
-
--- Session-based index for retrieving context
-CREATE INDEX idx_memory_summaries_session 
-    ON memory_summaries(session_id) 
-    WHERE session_id IS NOT NULL;
+CREATE INDEX idx_learnings_session ON learnings(session_id);
+CREATE INDEX idx_learnings_user_id ON learnings(user_id);
+CREATE INDEX idx_learnings_type ON learnings(learning_type);
 
 -- Enable RLS
-ALTER TABLE memory_summaries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE learnings ENABLE ROW LEVEL SECURITY;
 
--- Add RLS policies
-CREATE POLICY "Public read access" ON memory_summaries
-    FOR SELECT USING (true);
-CREATE POLICY "Service role modification" ON memory_summaries
-    FOR ALL USING (auth.role() = 'service_role')
-    WITH CHECK (auth.role() = 'service_role');
+-- RLS Policies
+CREATE POLICY "Public read access" ON learnings
+  FOR SELECT USING (true);
+
+CREATE POLICY "Service role modification" ON learnings
+  FOR ALL USING (auth.role() = 'service_role')
+  WITH CHECK (auth.role() = 'service_role');
 ```
 
 Example of adding another platform (e.g., Discord)
