@@ -318,7 +318,6 @@ export async function fetchAndFormatTweetMemory(tweetId: string): Promise<{
  * @returns An object containing text content and image contents.
  */
 export async function assembleTwitterInterface(
-    recentMainTweetsContent: string,
     tweetId: string
 ): Promise<{
     textContent: string;
@@ -327,6 +326,7 @@ export async function assembleTwitterInterface(
         media_type: string;
         data: Buffer;
     }>;
+    usernames: string[];
 }> {
     const tweetMemoryResult = await fetchAndFormatTweetMemory(tweetId);
     const tweetMemory = tweetMemoryResult?.memory || '';
@@ -338,6 +338,48 @@ export async function assembleTwitterInterface(
 
     // Keep track of processed photo URLs to avoid duplicates
     const processedPhotoUrls = new Set<string>();
+
+    // Collect all usernames involved
+    const usernamesInvolved = new Set<string>();
+
+    if (tweetMemoryResult) {
+        // Add usernames from the conversation thread
+        const conversationThread = await getConversationThread(tweetId);
+        
+        // Add usernames from all tweets in the thread
+        conversationThread.forEach(tweet => {
+            // Add main tweet sender
+            usernamesInvolved.add(tweet.sender);
+            
+            // Add quote tweet sender if exists
+            if (tweet.quoteContext) {
+                usernamesInvolved.add(tweet.quoteContext.sender);
+            }
+        });
+
+        // Add the initial tweet's username
+        usernamesInvolved.add(tweetMemoryResult.username);
+
+        // Add focus tweet sender
+        if (tweetMemoryResult.focusTweet) {
+            usernamesInvolved.add(tweetMemoryResult.focusTweet.sender);
+
+            // Add sender from focus tweet's quote context
+            if (tweetMemoryResult.focusTweet.quoteContext) {
+                usernamesInvolved.add(tweetMemoryResult.focusTweet.quoteContext.sender);
+            }
+        }
+
+        // Add senders from photos
+        if (tweetMemoryResult.photos && tweetMemoryResult.photos.length > 0) {
+            tweetMemoryResult.photos.forEach(photoInfo => {
+                usernamesInvolved.add(photoInfo.sender);
+            });
+        }
+    }
+
+    // Convert the set to an array
+    const usernames = Array.from(usernamesInvolved);
 
     // Process images if they exist
     if (tweetMemoryResult) {
@@ -403,6 +445,6 @@ ${tweetMemory}
 ${imageContents.length > 0 ? `## IMAGES IN CONVERSATION\nThe following messages contain ${imageContents.length} images that provide additional context.` : ''}
 `;
 
-    return { textContent, imageContents };
+    return { textContent, imageContents, usernames };
 }
   

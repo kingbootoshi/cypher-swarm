@@ -13,6 +13,9 @@ const quoteAgentConfig: AgentConfig = {
 # CURRENT SUMMARIES
 {{currentSummaries}}
 
+# MEMORIES
+{{memories}}
+
 # TWITTER INTERFACE
 {{twitterInterface}}
 
@@ -26,6 +29,7 @@ Respond naturally in a conversational manner while maintaining the personality d
     corePersonalityPrompt: corePersonalityPrompt,
     currentSummaries: activeSummaries,
     twitterInterface: 'TWITTER INTERFACE DYNAMIC VARIABLE HERE',
+    memories: 'MEMORIES DYNAMIC VARIABLE HERE'
   },
 };
 

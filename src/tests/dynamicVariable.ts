@@ -8,7 +8,7 @@ import { FireworkClient } from '../ai/models/clients/FireworkClient';
 Logger.enable();
 
 // Assemble Twitter interface
-const { textContent, imageContents } = await assembleTwitterInterface(".", "1862442359020990812");
+const { textContent, imageContents } = await assembleTwitterInterface("1862442359020990812");
 
 // Create dynamic variables for runtime
 const runtimeVariables = {

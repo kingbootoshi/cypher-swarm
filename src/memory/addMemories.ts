@@ -57,13 +57,14 @@ export function addSelfKnowledge(msgTemplate: MessageTemplate): MemoryResponse {
 
 /**
  * Add user-specific knowledge to Satoshi's memory
+ * @param msgTemplate Array of message objects
  * @param userId Supabase user ID for the specific user
  */
 export function addUserSpecificKnowledge(
     msgTemplate: MessageTemplate,
     userId: string
 ): MemoryResponse {
-    return addMemoryBase("user_specific", msgTemplate, { user_id: userId });
+    return addMemoryBase(`user_${userId}`, msgTemplate);
 }
 
 /**

@@ -3,6 +3,7 @@ import { ReplyAgent } from '../ai/agents/replyAgent/replyAgent';
 import { Logger } from '../utils/logger';
 import { OpenAIClient } from '../ai/models/clients/OpenAiClient';
 import { replyToTweet } from '../twitter/functions/replyToTweet';
+import { loadMemories } from './loadMemories';
 
 // Type for the reply result
 interface ReplyResult {
@@ -28,10 +29,10 @@ export async function generateAndPostTweetReply(
   Logger.enable();
   try {
     // Assemble Twitter interface
-    const { textContent, imageContents } = await assembleTwitterInterface(".", tweetId);
+    const { textContent, imageContents, usernames } = await assembleTwitterInterface(tweetId);
     
     // Generate AI reply
-    const replyText = await generateTweetReply(tweetId, prompt, textContent, imageContents);
+    const replyText = await generateTweetReply(tweetId, prompt, textContent, imageContents, usernames);
     
     // Post the reply
     const result = await replyToTweet(tweetId, replyText, mediaUrls, textContent);
@@ -54,21 +55,28 @@ async function generateTweetReply(
   tweetId: string,
   prompt: string,
   textContent?: string,
-  imageContents?: any[]
+  imageContents?: any[],
+  usernames?: string[]
 ): Promise<string> {
   Logger.enable();
 
   // Use preassembled interface data if provided
   if (!textContent || !imageContents) {
     // Assemble Twitter interface if not provided
-    const interfaceData = await assembleTwitterInterface(".", tweetId);
+    const interfaceData = await assembleTwitterInterface(tweetId);
     textContent = interfaceData.textContent;
     imageContents = interfaceData.imageContents;
+    usernames = interfaceData.usernames;
   }
+
+  // Load memories with empty array fallback for undefined usernames
+  const memories = await loadMemories(textContent, usernames || []);
+  Logger.log('Active memories fetched:', memories);
 
   // Configure agent with runtime variables
   const runtimeVariables = {
     twitterInterface: textContent,
+    memories: memories
   };
 
   // Initialize OpenAI client and reply agent

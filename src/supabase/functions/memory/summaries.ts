@@ -194,7 +194,6 @@ export class MemorySummaries {
   static async getFormattedActiveSummaries(): Promise<string> {
     try {
       const activeMemories = await this.getActiveMemories();
-      Logger.log('Active memories fetched:', activeMemories);
 
       const formattedSummaries: string[] = [];
 
@@ -245,8 +244,7 @@ export class MemorySummaries {
       }
 
       const result = formattedSummaries.join('\n');
-      Logger.log('Final formatted result:', result);
-      
+
       return result || 'No active summaries found.';
     } catch (error) {
       Logger.log('Error getting formatted active summaries:', error);

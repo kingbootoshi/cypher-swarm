@@ -7,8 +7,7 @@ import { getCurrentTimestamp } from '../utils/formatTimestamps';
  */
 async function testTweetContext(tweetId: string) {
     try {
-        const recentMainTweetsContent = ''; // Replace with actual content if available
-        const { textContent, imageContents } = await assembleTwitterInterface(recentMainTweetsContent, tweetId);
+        const { textContent, imageContents, usernames } = await assembleTwitterInterface(tweetId);
 
         console.log('--- Text Content ---');
         console.log(textContent);
@@ -20,11 +19,14 @@ async function testTweetContext(tweetId: string) {
             console.log(`Media Type: ${image.media_type}`);
             console.log('Base64 data retrieved successfully.');
         });
+
+        console.log('--- Usernames ---');
+        console.log(usernames);
     } catch (error) {
         console.error('Error testing tweet context:', error);
     }
 }
 
 // Replace 'YOUR_TWEET_ID_HERE' with an actual tweet ID to test
-testTweetContext('1864524655794504015');
+testTweetContext('1864746531535937618');
 console.log(getCurrentTimestamp());
