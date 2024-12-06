@@ -7,7 +7,7 @@ import { followUser, FollowResult } from '../../twitter/functions/followUser';
  */
 export const twitterFollow: Command = {
   name: 'follow',
-  description: 'Follows a specified Twitter user',
+  description: 'Follow a user. Do not include the @ symbol.',
   parameters: [
     {
       name: 'username',

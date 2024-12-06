@@ -7,7 +7,7 @@ import { getMentions } from '../../twitter/functions/getMentions';
  */
 export const twitterGetMentions: Command = {
   name: 'get-mentions',
-  description: 'Get recent mentions of your account',
+  description: 'Get recent mentions',
   parameters: [
     {
       name: 'limit',

@@ -2,6 +2,7 @@ import { assembleTwitterInterface } from '../twitter/utils/imageUtils';
 import { QuoteAgent } from '../ai/agents/quoteAgent/quoteAgent';
 import { Logger } from '../utils/logger';
 import { OpenAIClient } from '../ai/models/clients/OpenAiClient';
+import { AnthropicClient } from '../ai/models/clients/AnthropicClient';
 import { quoteTweet } from '../twitter/functions/quoteTweet';
 import { loadMemories } from './loadMemories';
 
@@ -79,9 +80,10 @@ async function generateQuoteTweet(
     memories: memories
   };
 
-  // Initialize OpenAI client and reply agent
+  // Initialize OpenAI client and quote agent
   const openAIClient = new OpenAIClient("gpt-4o");
-  const quoteAgent = new QuoteAgent(openAIClient);
+  const anthropicClient = new AnthropicClient("claude-3-5-sonnet-20241022");
+  const quoteAgent = new QuoteAgent(anthropicClient);
 
   // Add images to the agent's context if available
   if (imageContents && imageContents.length > 0) {
@@ -97,5 +99,5 @@ async function generateQuoteTweet(
   // Generate reply using the agent
   const response = await quoteAgent.run(prompt, runtimeVariables);
   
-  return response.output;
+  return response.output.quote_tweet;
 }

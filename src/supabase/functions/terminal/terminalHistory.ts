@@ -42,12 +42,12 @@ export async function storeTerminalMessage(
  * Retrieves all messages from the short term history buffer
  * @returns Array of Message objects ordered by creation time
  */
-export async function getShortTermHistory(): Promise<Message[]> {
+export async function getShortTermHistory(limit: number = 10): Promise<Message[]> {
   try {
     const { data, error } = await supabase
       .from('short_term_terminal_history')
       .select('*')
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: true })
 
     if (error) {
       Logger.log('Error loading short term history:', error);

@@ -50,31 +50,16 @@ export function generateHelpText(): string {
   const helpText: string[] = ['Available commands:'];
 
   const formatCommand = (cmd: Command) => {
-    const lines: string[] = [];
     let cmdStr = cmd.name;
-
+    
     if (cmd.parameters?.length) {
       cmdStr += ' ' + cmd.parameters
         .map(p => `<${p.name}>`)
         .join(' ');
     }
-
+    
     const paddedCmd = cmdStr.padEnd(25, ' ');
-    lines.push(`${paddedCmd} - ${cmd.description.split('.')[0]}.`);
-
-    if (cmd.parameters?.length) {
-      lines.push('  Parameters:');
-      cmd.parameters.forEach(p => {
-        const status = p.required ? '(required)' :
-          p.defaultValue !== undefined ? `(optional, default: ${p.defaultValue})` :
-          '(optional)';
-        const paramDesc = `    ${p.name.padEnd(15, ' ')} - ${p.description} ${status}`;
-        lines.push(paramDesc);
-      });
-      lines.push(''); // Add empty line between commands
-    }
-
-    return lines.join('\n');
+    return `${paddedCmd} - ${cmd.description}`;
   };
 
   commands.forEach(cmd => {

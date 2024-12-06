@@ -1,5 +1,6 @@
 import { Command } from '../types/commands';
 import { retweet } from '../../twitter/functions/retweet';
+import { isCooldownActive } from '../../supabase/functions/twitter/cooldowns';
 
 /**
  * @command twitter-retweet
@@ -7,7 +8,7 @@ import { retweet } from '../../twitter/functions/retweet';
  */
 export const twitterRetweet: Command = {
   name: 're-tweet',
-  description: 'Retweets a specified tweet',
+  description: 'Retweet a tweet. Only input the tweet ID number, raw digits. An agent will handle the rest.',
   parameters: [
     {
       name: 'tweetId',
@@ -17,9 +18,22 @@ export const twitterRetweet: Command = {
     }
   ],
   handler: async (args) => {
+    // Check for retweet cooldown
+    const cooldownInfo = await isCooldownActive('retweet');
+
+    if (cooldownInfo.isActive) {
+      return {
+        output: `❌ Action: Retweet\n` +
+                `Tweet ID: ${args.tweetId}\n` +
+                'Status: Failed\n' +
+                `Reason: Retweet cooldown is active. Please wait ${cooldownInfo.remainingTime} minutes before retweeting again.`
+      };
+    }
+
     try {
+      // Proceed with retweeting
       const result = await retweet(args.tweetId);
-      
+
       return {
         output: `${result.success ? '✅' : '❌'} Action: Retweet\n` +
                `Tweet ID: ${args.tweetId}\n` +

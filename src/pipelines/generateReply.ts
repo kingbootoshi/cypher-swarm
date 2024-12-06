@@ -2,6 +2,7 @@ import { assembleTwitterInterface } from '../twitter/utils/imageUtils';
 import { ReplyAgent } from '../ai/agents/replyAgent/replyAgent';
 import { Logger } from '../utils/logger';
 import { OpenAIClient } from '../ai/models/clients/OpenAiClient';
+import { AnthropicClient } from '../ai/models/clients/AnthropicClient';
 import { replyToTweet } from '../twitter/functions/replyToTweet';
 import { loadMemories } from './loadMemories';
 
@@ -81,7 +82,8 @@ async function generateTweetReply(
 
   // Initialize OpenAI client and reply agent
   const openAIClient = new OpenAIClient("gpt-4o");
-  const replyAgent = new ReplyAgent(openAIClient);
+  const anthropicClient = new AnthropicClient("claude-3-5-sonnet-20241022");
+  const replyAgent = new ReplyAgent(anthropicClient);
 
   // Add images to the agent's context if available
   if (imageContents && imageContents.length > 0) {
@@ -97,5 +99,5 @@ async function generateTweetReply(
   // Generate reply using the agent
   const response = await replyAgent.run(prompt, runtimeVariables);
   
-  return response.output;
+  return response.output.reply_tweet;
 }

@@ -14,13 +14,6 @@ export const twitterGetTweets: Command = {
       description: 'Twitter username (without @ symbol)',
       required: true,
       type: 'string'
-    },
-    {
-      name: 'limit',
-      description: 'Maximum number of tweets to fetch',
-      required: false,
-      type: 'number',
-      defaultValue: '20'
     }
   ],
   handler: async (args) => {

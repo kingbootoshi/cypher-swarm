@@ -42,7 +42,8 @@ export async function logTweet(
       mediaIds = mediaIdResults.filter((id): id is string => id !== null);
     }
 
-    // Build insert data
+    // Build insert data with current UTC time
+    const currentTime = new Date().toISOString();
     const insertData = {
       tweet_id: data.tweet_id || (data.tweet_type === 'retweet' ? 
         `rt_${data.retweeted_tweet_id}` : null),
@@ -53,8 +54,17 @@ export async function logTweet(
       in_reply_to_tweet_id: data.in_reply_to_tweet_id,
       retweeted_tweet_id: data.retweeted_tweet_id,
       quoted_tweet_id: data.quoted_tweet_id,
-      created_at: data.created_at || new Date().toISOString(),
+      created_at: currentTime,
     };
+
+    // Log the timestamp being inserted
+    Logger.log(`Logging tweet with created_at: ${insertData.created_at}`);
+
+    // Validate that created_at is not in the future
+    if (new Date(insertData.created_at) > new Date()) {
+      Logger.log(`Error: Attempted to set created_at to a future time.`);
+      insertData.created_at = new Date().toISOString();
+    }
 
     // Insert tweet record into the database
     const { data: tweet, error } = await supabase
@@ -95,17 +105,17 @@ export async function logTweet(
 }
 
 /**
- * Returns a formatted string of the last 5 main tweets with timestamps
+ * Returns a formatted string of the last 5 main tweets with timestamps and media indicators
  * @returns Formatted string of recent tweets or null if error occurs
  */
 export async function getRecentMainTweets(): Promise<string | null> {
   try {
-    // Query the last 5 main tweets
+    // Query the last 5 main tweets in descending order
     const { data: tweets, error } = await supabase
       .from('twitter_tweets')
       .select('*')
       .eq('tweet_type', 'main')
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: false })
       .limit(5);
 
     if (error) {
@@ -117,16 +127,15 @@ export async function getRecentMainTweets(): Promise<string | null> {
       return "No recent main tweets found.";
     }
 
-    // Format the tweets
+    // Format the tweets with media indicators
     const formattedTweets = tweets.map(tweet => {
-      // Use current timestamp if created_at is null
       const timestamp = formatTimestamp(tweet.created_at || new Date().toISOString());
-      const mediaIndicator = tweet.has_media ? ' [with media]' : '';
-      return `[${timestamp}] - ${tweet.text}${mediaIndicator}`;
+      const mediaIndicator = tweet.has_media ? '[has media]' : '[no media]';
+      return `[${timestamp}] - ${tweet.text} ${mediaIndicator}`;
     });
 
-    // Combine into final output
-    return "### RECENT MAIN TWEETS\n" + formattedTweets.join('\n');
+    // Return tweets without header
+    return formattedTweets.join('\n');
   } catch (error) {
     Logger.log('Exception in getRecentMainTweets:', error);
     return null;

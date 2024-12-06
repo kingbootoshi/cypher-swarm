@@ -8,7 +8,6 @@ import { v4 as uuidv4 } from 'uuid';
 import { Message } from './ai/types/agentSystem';
 import { storeTerminalMessage } from './supabase/functions/terminal/terminalHistory';
 import { createTerminalEntry, updateTerminalResponse } from './supabase/functions/terminal/terminalEntries';
-import { initializeDynamicVariables } from './utils/dynamicVariables';
 
 Logger.enable();
 
@@ -22,11 +21,6 @@ Logger.enable();
 
 async function initializeCLI() {
   try {
-    // Initialize dynamic variables first
-    console.log('Initializing dynamic variables...');
-    await initializeDynamicVariables();
-    console.log('Dynamic variables initialized successfully');
-
     const sessionId = uuidv4(); // Generate unique session ID for this CLI session
     
     // Ensure Twitter authentication before starting

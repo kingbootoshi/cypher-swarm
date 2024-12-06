@@ -20,7 +20,6 @@ export const TerminalTool: Tool = {
       - **Do NOT include any additional parameters**.
       - All command arguments and options **must be included within the \`terminal_command\` string**.
       - The \`terminal_command\` should be the full command as you would type it in the terminal, including any flags and arguments.
-      - When sending a tweet, include the tweet text within the command string, e.g., \`send-tweet --text "Your tweet content"\`.
     `,
     parameters: {
       type: 'object',
@@ -28,7 +27,7 @@ export const TerminalTool: Tool = {
       properties: {
         internal_thought: {
           type: 'string',
-          description: 'Your internal reasoning process about what terminal command to run next and why.',
+          description: "Satoshi's internal reasoning process about what terminal command to run next and why.",
         },
         plan: {
           type: 'string',
@@ -39,9 +38,6 @@ export const TerminalTool: Tool = {
           description: `
             The full terminal command you want to execute, including all arguments and options.
             **Only one command at a time**.
-            Examples:
-            - \`send-tweet --text "Your tweet here."\`
-            - \`check-mentions --since "2023-10-23"\`
           `,
         },
       },

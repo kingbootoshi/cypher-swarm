@@ -8,18 +8,10 @@ import { getHomepage } from '../../twitter/functions/getHomepage';
 export const twitterGetHomepage: Command = {
   name: 'get-homepage',
   description: 'Get the homepage of your timeline',
-  parameters: [
-    {
-      name: 'limit',
-      description: 'Maximum number of tweets to fetch',
-      required: false,
-      type: 'number',
-      defaultValue: '20'
-    }
-  ],
+  parameters: [],
   handler: async (args) => {
     try {
-      const tweets = await getHomepage(args.limit);
+      const tweets = await getHomepage(20);
       if (tweets.length === 0) {
         return {
           output: '📭 No unhandled tweets found in your homepage timeline.'

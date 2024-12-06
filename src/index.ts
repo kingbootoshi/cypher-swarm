@@ -17,7 +17,7 @@ import {
   clearShortTermHistory 
 } from './supabase/functions/terminal/terminalHistory';
 import { extractAndSaveLearnings } from './pipelines/extractLearnings';
-import { initializeDynamicVariables } from './utils/dynamicVariables';
+import { getCurrentTimestamp } from './utils/formatTimestamps';
 
 Logger.enable();
 
@@ -40,7 +40,7 @@ function getModelClient(modelType: ModelType) {
     case 'openai':
       return new OpenAIClient('gpt-4o', { temperature: 1 });
     case 'firework':
-      return new FireworkClient("accounts/fireworks/models/llama-v3p1-405b-instruct", { temperature: 1 });
+      return new FireworkClient("accounts/fireworks/models/llama-v3p3-70b-instruct", { temperature: 1 });
     case 'anthropic':
       return new AnthropicClient("claude-3-5-haiku-20241022", { temperature: 1 });
     default:
@@ -49,11 +49,6 @@ function getModelClient(modelType: ModelType) {
 }
 export async function startAISystem() {
   try {
-    // Initialize dynamic variables first
-    Logger.log('Initializing dynamic variables...');
-    await initializeDynamicVariables();
-    Logger.log('Dynamic variables initialized successfully');
-
     const sessionId = uuidv4();
     await ensureAuthenticated();
     
@@ -83,18 +78,6 @@ export async function startAISystem() {
     const modelType = await getModelTypeFromUser();
     console.log(`Using ${modelType} model client...`);
     const modelClient = getModelClient(modelType);
-    const terminalAgent = new TerminalAgent(modelClient);
-
-    // Load existing short-term history
-    try {
-      const shortTermHistory = await getShortTermHistory();
-      if (shortTermHistory.length > 0) {
-        Logger.log('Loading existing short-term history...');
-        terminalAgent.loadChatHistory(shortTermHistory);
-      }
-    } catch (error) {
-      Logger.log('Error loading short-term history:', error);
-    }
 
     // Set initial active status
     await updateTerminalStatus(true);
@@ -103,12 +86,27 @@ export async function startAISystem() {
     while (true) { // Run indefinitely with idle periods
       try {
         let actionCount = 0;
-        const MAX_ACTIONS = 10; // Reduced for testing
+        const MAX_ACTIONS = 30; // Reduced for testing
 
         // Active period
         while (actionCount < MAX_ACTIONS) {
+          // Start a new TerminalAgent instance
+          const terminalAgent = new TerminalAgent(modelClient);
+
+          // Load the latest short-term history into the new agent
+          try {
+            const shortTermHistory = await getShortTermHistory(6);
+            if (shortTermHistory.length > 0) {
+              Logger.log('Loading existing short-term history...');
+              terminalAgent.loadChatHistory(shortTermHistory);
+            }
+          } catch (error) {
+            Logger.log('Error loading short-term history:', error);
+          }
+
+          // Run the agent
           const functionResult = await terminalAgent.run();
-          
+
           if (!functionResult.success) {
             throw new Error(functionResult.error);
           }
@@ -141,12 +139,12 @@ export async function startAISystem() {
           // Store terminal output in short-term history and update agent's message history
           const terminalOutputMessage: Message = {
             role: 'user',
-            content: `TERMINAL OUTPUT: ${commandOutput.output}`,
+            content: `TERMINAL OUTPUT ${getCurrentTimestamp()}: ${commandOutput.output}`,
           };
           terminalAgent.addMessage(terminalOutputMessage);
           await storeTerminalMessage(terminalOutputMessage, sessionId);
 
-          await new Promise((resolve) => setTimeout(resolve, 5000));
+          await new Promise((resolve) => setTimeout(resolve, 120000));
           actionCount++;
         }
 

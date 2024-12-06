@@ -1,13 +1,11 @@
 import { Command } from '../types/commands';
-import { generateAndPostTweetReply } from '../../pipelines/generateReply';
-
 /**
  * @command twitter-reply
  * @description Replies to a specified tweet
  */
 export const twitterReply: Command = {
   name: 'reply-to-tweet',
-  description: 'Replies to a specified tweet with optional media attachments',
+  description: 'Reply to a tweet. Only input the tweet ID number, raw digits. An agent will handle the rest.',
   parameters: [
     {
       name: 'tweetId',
@@ -19,6 +17,9 @@ export const twitterReply: Command = {
   handler: async (args) => {
     try {
       const mediaUrls = args.mediaUrls ? args.mediaUrls.split(',').map(url => url.trim()) : undefined;
+
+      // Lazy import generateAndPostTweetReply to avoid initialization issues
+      const { generateAndPostTweetReply } = await import('../../pipelines/generateReply');
       
       // Use the enhanced pipeline
       const result = await generateAndPostTweetReply(args.tweetId, mediaUrls);

@@ -43,7 +43,7 @@ export async function generateAndPostMainTweet(
     // Set up runtime variables
     const runtimeVariables = {
       memories: relevantMemories,
-      terminal_history: formattedHistory,
+      terminalLog: formattedHistory,
     };
 
     // Generate main tweet

@@ -1,6 +1,6 @@
 import { supabase } from '../../supabaseClient';
 import { ToolOutputFromSchema } from '../../../ai/types/agentSystem';
-import { terminalToolSchema } from '../../../ai/agents/TerminalAgent/terminalTool';
+import { terminalToolSchema } from '../../../ai/agents/TerminalAgent/TerminalTool';
 
 type TerminalToolOutput = ToolOutputFromSchema<typeof terminalToolSchema>;
 

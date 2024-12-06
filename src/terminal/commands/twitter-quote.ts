@@ -1,5 +1,5 @@
 import { Command } from '../types/commands';
-import { generateAndPostQuoteTweet } from '../../pipelines/generateQuote';
+import { isCooldownActive } from '../../supabase/functions/twitter/cooldowns';
 
 /**
  * @command twitter-quote
@@ -7,7 +7,7 @@ import { generateAndPostQuoteTweet } from '../../pipelines/generateQuote';
  */
 export const twitterQuote: Command = {
   name: 'quote-tweet',
-  description: 'Creates a quote tweet with optional media attachments',
+  description: 'Quote tweet with text. Only input the tweet ID number, raw digits. An agent will handle the rest.',
   parameters: [
     {
       name: 'tweetId',
@@ -17,12 +17,26 @@ export const twitterQuote: Command = {
     }
   ],
   handler: async (args) => {
+    // Lazy import generateAndPostQuoteTweet to avoid initialization issues
+    const { generateAndPostQuoteTweet } = await import('../../pipelines/generateQuote');
+
+    // Check for quote tweet cooldown
+    const cooldownInfo = await isCooldownActive('quote');
+
+    if (cooldownInfo.isActive) {
+      return {
+        output: `❌ Action: Quote Tweet\n` +
+                `Quoted Tweet ID: ${args.tweetId}\n` +
+                'Status: Failed\n' +
+                `Reason: Quote tweet cooldown is active. Please wait ${cooldownInfo.remainingTime} minutes before quoting again.`
+      };
+    }
+
     try {
+      // Proceed with generating and posting the quote tweet
       const mediaUrls = args.mediaUrls ? args.mediaUrls.split(',').map(url => url.trim()) : undefined;
-      
-      // Use the enhanced pipeline
       const result = await generateAndPostQuoteTweet(args.tweetId, mediaUrls);
-      
+
       return {
         output: `${result.success ? '✅' : '❌'} Action: Quote Tweet\n` +
                `Quoted Tweet ID: ${args.tweetId}\n` +

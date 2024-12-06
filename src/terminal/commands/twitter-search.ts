@@ -14,13 +14,6 @@ export const twitterSearch: Command = {
       description: 'Search query string',
       required: true,
       type: 'string'
-    },
-    {
-      name: 'limit',
-      description: 'Maximum number of results to return',
-      required: false,
-      type: 'number',
-      defaultValue: '20'
     }
   ],
   handler: async (args) => {
