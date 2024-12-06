@@ -4,11 +4,15 @@ import { AgentConfig } from '../../types/agentSystem';
 import { corePersonalityPrompt } from '../corePersonality';
 import { generateHelpText } from '../../../terminal/commandRegistry';
 import { getCurrentTimestamp } from '../../../utils/formatTimestamps';
+import { activeSummaries } from '../../../utils/dynamicVariables';
 
 export const terminalAgentConfig: AgentConfig = {
   systemPromptTemplate: `
 # PERSONALITY
 {{corePersonalityPrompt}}
+
+# CURRENT SUMMARIES
+{{currentSummaries}}
 
 ## TIME
 {{current_timestamp}}
@@ -24,6 +28,7 @@ You MUST use your use_terminal function tool at all times - you will ONLY be giv
 `,
   dynamicVariables: {
     corePersonalityPrompt: corePersonalityPrompt,
+    currentSummaries: activeSummaries,
     current_timestamp: getCurrentTimestamp(),
     terminal_commands: generateHelpText()
   },

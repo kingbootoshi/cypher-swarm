@@ -1,5 +1,6 @@
 import { supabase } from '../../supabaseClient';
 import { Logger } from '../../../utils/logger';
+import { formatTimestamp } from '../../../utils/formatTimestamps';
 
 // Types for our summary data
 interface MemorySummary {
@@ -20,16 +21,23 @@ export class MemorySummaries {
     sessionId: string | null
   ): Promise<void> {
     try {
-      await supabase
+      const { data, error } = await supabase
         .from('memory_summaries')
         .insert({
           summary_type: summaryType,
           summary,
           session_id: sessionId,
           processed: false
-        });
+        })
+        .select(); // Fetch the inserted row
+
+      if (error) {
+        Logger.log(`Error saving ${summaryType}-term summary:`, error);
+      } else {
+        Logger.log(`${summaryType}-term summary saved successfully.`, data);
+      }
     } catch (error) {
-      Logger.log('Error saving summary:', error);
+      Logger.log(`Exception in saveSummary when saving ${summaryType}-term summary:`, error);
     }
   }
 
@@ -175,6 +183,74 @@ export class MemorySummaries {
     } catch (error) {
       Logger.log('Error getting unprocessed summaries:', error);
       return [];
+    }
+  }
+
+  /**
+   * Retrieves all active summaries (short, mid, long) and returns them as a formatted string.
+   * Summaries are grouped by type and ordered chronologically with formatted UTC timestamps.
+   * @returns Formatted summaries as a single string.
+   */
+  static async getFormattedActiveSummaries(): Promise<string> {
+    try {
+      const activeMemories = await this.getActiveMemories();
+      Logger.log('Active memories fetched:', activeMemories);
+
+      const formattedSummaries: string[] = [];
+
+      /**
+       * Helper function to safely format Supabase timestamps
+       * Converts Supabase timestamp to proper format for formatTimestamp
+       */
+      const formatSupabaseTimestamp = (timestamp: string | null | undefined): string => {
+        try {
+          if (!timestamp) return 'No timestamp';
+          // Remove the timezone offset from Supabase timestamp
+          const cleanTimestamp = timestamp.split('+')[0] + 'Z';
+          return formatTimestamp(new Date(cleanTimestamp));
+        } catch (err) {
+          Logger.log('Error formatting timestamp:', err);
+          return 'Invalid timestamp';
+        }
+      };
+
+      // Process long-term summary
+      if (activeMemories.long) {
+        const timestamp = formatSupabaseTimestamp(activeMemories.long.created_at);
+        formattedSummaries.push(
+          `### LONG TERM SUMMARY\n[${timestamp}]\n${activeMemories.long.summary}\n`
+        );
+      }
+
+      // Process mid-term summaries
+      if (activeMemories.mid.length > 0) {
+        formattedSummaries.push('### MID-TERM SUMMARIES');
+        activeMemories.mid
+          .sort((a, b) => new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime())
+          .forEach(summary => {
+            const timestamp = formatSupabaseTimestamp(summary.created_at);
+            formattedSummaries.push(`[${timestamp}]\n${summary.summary}\n`);
+          });
+      }
+
+      // Process short-term summaries
+      if (activeMemories.short.length > 0) {
+        formattedSummaries.push('### SHORT-TERM SUMMARIES');
+        activeMemories.short
+          .sort((a, b) => new Date(a.created_at || '').getTime() - new Date(b.created_at || '').getTime())
+          .forEach(summary => {
+            const timestamp = formatSupabaseTimestamp(summary.created_at);
+            formattedSummaries.push(`[${timestamp}]\n${summary.summary}\n`);
+          });
+      }
+
+      const result = formattedSummaries.join('\n');
+      Logger.log('Final formatted result:', result);
+      
+      return result || 'No active summaries found.';
+    } catch (error) {
+      Logger.log('Error getting formatted active summaries:', error);
+      return 'Error retrieving summaries.';
     }
   }
 }

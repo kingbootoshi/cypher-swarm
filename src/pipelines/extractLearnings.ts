@@ -10,6 +10,7 @@ import { getFormattedInteractionSummary } from '../utils/extractTweetActions';
 import { addWorldKnowledge, addCryptoKnowledge, addSelfKnowledge, addUserSpecificKnowledge, MessageTemplate } from '../memory/addMemories';
 import { MemorySummaries } from '../supabase/functions/memory/summaries';
 import { Learnings } from '../supabase/functions/memory/learnings';
+import { summarizeSummaries } from './summarizeSummaries';
 
 // turn on logging
 Logger.enable();
@@ -105,10 +106,8 @@ export async function extractAndSaveLearnings(sessionId: string) {
             await MemorySummaries.saveSummary('short', learnings.output.summary, sessionId);
             Logger.log("Successfully saved short-term summary to database");
 
-            const shouldProcessShortTerm = await MemorySummaries.checkAndProcessShortTermSummaries();
-            if (shouldProcessShortTerm) {
-                Logger.log("Triggering short-term to mid-term summary processing...");
-            }
+            Logger.log("Triggering summary condensation process...");
+            await summarizeSummaries(sessionId);
         }
     }
 
@@ -119,41 +118,41 @@ export async function extractAndSaveLearnings(sessionId: string) {
   }
 }
 
-// // Test function to run the extraction process
-// async function testExtraction() {
-//     try {
-//       Logger.log('Starting test extraction...');
+// Test function to run the extraction process
+async function testExtraction() {
+    try {
+      Logger.log('Starting test extraction...');
       
-//       // Generate a test sessionId
-//       const testSessionId = 'test-session-' + Date.now();
+      // Generate a test sessionId
+      const testSessionId = 'test-session-' + Date.now();
       
-//       // Run the extraction process
-//       const result = await extractAndSaveLearnings(testSessionId);
+      // Run the extraction process
+      const result = await extractAndSaveLearnings(testSessionId);
       
-//       Logger.log('Extraction completed successfully');
-//       Logger.log('Test session ID:', testSessionId);
-//       Logger.log('Extraction result:', JSON.stringify(result, null, 2));
+      Logger.log('Extraction completed successfully');
+      Logger.log('Test session ID:', testSessionId);
+      Logger.log('Extraction result:', JSON.stringify(result, null, 2));
       
-//       // Check if any short-term summaries need processing
-//       const needsProcessing = await MemorySummaries.checkAndProcessShortTermSummaries();
-//       Logger.log('Needs processing:', needsProcessing);
+      // Check if any short-term summaries need processing
+      const needsProcessing = await MemorySummaries.checkAndProcessShortTermSummaries();
+      Logger.log('Needs processing:', needsProcessing);
       
-//       return result;
-//     } catch (error) {
-//       Logger.log('Error in test extraction:', error);
-//       throw error;
-//     }
-//   }
+      return result;
+    } catch (error) {
+      Logger.log('Error in test extraction:', error);
+      throw error;
+    }
+  }
   
-//   // Run the test if this file is executed directly
-//   if (require.main === module) {
-//     testExtraction()
-//       .then(() => {
-//         Logger.log('Test completed successfully');
-//         process.exit(0);
-//       })
-//       .catch((error) => {
-//         Logger.log('Test failed:', error);
-//         process.exit(1);
-//       });
-//   }
+  // Run the test if this file is executed directly
+  if (require.main === module) {
+    testExtraction()
+      .then(() => {
+        Logger.log('Test completed successfully');
+        process.exit(0);
+      })
+      .catch((error) => {
+        Logger.log('Test failed:', error);
+        process.exit(1);
+      });
+  }
