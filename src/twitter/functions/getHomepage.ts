@@ -10,18 +10,20 @@ import { Logger } from '../../utils/logger';
  */
 export async function getHomepage(maxTweets: number = 20): Promise<string[]> {
   try {
-    Logger.log('Fetching homepage tweets...');
+    Logger.log(`Fetching homepage tweets (max: ${maxTweets})...`);
     const rawTweets: any[] = [];
     const listId = '1621164352186327041';
 
-    // First collect all raw tweets
+    // First collect raw tweets with proper limit
     const response = await scraper.fetchListTweets(listId, maxTweets);
     if (!response || !response.tweets || response.tweets.length === 0) {
+      Logger.log('No tweets found in response');
       return [];
     }
 
-    rawTweets.push(...response.tweets);
-    Logger.log(`Found ${rawTweets.length} total tweets, checking for previous interactions...`);
+    // Only take up to maxTweets tweets
+    rawTweets.push(...response.tweets.slice(0, maxTweets));
+    Logger.log(`Found ${rawTweets.length}/${maxTweets} tweets, checking for previous interactions...`);
 
     // Filter out already interacted tweets
     const unhandledTweets = await Promise.all(
@@ -37,7 +39,7 @@ export async function getHomepage(maxTweets: number = 20): Promise<string[]> {
     );
 
     // Format remaining tweets
-    return unhandledTweets
+    const formattedTweets = unhandledTweets
       .filter((tweet): tweet is any => tweet !== null)
       .map(tweet => {
         const timestamp = tweet.timeParsed ? 
@@ -46,6 +48,9 @@ export async function getHomepage(maxTweets: number = 20): Promise<string[]> {
         
         return `- [${tweet.id}] @${tweet.username || 'unknown_user'} (${timestamp}): ${tweet.text}`;
       });
+
+    Logger.log(`Returning ${formattedTweets.length} formatted tweets after filtering`);
+    return formattedTweets;
 
   } catch (error) {
     Logger.log('Error fetching homepage tweets:', error);

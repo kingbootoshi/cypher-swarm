@@ -1,8 +1,6 @@
 to-do:
-1. create main tweet pipeline (include loading relevant main tweets/saving main tweets to db)
-2. create media generation agent systems for images/videos
-3. make more configurable (i think config that alters core personality + name for mem0 db)
-3. DONE WITH v2, PUSH LIVE TO GIT, UPDATE DOCS, AND ANNOUNCE IT
+1. make more configurable (i think config that alters core personality + name for mem0 db)
+2. DONE WITH v2, PUSH LIVE TO GIT, UPDATE DOCS, AND ANNOUNCE IT
 
 TO DO LATER
 - create dream system - an agent that loads in learnings daily per category [and each user], reflects/summarizes, and stores in supabase db. every day the new learnings condense into the existing learnings, adjusting the core system prompt on a daily basis. (can be done later)

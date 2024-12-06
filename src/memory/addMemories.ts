@@ -10,11 +10,13 @@ export type MemoryResponse = Promise<any>; // Replace 'any' with actual response
  * @param category Memory category (user_id in mem0)
  * @param msgTemplate Array of message objects
  * @param metadata Optional additional metadata
+ * @param infer Optional flag to control memory inference (defaults to true)
  */
 async function addMemoryBase(
     category: string,
     msgTemplate: MessageTemplate,
-    metadata: Record<string, any> = {}
+    metadata: Record<string, any> = {},
+    infer: boolean = true
 ): MemoryResponse {
     try {
         // Always include UTC timestamp
@@ -23,7 +25,8 @@ async function addMemoryBase(
         const response = await client.add(msgTemplate, {
             agent_id: "satoshi",
             user_id: category,
-            metadata: { ...metadata, timestamp }
+            metadata: { ...metadata, timestamp },
+            infer
         });
         
         Logger.log(`Memory added to category: ${category}`);
@@ -69,9 +72,10 @@ export function addUserSpecificKnowledge(
 
 /**
  * Add main tweets to Satoshi's memory
+ * Stores exact tweet content without inference to maintain original message integrity
  */
 export function addMainTweet(msgTemplate: MessageTemplate): MemoryResponse {
-    return addMemoryBase("main_tweets", msgTemplate);
+    return addMemoryBase("main_tweets", msgTemplate, {}, false);
 }
 
 /**

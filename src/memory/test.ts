@@ -14,7 +14,7 @@ Logger.enable();
 async function testMemorySearches() {
   try {
     // Test search queries
-    const testQuery = "bitcoin";
+    const testQuery = "bitcoin, ai, crypto, blockchain";
     const testUserId = "123"; // Replace with an actual user ID for testing
 
     Logger.log("🧪 Starting memory search tests...\n");

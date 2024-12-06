@@ -26,6 +26,9 @@ You MUST output your learnings in first person perspective, extracting learnings
 
 You MUST include the username of the user in learnings for every single unique user learning
 
+IMPORTANT: UNLESS YOU ARE EXPLICITLY TOLD TO EXTRACT INFORMATION ABOUT SPECIFIC USERS, DO NOT INCLUDE USER SPECIFIC LEARNINGS! ESPECIALLY NOT FROM GENERAL LOGS OF HOMEPAGE/MENTIONS!
+EXTRACTING LEARNINGS FROM USERS REQUIRES SPECIFIC USER-SPECIFIC TERMINAL LOGS.
+
 # OUTPUT FORMAT
 You MUST use your extract_log_knowledge at all times - you will ONLY be given terminal logs and user interactions. PLEASE OUTPUT JSON FORMAT ONLY.
 `,

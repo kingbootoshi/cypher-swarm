@@ -1,6 +1,7 @@
 import { supabase } from '../../supabaseClient';
 import { uploadAndLogMedia } from './mediaEntries';
 import { Logger } from '../../../utils/logger';
+import { formatTimestamp } from '../../../utils/formatTimestamps';
 
 interface TweetData {
   tweet_id?: string | null;
@@ -47,7 +48,7 @@ export async function logTweet(
         `rt_${data.retweeted_tweet_id}` : null),
       text: data.text.trim(),
       tweet_type: data.tweet_type,
-      has_media: data.has_media || false,
+      has_media: mediaData && mediaData.length > 0 ? true : false,
       bot_username: data.bot_username || process.env.TWITTER_USERNAME,
       in_reply_to_tweet_id: data.in_reply_to_tweet_id,
       retweeted_tweet_id: data.retweeted_tweet_id,
@@ -89,6 +90,45 @@ export async function logTweet(
     return tweet?.tweet_id || null;
   } catch (error) {
     Logger.log('Exception in logTweet:', error);
+    return null;
+  }
+}
+
+/**
+ * Returns a formatted string of the last 5 main tweets with timestamps
+ * @returns Formatted string of recent tweets or null if error occurs
+ */
+export async function getRecentMainTweets(): Promise<string | null> {
+  try {
+    // Query the last 5 main tweets
+    const { data: tweets, error } = await supabase
+      .from('twitter_tweets')
+      .select('*')
+      .eq('tweet_type', 'main')
+      .order('created_at', { ascending: true })
+      .limit(5);
+
+    if (error) {
+      Logger.log('Error fetching recent tweets:', error);
+      return null;
+    }
+
+    if (!tweets || tweets.length === 0) {
+      return "No recent main tweets found.";
+    }
+
+    // Format the tweets
+    const formattedTweets = tweets.map(tweet => {
+      // Use current timestamp if created_at is null
+      const timestamp = formatTimestamp(tweet.created_at || new Date().toISOString());
+      const mediaIndicator = tweet.has_media ? ' [with media]' : '';
+      return `[${timestamp}] - ${tweet.text}${mediaIndicator}`;
+    });
+
+    // Combine into final output
+    return "### RECENT MAIN TWEETS\n" + formattedTweets.join('\n');
+  } catch (error) {
+    Logger.log('Exception in getRecentMainTweets:', error);
     return null;
   }
 } 

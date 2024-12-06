@@ -83,3 +83,38 @@ export async function clearShortTermHistory(): Promise<void> {
     throw error;
   }
 }
+
+/**
+ * Gets the most recent terminal history formatted as a single string
+ * @param limit Number of recent messages to retrieve (defaults to 10)
+ * @returns Formatted string containing the recent terminal history
+ */
+export async function getFormattedRecentHistory(limit: number = 10): Promise<string> {
+  try {
+    // Get recent messages from supabase
+    const { data, error } = await supabase
+      .from('short_term_terminal_history')
+      .select('*')
+      .order('created_at', { ascending: false }) // Get most recent first
+      .limit(limit);
+
+    if (error) {
+      Logger.log('Error loading recent history:', error);
+      throw error;
+    }
+
+    // Reverse the array to show oldest first
+    const recentHistory = data.reverse();
+
+    // Format the history into a string
+    return recentHistory
+      .map((entry, index) => {
+        const separator = index === 0 ? '' : '\n-------------------\n';
+        return `${separator}[${entry.role.toUpperCase()}]:\n${entry.content}`;
+      })
+      .join('');
+  } catch (error) {
+    Logger.log('Failed to load formatted recent history:', error);
+    throw error;
+  }
+}

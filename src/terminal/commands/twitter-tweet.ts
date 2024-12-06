@@ -1,40 +1,32 @@
 import { Command } from '../types/commands';
-import { sendTweet } from '../../twitter/functions/sendTweet';
+import { generateAndPostMainTweet } from '../../pipelines/generateMainTweet';
 
 /**
  * @command twitter-tweet
- * @description Sends a new tweet
+ * @description Generates and posts a new main tweet with optional media
  */
 export const twitterTweet: Command = {
   name: 'send-tweet',
-  description: 'Sends a new tweet with optional media attachments',
-  parameters: [
-    {
-      name: 'text',
-      description: 'Text content of your tweet',
-      required: true,
-      type: 'string'
-    },
-    {
-      name: 'mediaUrls',
-      description: 'Comma-separated list of media URLs (images, GIFs, or videos)',
-      required: false,
-      type: 'string'
-    }
-  ],
-  handler: async (args) => {
+  description: 'Generates and posts a new main tweet with optional media attachments',
+  parameters: [],
+  handler: async () => {
     try {
-      const mediaUrls = args.mediaUrls ? args.mediaUrls.split(',').map(url => url.trim()) : undefined;
-      const tweetId = await sendTweet(args.text, mediaUrls);
-      
+      // Use the enhanced pipeline
+      const result = await generateAndPostMainTweet();
+
       return {
-        output: tweetId 
-          ? `✅ Action: Send Tweet\nTweet ID: ${tweetId}\nStatus: Success\nText: ${args.text}\nMedia: ${mediaUrls ? mediaUrls.join(', ') : 'None'}\nDetails: Successfully sent tweet`
-          : `❌ Action: Send Tweet\nStatus: Failed\nDetails: Unable to send tweet`
+        output: `${result.success ? '✅' : '❌'} Action: Post Main Tweet\n` +
+               `${result.tweetId ? `Tweet ID: ${result.tweetId}\n` : ''}` +
+               `Status: ${result.success ? 'Success' : 'Failed'}\n` +
+               `Text: ${result.tweetText}\n` +
+               `Media: ${result.mediaUrls ? result.mediaUrls.join(', ') : 'None'}\n` +
+               `Details: ${result.message}`
       };
     } catch (error) {
       return {
-        output: `❌ Action: Send Tweet\nStatus: Error\nDetails: ${error.message}`
+        output: `❌ Action: Post Main Tweet\n` +
+               `Status: Error\n` +
+               `Details: ${error.message}`
       };
     }
   }

@@ -27,7 +27,7 @@ export const MemoryTool: Tool = {
         },
         "memory_query": {
           "type": "string",
-          "description": "A query to pull the most relevant memories from the vector database of memories"
+          "description": "A query of keywords to pull the most relevant memories from the vector database of memories. This should be a short list of keywords, seperated by commas. Max 5 words"
         }
       }
     }

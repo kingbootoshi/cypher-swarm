@@ -2,6 +2,7 @@ import { scraper } from '../twitterClient';
 import { prepareMediaData } from '../utils/mediaUtils';
 import { logTweet } from '../../supabase/functions/twitter/tweetEntries';
 import { Logger } from '../../utils/logger';
+import { addMainTweet } from '../../memory/addMemories';
 
 /**
  * Sends a main tweet with optional media and logs it to the database.
@@ -39,6 +40,10 @@ export async function sendTweet(
       } else {
         Logger.log('Failed to log tweet to Supabase.');
       }
+
+      // Add the main tweet text to memory
+      await addMainTweet([{ role: 'user', content: text }]);
+      Logger.log('Main tweet text added to memory.');
 
       return tweetId;
     } else {

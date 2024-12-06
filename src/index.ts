@@ -17,6 +17,7 @@ import {
   clearShortTermHistory 
 } from './supabase/functions/terminal/terminalHistory';
 import { extractAndSaveLearnings } from './pipelines/extractLearnings';
+import { initializeDynamicVariables } from './utils/dynamicVariables';
 
 Logger.enable();
 
@@ -47,128 +48,137 @@ function getModelClient(modelType: ModelType) {
   }
 }
 export async function startAISystem() {
-  const sessionId = uuidv4();
-  await ensureAuthenticated();
-  
-  // Prompt user for model type if not provided via command line or env var
-  const readline = require('readline').createInterface({
-    input: process.stdin,
-    output: process.stdout
-  });
-
-  // Helper to get model type via CLI prompt
-  const getModelTypeFromUser = (): Promise<ModelType> => {
-    return new Promise((resolve, reject) => {
-      readline.question('Which model would you like to use? (openai/firework/anthropic): ', (answer: string) => {
-        const normalizedAnswer = answer.toLowerCase().trim() as ModelType;
-        
-        if (['openai', 'firework', 'anthropic'].includes(normalizedAnswer)) {
-          readline.close();
-          resolve(normalizedAnswer);
-        } else {
-          readline.close();
-          reject(new Error('Invalid model type. Please choose "openai", "firework", or "anthropic"'));
-        }
-      });
-    });
-  };
-
-  const modelType = await getModelTypeFromUser();
-  console.log(`Using ${modelType} model client...`);
-  const modelClient = getModelClient(modelType);
-  const terminalAgent = new TerminalAgent(modelClient);
-
-  // Load existing short-term history
   try {
-    const shortTermHistory = await getShortTermHistory();
-    if (shortTermHistory.length > 0) {
-      Logger.log('Loading existing short-term history...');
-      terminalAgent.loadChatHistory(shortTermHistory);
+    // Initialize dynamic variables first
+    Logger.log('Initializing dynamic variables...');
+    await initializeDynamicVariables();
+    Logger.log('Dynamic variables initialized successfully');
+
+    const sessionId = uuidv4();
+    await ensureAuthenticated();
+    
+    // Prompt user for model type if not provided via command line or env var
+    const readline = require('readline').createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+
+    // Helper to get model type via CLI prompt
+    const getModelTypeFromUser = (): Promise<ModelType> => {
+      return new Promise((resolve, reject) => {
+        readline.question('Which model would you like to use? (openai/firework/anthropic): ', (answer: string) => {
+          const normalizedAnswer = answer.toLowerCase().trim() as ModelType;
+          
+          if (['openai', 'firework', 'anthropic'].includes(normalizedAnswer)) {
+            readline.close();
+            resolve(normalizedAnswer);
+          } else {
+            readline.close();
+            reject(new Error('Invalid model type. Please choose "openai", "firework", or "anthropic"'));
+          }
+        });
+      });
+    };
+
+    const modelType = await getModelTypeFromUser();
+    console.log(`Using ${modelType} model client...`);
+    const modelClient = getModelClient(modelType);
+    const terminalAgent = new TerminalAgent(modelClient);
+
+    // Load existing short-term history
+    try {
+      const shortTermHistory = await getShortTermHistory();
+      if (shortTermHistory.length > 0) {
+        Logger.log('Loading existing short-term history...');
+        terminalAgent.loadChatHistory(shortTermHistory);
+      }
+    } catch (error) {
+      Logger.log('Error loading short-term history:', error);
+    }
+
+    // Set initial active status
+    await updateTerminalStatus(true);
+    Logger.log('Terminal status set to active');
+
+    while (true) { // Run indefinitely with idle periods
+      try {
+        let actionCount = 0;
+        const MAX_ACTIONS = 10; // Reduced for testing
+
+        // Active period
+        while (actionCount < MAX_ACTIONS) {
+          const functionResult = await terminalAgent.run();
+          
+          if (!functionResult.success) {
+            throw new Error(functionResult.error);
+          }
+
+          // Create initial terminal entry
+          const entryId = await createTerminalEntry(sessionId, {
+            internal_thought: functionResult.output.internal_thought,
+            plan: functionResult.output.plan,
+            terminal_command: functionResult.output.terminal_command
+          });
+
+          if (!entryId) {
+            throw new Error('Failed to create terminal entry');
+          }
+
+          // Execute command
+          const commandOutput = await executeCommand(functionResult.output.terminal_command);
+
+          // Update the same entry with the response
+          await updateTerminalResponse(entryId, commandOutput.output);
+
+          // Retrieve the last assistant message from the agent's message history
+          const lastAssistantMessage = terminalAgent.getLastAgentMessage();
+
+          if (lastAssistantMessage) {
+            // Store agent's response in short-term history
+            await storeTerminalMessage(lastAssistantMessage, sessionId);
+          }
+
+          // Store terminal output in short-term history and update agent's message history
+          const terminalOutputMessage: Message = {
+            role: 'user',
+            content: `TERMINAL OUTPUT: ${commandOutput.output}`,
+          };
+          terminalAgent.addMessage(terminalOutputMessage);
+          await storeTerminalMessage(terminalOutputMessage, sessionId);
+
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+          actionCount++;
+        }
+
+        // Before entering idle mode, initiate the memory process, and wipe the short term history
+        try {
+          Logger.log('Initiating memory processing...');
+          await extractAndSaveLearnings(sessionId);
+          await clearShortTermHistory();
+          Logger.log('Memory processing complete, short-term history cleared');
+        } catch (error) {
+          Logger.log('Error during memory processing:', error);
+        }
+
+        // Enter idle mode
+        const idleMinutes = getRandomInt(30, 60);
+        Logger.log(`Entering idle mode for ${idleMinutes} minutes`);
+        await updateTerminalStatus(false);
+
+        // Idle period
+        await new Promise((resolve) => setTimeout(resolve, idleMinutes * 60 * 1000));
+
+        // Resume active mode
+        Logger.log('Resuming active mode');
+        await updateTerminalStatus(true);
+
+      } catch (error) {
+        console.error('Error in AI system loop:', error);
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+      }
     }
   } catch (error) {
-    Logger.log('Error loading short-term history:', error);
-  }
-
-  // Set initial active status
-  await updateTerminalStatus(true);
-  Logger.log('Terminal status set to active');
-
-  while (true) { // Run indefinitely with idle periods
-    try {
-      let actionCount = 0;
-      const MAX_ACTIONS = 10; // Reduced for testing
-
-      // Active period
-      while (actionCount < MAX_ACTIONS) {
-        const functionResult = await terminalAgent.run();
-        
-        if (!functionResult.success) {
-          throw new Error(functionResult.error);
-        }
-
-        // Create initial terminal entry
-        const entryId = await createTerminalEntry(sessionId, {
-          internal_thought: functionResult.output.internal_thought,
-          plan: functionResult.output.plan,
-          terminal_command: functionResult.output.terminal_command
-        });
-
-        if (!entryId) {
-          throw new Error('Failed to create terminal entry');
-        }
-
-        // Execute command
-        const commandOutput = await executeCommand(functionResult.output.terminal_command);
-
-        // Update the same entry with the response
-        await updateTerminalResponse(entryId, commandOutput.output);
-
-        // Retrieve the last assistant message from the agent's message history
-        const lastAssistantMessage = terminalAgent.getLastAgentMessage();
-
-        if (lastAssistantMessage) {
-          // Store agent's response in short-term history
-          await storeTerminalMessage(lastAssistantMessage, sessionId);
-        }
-
-        // Store terminal output in short-term history and update agent's message history
-        const terminalOutputMessage: Message = {
-          role: 'user',
-          content: `TERMINAL OUTPUT: ${commandOutput.output}`,
-        };
-        terminalAgent.addMessage(terminalOutputMessage);
-        await storeTerminalMessage(terminalOutputMessage, sessionId);
-
-        await new Promise((resolve) => setTimeout(resolve, 5000));
-        actionCount++;
-      }
-
-      // Before entering idle mode, initiate the memory process, and wipe the short term history
-      try {
-        Logger.log('Initiating memory processing...');
-        await extractAndSaveLearnings(sessionId);
-        await clearShortTermHistory();
-        Logger.log('Memory processing complete, short-term history cleared');
-      } catch (error) {
-        Logger.log('Error during memory processing:', error);
-      }
-
-      // Enter idle mode
-      const idleMinutes = getRandomInt(30, 60);
-      Logger.log(`Entering idle mode for ${idleMinutes} minutes`);
-      await updateTerminalStatus(false);
-
-      // Idle period
-      await new Promise((resolve) => setTimeout(resolve, idleMinutes * 60 * 1000));
-
-      // Resume active mode
-      Logger.log('Resuming active mode');
-      await updateTerminalStatus(true);
-
-    } catch (error) {
-      console.error('Error in AI system loop:', error);
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-    }
+    console.error('Error in AI system:', error);
   }
 }
 
