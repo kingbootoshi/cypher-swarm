@@ -14,7 +14,7 @@ export const twitterTweet: Command = {
     const { generateAndPostMainTweet } = await import('../../pipelines/generateMainTweet');
 
     // Check for main tweet cooldown
-    const cooldownInfo = await isCooldownActive('media');
+    const cooldownInfo = await isCooldownActive('main');
 
     if (cooldownInfo.isActive) {
       return {

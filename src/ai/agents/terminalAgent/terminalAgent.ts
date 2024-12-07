@@ -2,7 +2,7 @@
 import { BaseAgent } from '../BaseAgent';
 import { terminalAgentConfig } from './terminalAgentConfig';
 import { ModelClient } from '../../types/agentSystem';
-import { terminalToolSchema, TerminalTool } from './terminalTool';  
+import { terminalToolSchema, TerminalTool } from './TerminalTool';  
 
 export class TerminalAgent extends BaseAgent<typeof terminalToolSchema> {
   constructor(modelClient: ModelClient) {
