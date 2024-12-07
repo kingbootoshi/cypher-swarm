@@ -47,7 +47,8 @@ export async function getShortTermHistory(limit: number = 10): Promise<Message[]
     const { data, error } = await supabase
       .from('short_term_terminal_history')
       .select('*')
-      .order('created_at', { ascending: true })
+      // Get most recent entries first
+      .order('created_at', { ascending: false })
       .limit(limit)
 
     if (error) {
@@ -55,10 +56,13 @@ export async function getShortTermHistory(limit: number = 10): Promise<Message[]
       throw error;
     }
 
-    return data.map(entry => ({
-      role: entry.role as Message['role'],
-      content: entry.content
-    }));
+    // Map the entries and reverse the array to get chronological order (oldest first)
+    return data
+      .map(entry => ({
+        role: entry.role as Message['role'],
+        content: entry.content
+      }))
+      .reverse();
   } catch (error) {
     Logger.log('Failed to load short term history:', error);
     throw error;

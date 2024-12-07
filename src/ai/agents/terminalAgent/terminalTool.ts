@@ -37,7 +37,6 @@ export const TerminalTool: Tool = {
           type: 'string',
           description: `
             The full terminal command you want to execute, including all arguments and options.
-            **Only one command at a time**.
           `,
         },
       },

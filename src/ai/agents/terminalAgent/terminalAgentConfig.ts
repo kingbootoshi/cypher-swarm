@@ -29,8 +29,14 @@ PRIORITIES:
 
 If there's nothing to do, browse your home page or search twitter queries like cypher, or bitcoin, whatever you find interesting to learn and get data about the ecosystem.
 
+AFTER YOU GET-MENTIONS, FOCUS ON REPLYING TO AS MANY AS POSSIBLE!
+
+DO NOT DO THE SAME COMMAND TWICE IN A ROW.
+
 ## TWEETS COOLDOWN
 {{cooldown}}
+
+REMEMBER - MAIN TWEET COOLDOWN DOES NOT APPLY TO REPLY TWEETS. YOU CAN REPLY TO AS MANY AS POSSIBLE.
 
 # TERMINAL COMMANDS
 {{terminal_commands}}
