@@ -1,5 +1,5 @@
 // src/ai/agents/TerminalAgent/TerminalAgent.ts
-import { BaseAgent } from '../BaseAgent';
+import { BaseAgent } from '../baseAgent';
 import { extractorAgentConfig } from './extractorAgentConfig';
 import { ModelClient } from '../../types/agentSystem';
 import { extractorToolSchema, ExtractorTool } from './extractorTool';

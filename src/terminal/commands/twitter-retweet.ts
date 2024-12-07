@@ -1,6 +1,6 @@
 import { Command } from '../types/commands';
-import { retweet } from '../../twitter/functions/retweet';
 import { isCooldownActive } from '../../supabase/functions/twitter/cooldowns';
+import { confirmRetweet } from '../../pipelines/verifyRetweet';
 
 /**
  * @command twitter-retweet
@@ -32,7 +32,7 @@ export const twitterRetweet: Command = {
 
     try {
       // Proceed with retweeting
-      const result = await retweet(args.tweetId);
+      const result = await confirmRetweet(args.tweetId);
 
       return {
         output: `${result.success ? '✅' : '❌'} Action: Retweet\n` +

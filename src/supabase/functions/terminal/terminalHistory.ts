@@ -94,7 +94,7 @@ export async function clearShortTermHistory(): Promise<void> {
  * @param limit Number of recent messages to retrieve (defaults to 10)
  * @returns Formatted string containing the recent terminal history
  */
-export async function getFormattedRecentHistory(limit: number = 10): Promise<string> {
+export async function getFormattedRecentHistory(limit: number = 6): Promise<string> {
   try {
     // Get recent messages from supabase
     const { data, error } = await supabase

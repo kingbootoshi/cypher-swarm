@@ -1,5 +1,5 @@
 // src/ai/agents/TerminalAgent/TerminalAgent.ts
-import { BaseAgent } from '../BaseAgent';
+import { BaseAgent } from '../baseAgent';
 import { summaryAgentConfig } from './summaryAgentConfig';
 import { ModelClient } from '../../types/agentSystem';
 import { summaryTool, summaryToolSchema } from './summaryTool';

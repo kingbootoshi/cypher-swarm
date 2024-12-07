@@ -1,4 +1,4 @@
-import { BaseAgent } from '../BaseAgent';
+import { BaseAgent } from '../baseAgent';
 import { ModelClient } from '../../types/agentSystem';
 import { contentManagerAgentConfig } from './contentManagerConfig';
 import { PlanMainTweetTool, planMainTweetSchema } from './contentManagerTool';

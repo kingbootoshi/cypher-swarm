@@ -1,4 +1,4 @@
-import { BaseAgent } from '../BaseAgent';
+import { BaseAgent } from '../baseAgent';
 import { ModelClient } from '../../types/agentSystem';
 import { mainTweetAgentConfig } from './mainTweetAgentConfig';
 import { MainTweetTool, mainTweetToolSchema } from './mainTweetTool';

@@ -1,7 +1,7 @@
 // src/ai/agents/terminalAgent/terminalAgentConfig.ts
 
 import { AgentConfig } from '../../types/agentSystem';
-import { corePersonalityPrompt } from '../corePersonality';
+import { generateSystemPrompt } from '../corePersonality';
 import { activeSummaries } from '../../../utils/dynamicVariables';
 import { recentMainTweets } from '../../../utils/dynamicVariables';
 
@@ -38,7 +38,7 @@ The goal is to get users to engage with the Satoshi Twitter account by sparking 
 Use the "plan_main_tweet" tool to output the topic of the next main tweet.
 `,
   dynamicVariables: {
-    corePersonalityPrompt: corePersonalityPrompt,
+    corePersonalityPrompt: generateSystemPrompt(),
     currentSummaries: activeSummaries,
     terminalLog: "TERMINAL LOG DYNAMIC VARIABLE HERE",
     recentMainTweets: recentMainTweets || 'No recent tweets available',

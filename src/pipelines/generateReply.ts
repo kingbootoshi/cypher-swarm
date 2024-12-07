@@ -6,6 +6,7 @@ import { AnthropicClient } from '../ai/models/clients/AnthropicClient';
 import { FireworkClient } from '../ai/models/clients/FireworkClient';
 import { replyToTweet } from '../twitter/functions/replyToTweet';
 import { loadMemories } from './loadMemories';
+import { getFormattedRecentHistory } from '../supabase/functions/terminal/terminalHistory';
 
 // Type for the reply result
 interface ReplyResult {
@@ -71,6 +72,8 @@ async function generateTweetReply(
     usernames = interfaceData.usernames;
   }
 
+  const formattedHistory = await getFormattedRecentHistory();
+
   // Load memories with empty array fallback for undefined usernames
   const memories = await loadMemories(textContent, usernames || []);
   Logger.log('Active memories fetched:', memories);
@@ -78,6 +81,7 @@ async function generateTweetReply(
   // Configure agent with runtime variables
   const runtimeVariables = {
     twitterInterface: textContent,
+    terminalLog: formattedHistory,
     memories: memories
   };
 

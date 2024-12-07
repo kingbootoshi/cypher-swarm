@@ -1,4 +1,4 @@
-import { BaseAgent } from '../BaseAgent';
+import { BaseAgent } from '../baseAgent';
 import { ModelClient } from '../../types/agentSystem';
 import { replyAgentConfig } from './replyAgentConfig';
 import { ReplyTweetTool, replyTweetToolSchema } from './replyTool';

@@ -41,7 +41,7 @@ async function searchMemoryBase(
         const response = await client.search(query, {
             filters: filters,
             api_version: "v2",
-            limit: 10,
+            limit: 8,
         });
 
         Logger.log(`Search response from category: ${category}`, response);

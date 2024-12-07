@@ -1,4 +1,4 @@
-import { BaseAgent } from '../BaseAgent';
+import { BaseAgent } from '../baseAgent';
 import { ModelClient } from '../../types/agentSystem';
 import { mediaAgentConfig } from './mediaAgentConfig';
 import { MediaTool, mediaToolSchema } from './mediaTool';

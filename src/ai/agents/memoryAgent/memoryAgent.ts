@@ -1,5 +1,5 @@
 // src/ai/agents/TerminalAgent/TerminalAgent.ts
-import { BaseAgent } from '../BaseAgent';
+import { BaseAgent } from '../baseAgent';
 import { ModelClient } from '../../types/agentSystem';
 import { memoryAgentConfig } from './memoryAgentConfig';
 import { memoryToolSchema, MemoryTool } from './memoryTool';

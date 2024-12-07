@@ -49,11 +49,6 @@ export async function loadMemories(textContent: string, usernames?: string[]): P
         Logger.log("Self Knowledge Results:", selfKnowledgeResults);
         formattedMemories += `### MY OPINIONS/FEELINGS\n${formatMemoryResults(selfKnowledgeResults)}\n\n`;
 
-        // Add Main Tweet Knowledge section
-        const mainTweetKnowledgeResults = await searchMainTweet(query);
-        Logger.log("Main Tweet Knowledge Results:", mainTweetKnowledgeResults);
-        formattedMemories += `### POTENTIALLY RELEVANT TWEETS I MADE\n${formatMemoryResults(mainTweetKnowledgeResults)}\n\n`;
-
         // Proceed with user-specific memory search only if usernames are provided
         if (usernames && usernames.length > 0) {
             // Fetch user IDs based on provided usernames
