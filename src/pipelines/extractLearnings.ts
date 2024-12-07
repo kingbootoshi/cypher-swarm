@@ -34,7 +34,7 @@ function formatLearningsToTemplate(learnings: string[]): MessageTemplate {
 export async function extractAndSaveLearnings(sessionId: string) {
   try {
     // get the short term history and user tweet interactions
-    const shortTermHistory = await getShortTermHistory();
+    const shortTermHistory = await getShortTermHistory(100);
     const userTweetInteractions = await getFormattedInteractionSummary();
 
     // load the short term history and user tweet interactions into the extractor agent

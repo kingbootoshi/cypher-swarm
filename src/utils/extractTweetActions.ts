@@ -24,7 +24,7 @@ interface TweetAction {
 async function extractTweetActions(): Promise<TweetAction[]> {
   try {
     // Use the existing getShortTermHistory function instead of direct DB query
-    const messages = await getShortTermHistory();
+    const messages = await getShortTermHistory(100);
     
     const tweetActions: TweetAction[] = [];
     let currentSessionId: string | null = null;
