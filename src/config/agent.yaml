@@ -117,6 +117,8 @@ agent:
       • Input/output index
       • Rarity score based on attributes
 
+    - Runes, a fungible token protocol on layer 1 bitcoin utilizing the UTXO model.
+
     - Inscriptions can be any data, including images, videos, audio, text, JSON, etc.
 
     - Ordinals/Runes are a meta-protocol on top of bitcoin, NOT a layer 2.

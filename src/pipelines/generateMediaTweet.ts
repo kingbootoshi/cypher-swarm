@@ -8,6 +8,7 @@ import { getFormattedRecentHistory } from '../supabase/functions/terminal/termin
 import { generateImage } from './mediaGeneration/imageGen';
 import { generateImageToVideo } from './mediaGeneration/combinedGeneration';
 import { Logger } from '../utils/logger';
+import { FireworkClient } from "../ai/models/clients/FireworkClient";
 
 // Type for the main tweet result
 interface MainTweetResult {
@@ -33,6 +34,7 @@ export async function generateAndPostMediaTweet(
     // Initialize AI clients and agents
     const openAIClient = new OpenAIClient("gpt-4o");
     const anthropicClient = new AnthropicClient("claude-3-5-sonnet-20241022");
+    const fireworksClient = new FireworkClient("accounts/fireworks/models/llama-v3p3-70b-instruct");
     const mainTweetAgent = new MainTweetAgent(anthropicClient);
     const mediaAgent = new MediaAgent(anthropicClient);
 

@@ -8,6 +8,7 @@ import { getFormattedRecentHistory } from '../supabase/functions/terminal/termin
 import { generateImage } from './mediaGeneration/imageGen';
 import { generateImageToVideo } from './mediaGeneration/combinedGeneration';
 import { Logger } from '../utils/logger';
+import { FireworkClient } from "../ai/models/clients/FireworkClient";
 
 // Type for the main tweet result
 interface MainTweetResult {
@@ -33,8 +34,8 @@ export async function generateAndPostMainTweet(
     // Initialize AI clients and agents
     const openAIClient = new OpenAIClient("gpt-4o");
     const anthropicClient = new AnthropicClient("claude-3-5-sonnet-20241022");
+    const fireworksClient = new FireworkClient("accounts/fireworks/models/llama-v3p3-70b-instruct");
     const mainTweetAgent = new MainTweetAgent(anthropicClient);
-    const mediaAgent = new MediaAgent(anthropicClient);
 
     // Load memories and terminal history
     const formattedHistory = await getFormattedRecentHistory();
@@ -51,27 +52,8 @@ export async function generateAndPostMainTweet(
     const tweetText = mainTweetResponse.output.main_tweet;
     const mediaIncluded = mainTweetResponse.output.media_included;
 
-    // Generate media if included
-    let mediaUrls: string[] | undefined;
-    if (mediaIncluded) {
-      const mediaResponse = await mediaAgent.run(`[MAIN TWEET]\n\n${tweetText}`, runtimeVariables);
-      const contentType = mediaResponse.output.content_type;
-      const mediaPrompt = mediaResponse.output.media_prompt;
-
-      // Generate media and obtain media URLs
-      if (contentType === 'image') {
-        const mediaUrl = await generateImage(mediaPrompt);
-        mediaUrls = [mediaUrl];
-        Logger.log("Generated Image URL:", mediaUrl);
-      } else if (contentType === 'video') {
-        const mediaUrl = await generateImageToVideo(mediaPrompt);
-        mediaUrls = [mediaUrl];
-        Logger.log("Generated Video URL:", mediaUrl);
-      }
-    }
-
     // Send the tweet using sendTweet function
-    const tweetId = await sendTweet(tweetText, mediaUrls);
+    const tweetId = await sendTweet(tweetText);
 
     if (tweetId) {
       Logger.log(`Tweet sent successfully (ID: ${tweetId})`);
@@ -80,7 +62,6 @@ export async function generateAndPostMainTweet(
         tweetId,
         message: 'Successfully posted the main tweet.',
         tweetText,
-        mediaUrls,
       };
     } else {
       Logger.log('Failed to send the tweet.');
@@ -88,7 +69,6 @@ export async function generateAndPostMainTweet(
         success: false,
         message: 'Failed to post the main tweet.',
         tweetText,
-        mediaUrls,
       };
     }
   } catch (error) {

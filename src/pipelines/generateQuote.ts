@@ -5,6 +5,7 @@ import { OpenAIClient } from '../ai/models/clients/OpenAiClient';
 import { AnthropicClient } from '../ai/models/clients/AnthropicClient';
 import { quoteTweet } from '../twitter/functions/quoteTweet';
 import { loadMemories } from './loadMemories';
+import { FireworkClient } from '../ai/models/clients/FireworkClient';
 
 // Type for the quote result
 interface QuoteResult {
@@ -83,6 +84,7 @@ async function generateQuoteTweet(
   // Initialize OpenAI client and quote agent
   const openAIClient = new OpenAIClient("gpt-4o");
   const anthropicClient = new AnthropicClient("claude-3-5-sonnet-20241022");
+  const fireworksClient = new FireworkClient("accounts/fireworks/models/llama-v3p3-70b-instruct");
   const quoteAgent = new QuoteAgent(anthropicClient);
 
   // Add images to the agent's context if available

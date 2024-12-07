@@ -35,7 +35,7 @@ export const MainTweetTool: Tool = {
         },
         "main_tweet": {
           "type": "string",
-          "description": "The main tweet."
+          "description": "The main tweet. Max 280 characters."
         },
         "media_included": {
           "type": "boolean",

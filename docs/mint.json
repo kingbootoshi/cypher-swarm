@@ -48,18 +48,19 @@
       "group": "Getting Started",
       "pages": [
         "introduction",
-        "quickstart"
+        "quickstart",
+        "database-setup"
       ]
     },
     {
       "group": "Core Concepts",
       "pages": [
         "concepts/unified-personality",
-        "concepts/terminal-agent",
         "concepts/agent-system",
-        "concepts/hivemind-memory",
         "concepts/pipelines",
-        "concepts/terminal-commands"
+        "concepts/hivemind-memory",
+        "concepts/terminal-commands",
+        "concepts/terminal-agent"
       ]
     }
   ],

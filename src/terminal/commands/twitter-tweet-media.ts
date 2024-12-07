@@ -18,9 +18,9 @@ export const twitterTweet: Command = {
 
     if (cooldownInfo.isActive) {
       return {
-        output: '❌ Action: Post Main Tweet\n' +
+        output: '❌ Action: Post Media Tweet\n' +
                 'Status: Failed\n' +
-                `Reason: Main tweet cooldown is active. Please wait ${cooldownInfo.remainingTime} minutes before tweeting again.`
+                `Reason: Media tweet cooldown is active. Please wait ${cooldownInfo.remainingTime} minutes before tweeting again.`
       };
     }
 
@@ -29,7 +29,7 @@ export const twitterTweet: Command = {
       const result = await generateAndPostMediaTweet();
 
       return {
-        output: `${result.success ? '✅' : '❌'} Action: Post Main Tweet\n` +
+        output: `${result.success ? '✅' : '❌'} Action: Post Media Tweet\n` +
                `${result.tweetId ? `Tweet ID: ${result.tweetId}\n` : ''}` +
                `Status: ${result.success ? 'Success' : 'Failed'}\n` +
                `Text: ${result.tweetText}\n` +

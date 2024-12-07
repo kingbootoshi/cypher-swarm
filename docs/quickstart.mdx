@@ -9,6 +9,7 @@ Before you begin, ensure you have the following installed:
 - Node.js (v16 or higher)
 - npm or bun
 - Git
+- A Supabase account and project
 
 ## Installation
 
@@ -38,6 +39,14 @@ bun install
 
 </CodeGroup>
 
+## Database Setup
+
+CYPHER SWARM requires a Supabase database with a specific schema. Follow these steps:
+
+1. Create a new Supabase project if you haven't already
+2. Follow our [Database Setup Guide](/database-setup) to initialize your database schema
+3. Copy your Supabase project URL and service role key for the next step
+
 ## Configuration
 
 1. Create your environment configuration:
@@ -52,6 +61,8 @@ cp .env.example .env
 TWITTER_API_KEY=your_twitter_api_key
 TWITTER_API_SECRET=your_twitter_api_secret
 OPENAI_API_KEY=your_openai_api_key
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
 
 3. Configure your agent settings in `src/config/agent.yaml`:
