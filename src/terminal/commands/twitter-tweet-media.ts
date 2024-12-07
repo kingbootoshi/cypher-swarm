@@ -6,12 +6,12 @@ import { isCooldownActive } from '../../supabase/functions/twitter/cooldowns';
  * @description Generates and posts a new main tweet with optional media
  */
 export const twitterTweet: Command = {
-  name: 'post-main-tweet',
+  name: 'post-media-tweet',
   description: 'Generates and posts a new main tweet with optional media attachments. An agent will handle the rest.',
   parameters: [],
   handler: async () => {
-    // Lazy import generateAndPostMainTweet to avoid initialization issues
-    const { generateAndPostMainTweet } = await import('../../pipelines/generateMainTweet');
+    // Lazy import generateAndPostMediaTweet to avoid initialization issues
+    const { generateAndPostMediaTweet } = await import('../../pipelines/generateMediaTweet');
 
     // Check for main tweet cooldown
     const cooldownInfo = await isCooldownActive('media');
@@ -26,7 +26,7 @@ export const twitterTweet: Command = {
 
     try {
       // Proceed with generating and posting the tweet
-      const result = await generateAndPostMainTweet();
+      const result = await generateAndPostMediaTweet();
 
       return {
         output: `${result.success ? '✅' : '❌'} Action: Post Main Tweet\n` +

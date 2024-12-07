@@ -1,7 +1,7 @@
 import { supabase } from '../../../supabase/supabaseClient';
 import { Logger } from '../../../utils/logger';
 
-type TweetType = 'main' | 'quote' | 'retweet';
+type TweetType = 'main' | 'quote' | 'retweet' | 'media';
 
 // Cooldown duration in minutes for each tweet type
 const COOLDOWN_DURATION = 60; // 1 hour cooldown for all tweet types
@@ -110,14 +110,16 @@ export async function isCooldownActive(tweetType: TweetType): Promise<{ isActive
  * @returns A formatted string indicating the cooldown status of each tweet type.
  */
 export async function getCooldownStatus(): Promise<string> {
-  const [mainCooldown, quoteCooldown, retweetCooldown] = await Promise.all([
+  const [mainCooldown, quoteCooldown, retweetCooldown, mediaCooldown] = await Promise.all([
     isCooldownActive('main'),
     isCooldownActive('quote'),
     isCooldownActive('retweet'),
+    isCooldownActive('media'),
   ]);
 
   return `Tweet Cooldown Status:
   Main Tweet: ${mainCooldown.isActive ? `CANNOT SEND A MAIN TWEET. COOLDOWN IS ACTIVE (${mainCooldown.remainingTime} minutes remaining)` : 'CAN SEND A MAIN TWEET. COOLDOWN IS INACTIVE'}
   Quote Tweet: ${quoteCooldown.isActive ? `CANNOT SEND A QUOTE TWEET. COOLDOWN IS ACTIVE (${quoteCooldown.remainingTime} minutes remaining)` : 'CAN SEND A QUOTE TWEET. COOLDOWN IS INACTIVE'}
-  Retweet: ${retweetCooldown.isActive ? `CANNOT SEND A RETWEET. COOLDOWN IS ACTIVE (${retweetCooldown.remainingTime} minutes remaining)` : 'CAN SEND A RETWEET. COOLDOWN IS INACTIVE'}`;
+  Retweet: ${retweetCooldown.isActive ? `CANNOT RETWEET. COOLDOWN IS ACTIVE (${retweetCooldown.remainingTime} minutes remaining)` : 'CAN RETWEET. COOLDOWN IS INACTIVE'}
+  Media Tweet: ${mediaCooldown.isActive ? `CANNOT SEND A MEDIA TWEET. COOLDOWN IS ACTIVE (${mediaCooldown.remainingTime} minutes remaining)` : 'CAN SEND A MEDIA TWEET. COOLDOWN IS INACTIVE'}`;
 }

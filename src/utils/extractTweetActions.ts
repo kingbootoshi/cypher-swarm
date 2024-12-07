@@ -15,6 +15,7 @@ interface TweetAction {
   details: string;
   textContent?: string;
   mediaUrls?: string[];
+  timestamp?: string;
 }
 
 /**
@@ -25,6 +26,8 @@ async function extractTweetActions(): Promise<TweetAction[]> {
   try {
     // Use the existing getShortTermHistory function instead of direct DB query
     const messages = await getShortTermHistory(100);
+    // Log the number of messages retrieved from short-term history for debugging
+    Logger.log(`Retrieved ${messages.length} messages from short-term history`);
     
     const tweetActions: TweetAction[] = [];
     let currentSessionId: string | null = null;
@@ -32,15 +35,23 @@ async function extractTweetActions(): Promise<TweetAction[]> {
     // Iterate over the messages to extract actions
     for (const message of messages) {
       // Skip non-user messages or messages without content
-      if (message.role !== 'user' || !message.content?.startsWith('TERMINAL OUTPUT:')) {
+      if (message.role !== 'user' || !message.content) {
         continue;
       }
 
-      const output = message.content.replace('TERMINAL OUTPUT:', '').trim();
+      // Extract timestamp if present
+      const timestampMatch = message.content.match(/\[(\d{2}\/\d{2}\/\d{2} - \d{1,2}:\d{2} [AP]M [A-Z]+)\]/);
+      const timestamp = timestampMatch ? timestampMatch[1] : null;
+
+      // Clean the output by removing timestamp and TERMINAL OUTPUT prefix
+      const output = message.content
+        .replace(/TERMINAL OUTPUT:?\s*(\[\d{2}\/\d{2}\/\d{2} - \d{1,2}:\d{2} [AP]M [A-Z]+\]:?)?\s*/, '')
+        .trim();
+
       const lines = output.split('\n');
 
       // Extract details from the terminal output
-      const actionLine = lines.find(line => line.startsWith('Action:'));
+      const actionLine = lines.find(line => line.includes('Action:'));
       const tweetIdLine = lines.find(line => line.includes('Tweet ID:') || line.includes('Reply Tweet ID:'));
       const statusLine = lines.find(line => line.startsWith('Status:'));
       const detailsLine = lines.find(line => line.startsWith('Details:'));
@@ -56,14 +67,15 @@ async function extractTweetActions(): Promise<TweetAction[]> {
           tweetActions.push({
             sessionId: currentSessionId || 'unknown',
             role: message.role,
-            action: actionLine ? actionLine.replace('Action:', '').trim() : '',
+            action: actionLine ? actionLine.replace('Action:', '').replace('✅', '').trim() : '',
             tweetId,
             status: statusLine ? statusLine.replace('Status:', '').trim() : '',
             details: detailsLine ? detailsLine.replace('Details:', '').trim() : '',
             textContent: textLine ? textLine.replace('Text:', '').trim() : undefined,
             mediaUrls: mediaLine && mediaLine !== 'Media: None'
               ? mediaLine.replace('Media:', '').trim().split(', ')
-              : []
+              : [],
+            timestamp: timestamp || undefined
           });
         }
       }
