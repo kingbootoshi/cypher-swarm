@@ -18,7 +18,7 @@ export const twitterGetTweets: Command = {
   ],
   handler: async (args) => {
     try {
-      const result = await getTweets(args.username, args.limit);
+      const result = await getTweets(args.username, 10);
       return {
         output: result.startsWith('Error') ? `❌ ${result}` : `📝 ${result}`
       };

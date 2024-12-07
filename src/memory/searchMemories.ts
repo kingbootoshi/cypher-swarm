@@ -1,5 +1,9 @@
 import { client } from "./client";
 import { Logger } from '../utils/logger';
+import { configLoader } from '../utils/config';
+
+// Get the agent name from config
+const AGENT_NAME = configLoader.getAgentName();
 
 // Helper function to format search results into bullet points
 export const formatMemoryResults = (results: any[]) => {
@@ -29,7 +33,7 @@ async function searchMemoryBase(
         const filters = {
             AND: [
                 { user_id: category },
-                { agent_id: { in: ["satoshi"] } },
+                { agent_id: { in: [AGENT_NAME] } },
             ]
         };
 
@@ -72,12 +76,12 @@ export async function searchCryptoKnowledge(query: string): MemoryResponse {
 }
 
 /**
- * Search self-knowledge in Satoshi's memory
+ * Search self-knowledge in agent's memory
  * @param query The search query string
  */
 export async function searchSelfKnowledge(query: string): MemoryResponse {
-    // Search within the 'satoshi_self' category
-    return searchMemoryBase("satoshi_self", query);
+    // Search within the '{agent_name}_self' category
+    return searchMemoryBase(`${AGENT_NAME}_self`, query);
 }
 
 /**

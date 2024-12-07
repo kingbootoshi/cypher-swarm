@@ -19,7 +19,7 @@ export const twitterGetMentions: Command = {
   ],
   handler: async (args) => {
     try {
-      const mentions = await getMentions(args.limit);
+      const mentions = await getMentions(10);
       if (mentions.length === 0) {
         return {
           output: '📭 No unhandled mentions found.'

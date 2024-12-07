@@ -97,7 +97,7 @@ async function generateTweetReply(
   }
 
   // Generate reply using the agent
-  const response = await replyAgent.run(prompt, runtimeVariables);
+  const response = await replyAgent.run(`GENERATE A REPLY FOR THE FOLLOWING TWEET:\n\n${textContent}`, runtimeVariables);
   
   return response.output.reply_tweet;
 }

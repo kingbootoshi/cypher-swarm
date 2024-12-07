@@ -97,7 +97,7 @@ async function generateQuoteTweet(
   }
 
   // Generate reply using the agent
-  const response = await quoteAgent.run(prompt, runtimeVariables);
+  const response = await quoteAgent.run(`GENERATE A QUOTE FOR THE FOLLOWING TWEET:\n\n${textContent}`, runtimeVariables);
   
   return response.output.quote_tweet;
 }

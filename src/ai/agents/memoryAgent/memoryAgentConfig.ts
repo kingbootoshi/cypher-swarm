@@ -1,7 +1,7 @@
 // src/ai/agents/terminalAgent/terminalAgentConfig.ts
 
 import { AgentConfig } from '../../types/agentSystem';
-import { corePersonalityPrompt } from '../corePersonality';
+import { generateSystemPrompt } from '../corePersonality';
 
 export const memoryAgentConfig: AgentConfig = {
   systemPromptTemplate: `
@@ -19,6 +19,6 @@ The exact words you use are important: make sure the main theme/topic/categories
 You MUST use your extract_log_knowledge at all times - you will ONLY be given terminal logs and user interactions. PLEASE OUTPUT JSON FORMAT ONLY.
 `,
   dynamicVariables: {
-    corePersonalityPrompt: corePersonalityPrompt,
+    corePersonalityPrompt: generateSystemPrompt(),
   },
 };

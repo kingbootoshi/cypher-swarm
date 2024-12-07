@@ -1,7 +1,7 @@
 // src/ai/agents/terminalAgent/terminalAgentConfig.ts
 
 import { AgentConfig } from '../../types/agentSystem';
-import { corePersonalityPrompt } from '../corePersonality';
+import { generateSystemPrompt } from '../corePersonality';
 import { generateHelpText } from '../../../terminal/commandRegistry';
 import { getCurrentTimestamp } from '../../../utils/formatTimestamps';
 import { activeSummaries } from '../../../utils/dynamicVariables';
@@ -39,7 +39,7 @@ If there's nothing to do, browse your home page or search twitter queries like c
 You MUST use your use_terminal function tool at all times - you will ONLY be given terminal logs. PLEASE OUTPUT JSON FORMAT ONLY\nPLEASE OUTPUT JSON FORMAT ONLY\n# USE_TERMINAL FUNCTION
 `,
   dynamicVariables: {
-    corePersonalityPrompt: corePersonalityPrompt,
+    corePersonalityPrompt: generateSystemPrompt(),
     currentSummaries: activeSummaries,
     current_timestamp: getCurrentTimestamp(),
     terminal_commands: generateHelpText(),

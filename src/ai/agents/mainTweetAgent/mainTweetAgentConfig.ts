@@ -1,7 +1,7 @@
 // src/ai/agents/terminalAgent/terminalAgentConfig.ts
 
 import { AgentConfig } from '../../types/agentSystem';
-import { corePersonalityPrompt } from '../corePersonality';
+import { generateSystemPrompt } from '../corePersonality';
 import { activeSummaries } from '../../../utils/dynamicVariables';
 import { recentMainTweets } from '../../../utils/dynamicVariables';
 import { getCurrentTimestamp } from '../../../utils/formatTimestamps';
@@ -43,7 +43,7 @@ You are the main tweet agent designed to write main tweets embodying the persona
 Use your main_tweet_tool to write a main tweet.
 `,
   dynamicVariables: {
-    corePersonalityPrompt: corePersonalityPrompt,
+    corePersonalityPrompt: generateSystemPrompt(),
     current_timestamp: getCurrentTimestamp(),
     currentSummaries: activeSummaries,
     terminalLog: "TERMINAL LOG DYNAMIC VARIABLE HERE",

@@ -1,3 +1,0 @@
-notes:
-- maybe think about incorporating the result of a send tweet or send tweet with media data, so we can include that in the short term memory buffer that gets sent to the memory agent. easier to deal with users in an instant way rather than waiting for dream reflection (wtf does this mean on re-read ???)
-- we added a context field to twitter_interactions, right now it tracks if the og tweet was a mention, reply, or other tweet to the bot. parent tweets are marked null. make sure to use this field to add further context like tweet thread, users involved etc.

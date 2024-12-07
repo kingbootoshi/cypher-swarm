@@ -18,7 +18,7 @@ export const twitterSearch: Command = {
   ],
   handler: async (args) => {
     try {
-      const results = await searchTwitter(args.query, args.limit);
+      const results = await searchTwitter(args.query, 10);
       return {
         output: results.startsWith('Error') ? `❌ ${results}` : `🔍 ${results}`
       };

@@ -11,7 +11,7 @@ export const twitterGetHomepage: Command = {
   parameters: [],
   handler: async (args) => {
     try {
-      const tweets = await getHomepage(20);
+      const tweets = await getHomepage(10);
       if (tweets.length === 0) {
         return {
           output: '📭 No unhandled tweets found in your homepage timeline.'
