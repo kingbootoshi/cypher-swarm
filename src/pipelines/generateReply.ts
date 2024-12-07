@@ -75,7 +75,13 @@ async function generateTweetReply(
   const formattedHistory = await getFormattedRecentHistory();
 
   // Load memories with empty array fallback for undefined usernames
-  const memories = await loadMemories(textContent, usernames || []);
+  const memories = await loadMemories(textContent, {
+    worldKnowledge: true,
+    cryptoKnowledge: true,
+    selfKnowledge: true,
+    mainTweets: false,
+    userTweets: true
+}, usernames);
   Logger.log('Active memories fetched:', memories);
 
   // Configure agent with runtime variables

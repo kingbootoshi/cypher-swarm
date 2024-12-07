@@ -10,18 +10,37 @@ import {
     searchMainTweet
 } from '../memory/searchMemories';
 import { getUserIDsFromUsernames } from '../utils/getUserIDfromUsername';
-import { getShortTermHistory } from '../supabase/functions/terminal/terminalHistory';
 
-// Enable logging for detailed output
-Logger.enable();
+// Define memory types that can be loaded
+export interface MemoryOptions {
+    worldKnowledge?: boolean;
+    cryptoKnowledge?: boolean;
+    selfKnowledge?: boolean;
+    mainTweets?: boolean;
+    userTweets?: boolean;
+}
+
+// Default options when none specified
+const DEFAULT_MEMORY_OPTIONS: MemoryOptions = {
+    worldKnowledge: true,
+    cryptoKnowledge: true,
+    selfKnowledge: true,
+    mainTweets: true,
+    userTweets: true
+};
 
 /**
- * Loads and formats memories from various knowledge bases based on input text
+ * Loads and formats memories from various knowledge bases based on input text and specified options
  * @param textContent - The main text content to generate memory queries from
+ * @param options - Configuration object to specify which types of memories to load
  * @param usernames - Array of usernames to fetch specific memories for
- * @returns Formatted string containing all memory results with markdown headers
+ * @returns Formatted string containing selected memory results with markdown headers
  */
-export async function loadMemories(textContent: string, usernames?: string[]): Promise<string> {
+export async function loadMemories(
+    textContent: string, 
+    options: MemoryOptions = DEFAULT_MEMORY_OPTIONS,
+    usernames?: string[]
+): Promise<string> {
     try {
         const openAIClient = new OpenAIClient("gpt-4o");
         const memoryAgent = new MemoryAgent(openAIClient);
@@ -31,30 +50,37 @@ export async function loadMemories(textContent: string, usernames?: string[]): P
         const query = memoryQuery.output.memory_query;
         Logger.log("Generated memory query:", query);
 
-        // Initialize result string with formatted sections
+        // Initialize result string
         let formattedMemories = '';
 
-        // Add World Knowledge section
-        const worldKnowledgeResults = await searchWorldKnowledge(query);
-        Logger.log("World Knowledge Results:", worldKnowledgeResults);
-        formattedMemories += `### WORLD KNOWLEDGE\n${formatMemoryResults(worldKnowledgeResults)}\n\n`;
+        // Conditionally add each memory section based on options
+        if (options.worldKnowledge) {
+            const worldKnowledgeResults = await searchWorldKnowledge(query);
+            Logger.log("World Knowledge Results:", worldKnowledgeResults);
+            formattedMemories += `### WORLD KNOWLEDGE\n${formatMemoryResults(worldKnowledgeResults)}\n\n`;
+        }
 
-        // Add Crypto Knowledge section
-        const cryptoKnowledgeResults = await searchCryptoKnowledge(query);
-        Logger.log("Crypto Knowledge Results:", cryptoKnowledgeResults);
-        formattedMemories += `### CRYPTO KNOWLEDGE\n${formatMemoryResults(cryptoKnowledgeResults)}\n\n`;
+        if (options.cryptoKnowledge) {
+            const cryptoKnowledgeResults = await searchCryptoKnowledge(query);
+            Logger.log("Crypto Knowledge Results:", cryptoKnowledgeResults);
+            formattedMemories += `### CRYPTO KNOWLEDGE\n${formatMemoryResults(cryptoKnowledgeResults)}\n\n`;
+        }
 
-        // Add Self Knowledge section
-        const selfKnowledgeResults = await searchSelfKnowledge(query);
-        Logger.log("Self Knowledge Results:", selfKnowledgeResults);
-        formattedMemories += `### MY OPINIONS/FEELINGS\n${formatMemoryResults(selfKnowledgeResults)}\n\n`;
+        if (options.selfKnowledge) {
+            const selfKnowledgeResults = await searchSelfKnowledge(query);
+            Logger.log("Self Knowledge Results:", selfKnowledgeResults);
+            formattedMemories += `### MY OPINIONS/FEELINGS\n${formatMemoryResults(selfKnowledgeResults)}\n\n`;
+        }
 
-        // Proceed with user-specific memory search only if usernames are provided
-        if (usernames && usernames.length > 0) {
-            // Fetch user IDs based on provided usernames
+        if (options.mainTweets) {
+            const mainTweetKnowledgeResults = await searchMainTweet(query);
+            Logger.log("Main Tweet Knowledge Results:", mainTweetKnowledgeResults);
+            formattedMemories += `### POTENTIALLY RELEVANT TWEETS I MADE\n${formatMemoryResults(mainTweetKnowledgeResults)}\n\n`;
+        }
+
+        if (options.userTweets && usernames && usernames.length > 0) {
             const userIds = await getUserIDsFromUsernames(usernames);
             
-            // Iterate over each username to retrieve and format their specific memories
             for (const username of usernames) {
                 const userId = userIds[username];
                 if (userId) {
@@ -71,6 +97,6 @@ export async function loadMemories(textContent: string, usernames?: string[]): P
 
     } catch (error) {
         Logger.log("An error occurred during memory retrieval:", error);
-        throw error; // Re-throw to allow handling by caller
+        throw error;
     }
 } 

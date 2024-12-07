@@ -8,15 +8,7 @@ import { getMentions } from '../../twitter/functions/getMentions';
 export const twitterGetMentions: Command = {
   name: 'get-mentions',
   description: 'Get recent mentions',
-  parameters: [
-    {
-      name: 'limit',
-      description: 'Maximum number of mentions to fetch',
-      required: false,
-      type: 'number',
-      defaultValue: '20'
-    }
-  ],
+  parameters: [],
   handler: async (args) => {
     try {
       const mentions = await getMentions(10);

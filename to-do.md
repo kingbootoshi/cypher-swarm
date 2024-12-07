@@ -3,3 +3,6 @@ TO DO:
 - log the token usage per agent, somehow
 - log the schema outputs of every agent when they run in pipelines, so we can visualize it on site
 - update site so we get new terminal and functionalities
+- make the agent system for CORE agents configurable for new user modalarity
+- make the media gen system easily configurable for new user modalarity
+- look into bundling commands like replies from terminal agent so we can hammer out multiple replies at once
