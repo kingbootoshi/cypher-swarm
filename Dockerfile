@@ -20,7 +20,7 @@ RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y build-essential pkg-config python-is-python3
 
 # Copy both package files first
-COPY package.json package-lock.json bun.lockb ./
+COPY package.json bun.lockb ./
 
 # Use --frozen-lockfile to ensure exact versions are installed
 RUN bun install --frozen-lockfile

@@ -25,12 +25,13 @@ function parseTimestampToUTC(timestamp: string): Date {
 interface TweetRecord {
   created_at: Date;
   text: string;
+  has_media: boolean;
 }
 
 async function getLastTweetDetails(tweetType: TweetType): Promise<TweetRecord | null> {
   const { data, error } = await supabase
     .from('twitter_tweets')
-    .select('created_at, text')
+    .select('created_at, text, has_media')
     .eq('tweet_type', tweetType)
     .order('created_at', { ascending: false })
     .limit(1)
@@ -45,7 +46,8 @@ async function getLastTweetDetails(tweetType: TweetType): Promise<TweetRecord | 
     const createdAtUTC = parseTimestampToUTC(data.created_at);
     return {
       created_at: createdAtUTC,
-      text: data.text || ''
+      text: data.text || '',
+      has_media: data.has_media || false
     };
   } else {
     // No tweets of this type found or created_at is null
@@ -59,8 +61,76 @@ async function getLastTweetDetails(tweetType: TweetType): Promise<TweetRecord | 
  * @returns True if cooldown is active, false otherwise.
  */
 export async function isCooldownActive(tweetType: TweetType): Promise<{ isActive: boolean; remainingTime: number | null }> {
-  const lastTweetDetails = await getLastTweetDetails(tweetType);
+  // For media tweets, check both dedicated media tweets and main tweets with media
+  if (tweetType === 'media') {
+    const [mediaLastTweet, mainWithMediaTweet] = await Promise.all([
+      getLastTweetDetails('media'),
+      supabase
+        .from('twitter_tweets')
+        .select('created_at, text, has_media')
+        .eq('tweet_type', 'main')
+        .eq('has_media', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+        .then(({ data }) => data ? {
+          created_at: parseTimestampToUTC(data.created_at || new Date().toISOString()),
+          text: data.text || '',
+          has_media: true
+        } : null)
+    ]);
 
+    let lastMediaTweet: TweetRecord | null = null;
+    if (mediaLastTweet && mainWithMediaTweet) {
+      lastMediaTweet = mainWithMediaTweet.created_at > mediaLastTweet.created_at ? mainWithMediaTweet : mediaLastTweet;
+    } else {
+      lastMediaTweet = mediaLastTweet || mainWithMediaTweet;
+    }
+
+    if (!lastMediaTweet) {
+      return { isActive: false, remainingTime: null };
+    }
+
+    const currentTime = new Date();
+    const timeSinceLastTweet = currentTime.getTime() - lastMediaTweet.created_at.getTime();
+    const cooldownPeriod = COOLDOWN_DURATION * 60 * 1000;
+
+    const isActive = timeSinceLastTweet < cooldownPeriod;
+    const remainingTime = isActive ? Math.ceil((cooldownPeriod - timeSinceLastTweet) / (60 * 1000)) : null;
+
+    return { isActive, remainingTime };
+  }
+
+  // For main tweets, only check main tweets without media
+  if (tweetType === 'main') {
+    const { data } = await supabase
+      .from('twitter_tweets')
+      .select('created_at, text, has_media')
+      .eq('tweet_type', 'main')
+      .eq('has_media', false)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (!data) {
+      return { isActive: false, remainingTime: null };
+    }
+
+    const lastTweetTime = parseTimestampToUTC(data.created_at || new Date().toISOString());
+    const currentTime = new Date();
+    const timeSinceLastTweet = currentTime.getTime() - lastTweetTime.getTime();
+    const cooldownPeriod = COOLDOWN_DURATION * 60 * 1000;
+
+    const isActive = timeSinceLastTweet < cooldownPeriod;
+    const remainingTime = isActive ? Math.ceil((cooldownPeriod - timeSinceLastTweet) / (60 * 1000)) : null;
+
+    return { isActive, remainingTime };
+  }
+
+  // For other tweet types (quote, retweet), use the original logic
+  const lastTweetDetails = await getLastTweetDetails(tweetType);
+  Logger.log(`lastTweetDetails: ${lastTweetDetails}`);
+  
   if (!lastTweetDetails) {
     Logger.log(`No previous tweets of type ${tweetType}. Cooldown not active.`);
     return {

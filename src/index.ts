@@ -1,8 +1,6 @@
 // src/ai/index.ts
 
-import { TerminalAgent } from './ai/agents/TerminalAgent/TerminalAgent';
-import { FireworkClient } from './ai/models/clients/FireworkClient';
-import { OpenAIClient } from './ai/models/clients/OpenAiClient';
+import { TerminalAgent } from './ai/agents/terminalAgent/terminalAgent';
 import { AnthropicClient } from './ai/models/clients/AnthropicClient';
 import { executeCommand } from './terminal/executeCommand';
 import { ensureAuthenticated } from './twitter/twitterClient';
@@ -18,6 +16,7 @@ import {
 } from './supabase/functions/terminal/terminalHistory';
 import { extractAndSaveLearnings } from './pipelines/extractLearnings';
 import { getCurrentTimestamp } from './utils/formatTimestamps';
+import { OpenAIClient } from './ai/models/clients/OpenAiClient';
 
 Logger.enable();
 
@@ -34,50 +33,13 @@ function getRandomInt(min: number, max: number) {
  * Starts the AI system, which will run indefinitely with idle periods.
  */ 
 
-// Helper function to get model client based on user selection, for initial testing.
-function getModelClient(modelType: ModelType) {
-  switch(modelType.toLowerCase()) {
-    case 'openai':
-      return new OpenAIClient('gpt-4o', { temperature: 1 });
-    case 'firework':
-      return new FireworkClient("accounts/fireworks/models/llama-v3p3-70b-instruct", { temperature: 1 });
-    case 'anthropic':
-      return new AnthropicClient("claude-3-5-haiku-20241022", { temperature: 1 });
-    default:
-      throw new Error('Invalid model type. Please choose "openai", "firework", or "anthropic"');
-  }
-}
 export async function startAISystem() {
   try {
     const sessionId = uuidv4();
     await ensureAuthenticated();
     
-    // Prompt user for model type if not provided via command line or env var
-    const readline = require('readline').createInterface({
-      input: process.stdin,
-      output: process.stdout
-    });
-
-    // Helper to get model type via CLI prompt
-    const getModelTypeFromUser = (): Promise<ModelType> => {
-      return new Promise((resolve, reject) => {
-        readline.question('Which model would you like to use? (openai/firework/anthropic): ', (answer: string) => {
-          const normalizedAnswer = answer.toLowerCase().trim() as ModelType;
-          
-          if (['openai', 'firework', 'anthropic'].includes(normalizedAnswer)) {
-            readline.close();
-            resolve(normalizedAnswer);
-          } else {
-            readline.close();
-            reject(new Error('Invalid model type. Please choose "openai", "firework", or "anthropic"'));
-          }
-        });
-      });
-    };
-
-    const modelType = await getModelTypeFromUser();
-    console.log(`Using ${modelType} model client...`);
-    const modelClient = getModelClient(modelType);
+    // const modelClient = new AnthropicClient("claude-3-5-haiku-20241022", { temperature: 1 });
+    const modelClient = new OpenAIClient("gpt-4o");
 
     // Set initial active status
     await updateTerminalStatus(true);
@@ -86,7 +48,7 @@ export async function startAISystem() {
     while (true) { // Run indefinitely with idle periods
       try {
         let actionCount = 0;
-        const MAX_ACTIONS = 30; // Reduced for testing
+        const MAX_ACTIONS = 20; // Reduced for testing
 
         // Active period
         while (actionCount < MAX_ACTIONS) {
