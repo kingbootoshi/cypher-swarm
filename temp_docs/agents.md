@@ -2,30 +2,34 @@
 
 ## Overview
 
-The agent system provides a framework for creating AI agents that can interact with various interfaces, starting with a Twitter-connected terminal. Each agent inherits from BaseAgent and implements specific behaviors through tools and configurations.
+The agent system provides a framework for creating AI agents that can interact with various interfaces and external systems. Each agent inherits from `BaseAgent` and implements specific behaviors through tools and configurations.
+
+Agents are organized into their own folders under `src/ai/agents/` for better code organization.
 
 ## Core Components
 
 ### 1. BaseAgent
-The foundation class that handles:
-- Message history management
-- Model interactions (OpenAI, Anthropic, Fireworks)
-- Tool execution
-- Response processing
+
+The foundational class that handles:
+
+- **Message History Management**: Keeps track of the conversation history between the user and the agent.
+- **Model Interactions**: Interfaces with different AI models (OpenAI, Anthropic, Fireworks) in a consistent manner.
+- **Tool Execution**: Allows agents to perform actions using tools defined via OpenAI's function calling schemas.
+- **Response Processing**: Handles the agent's output, including tool results and direct responses.
 
 ### 2. Model Adapters
-Handles model-specific formatting for:
-- OpenAI
-- Anthropic
-- Fireworks
+
+Adapters for each AI provider handle model-specific formatting and interactions:
+
+- **OpenAI Adapter**: For models like GPT-4.
+- **Anthropic Adapter**: For models like Claude.
+- **Fireworks Adapter**: For Fireworks AI models.
 
 ### 3. Tools
 
-All tool schemas are made to match OpenAI's: https://platform.openai.com/docs/guides/function-calling
+Tools are defined following OpenAI's [function calling schemas](https://platform.openai.com/docs/guides/function-calling). They allow agents to connect with any external part of the code or system.
 
-** NOTE: I noticed Anthropic was making up new parameters in a tool call, because the additionalProperties: false parameter is not used by Claude at all. You have to reinforce the tool config to NOT make new properties in claude!
- 
-Function definitions that agents can use to interact with external systems:
+**Example Tool Definition:**
 ```typescript
 const ExampleTool = {
   type: 'function',

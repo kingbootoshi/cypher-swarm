@@ -1,7 +1,7 @@
 // src/ai/agents/terminalAgent/terminalAgentConfig.ts
 
 import { AgentConfig } from '../../types/agentSystem';
-import { corePersonalityPrompt } from '../corePersonality';
+import { generateSystemPrompt } from '../corePersonality';
 
 export const extractorAgentConfig: AgentConfig = {
   systemPromptTemplate: `
@@ -33,6 +33,6 @@ EXTRACTING LEARNINGS FROM USERS REQUIRES SPECIFIC USER-SPECIFIC TERMINAL LOGS.
 You MUST use your extract_log_knowledge at all times - you will ONLY be given terminal logs and user interactions. PLEASE OUTPUT JSON FORMAT ONLY.
 `,
   dynamicVariables: {
-    corePersonalityPrompt: corePersonalityPrompt,
+    corePersonalityPrompt: generateSystemPrompt(),
   },
 };

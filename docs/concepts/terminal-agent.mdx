@@ -1,0 +1,161 @@
+---
+title: 'Terminal Agent'
+description: 'Understanding the core terminal agent loop and database interactions'
+---
+
+## Overview
+
+The Terminal Agent serves as the primary interface between the AI system and the external world. It processes commands, maintains state, and logs interactions in a Supabase database for persistence and analysis.
+
+## Terminal Loop Architecture
+
+<Steps>
+  <Step title="Command Processing">
+    The terminal agent receives commands and processes them through a structured pipeline:
+    ```typescript
+    // 1. Command input
+    // 2. AI processing
+    // 3. Command execution
+    // 4. Response logging
+    ```
+  </Step>
+  <Step title="State Management">
+    Each terminal session maintains its state, including:
+    - Active/inactive status
+    - Session ID
+    - Command history
+    - Execution context
+  </Step>
+  <Step title="Database Integration">
+    All terminal interactions are logged in Supabase for:
+    - Historical analysis
+    - State persistence
+    - Command tracking
+  </Step>
+</Steps>
+
+## Database Schema
+
+The terminal system uses two main tables in Supabase:
+
+### Terminal History Table
+
+```sql
+terminal_history {
+  id: number
+  session_id: string
+  internal_thought: string
+  plan: string
+  command: string
+  terminal_log: string | null
+}
+```
+
+### Terminal Status Table
+
+```sql
+terminal_status {
+  id: boolean
+  is_active: boolean
+  last_updated: timestamp
+}
+```
+
+## Database Operations
+
+### Creating Terminal Entries
+
+When a command is executed, it's logged in the database:
+
+```typescript
+async function createTerminalEntry(sessionId: string, output: TerminalToolOutput) {
+  // Insert new entry with:
+  // - Session ID
+  // - Internal thought process
+  // - Execution plan
+  // - Command to be executed
+  // - Null terminal log (updated after execution)
+}
+```
+
+### Updating Command Responses
+
+After command execution, the response is saved:
+
+```typescript
+async function updateTerminalResponse(entryId: number, response: string) {
+  // Update the entry with command output
+}
+```
+
+### Terminal Status Management
+
+The system tracks terminal status for monitoring:
+
+```typescript
+async function updateTerminalStatus(isActive: boolean) {
+  // Update terminal active status and timestamp
+}
+
+async function getTerminalStatus() {
+  // Retrieve current terminal status
+}
+```
+
+## Command Execution Flow
+
+<Steps>
+  <Step title="Command Initiation">
+    1. Terminal receives command
+    2. Creates database entry with initial state
+    3. Assigns unique session ID
+  </Step>
+  <Step title="Processing">
+    1. AI agent processes command
+    2. Generates execution plan
+    3. Records internal thought process
+  </Step>
+  <Step title="Execution">
+    1. Executes command in system
+    2. Captures command output
+    3. Updates database with response
+  </Step>
+  <Step title="State Update">
+    1. Updates terminal status
+    2. Records timestamp
+    3. Maintains session context
+  </Step>
+</Steps>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card
+    title="Error Handling"
+    icon="shield-check"
+  >
+    Always implement proper error handling and logging for database operations.
+  </Card>
+  <Card
+    title="Session Management"
+    icon="clock"
+  >
+    Maintain consistent session IDs for command tracking and analysis.
+  </Card>
+  <Card
+    title="Status Updates"
+    icon="signal"
+  >
+    Keep terminal status current for system monitoring.
+  </Card>
+  <Card
+    title="Response Logging"
+    icon="database"
+  >
+    Ensure all command outputs are properly captured and stored.
+  </Card>
+</CardGroup>
+
+<Note>
+  The terminal agent system is designed to be resilient and maintain a complete history of all interactions for analysis and debugging.
+</Note> 

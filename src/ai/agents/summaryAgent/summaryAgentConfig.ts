@@ -1,7 +1,7 @@
 // src/ai/agents/summaryAgent/summaryAgentConfig.ts
 
 import { AgentConfig } from '../../types/agentSystem';
-import { corePersonalityPrompt } from '../corePersonality';
+import { generateSystemPrompt } from '../corePersonality';
 import { activeSummaries } from '../../../utils/dynamicVariables';
 
 export const summaryAgentConfig: AgentConfig = {
@@ -26,7 +26,7 @@ Use the current summaries as a REFERENCE in condensing summaries. The summaries 
 You MUST use your condense_summaries at all times - you will ONLY be given terminal logs and user interactions. PLEASE OUTPUT JSON FORMAT ONLY.
 `,
   dynamicVariables: {
-    corePersonalityPrompt: corePersonalityPrompt,
+    corePersonalityPrompt: generateSystemPrompt(),
     currentSummaries: activeSummaries,
   },
 };

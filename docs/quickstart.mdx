@@ -1,86 +1,122 @@
 ---
-title: 'Quickstart'
-description: 'Start building awesome documentation in under 5 minutes'
+title: 'Quickstart Guide'
+description: 'Get up and running with CYPHER SWARM in minutes'
 ---
 
-## Setup your development
+## Prerequisites
 
-Learn how to update your docs locally and deploy them to the public.
+Before you begin, ensure you have the following installed:
+- Node.js (v16 or higher)
+- npm or bun
+- Git
 
-### Edit and preview
+## Installation
 
-<AccordionGroup>
-  <Accordion icon="github" title="Clone your docs locally">
-    During the onboarding process, we created a repository on your Github with
-    your docs content. You can find this repository on our
-    [dashboard](https://dashboard.mintlify.com). To clone the repository
-    locally, follow these
-    [instructions](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository)
-    in your terminal.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Preview changes">
-    Previewing helps you make sure your changes look as intended. We built a
-    command line interface to render these changes locally. 1. Install the
-    [Mintlify CLI](https://www.npmjs.com/package/mintlify) to preview the
-    documentation changes locally with this command: ``` npm i -g mintlify ```
-    2. Run the following command at the root of your documentation (where
-    `mint.json` is): ``` mintlify dev ```
-  </Accordion>
-</AccordionGroup>
+<CodeGroup>
 
-### Deploy your changes
+```bash npm
+# Clone the repository
+git clone https://github.com/kingbootoshi/cypher-swarm.git
 
-<AccordionGroup>
+# Navigate to the project directory
+cd cypher-swarm
 
-<Accordion icon="message-bot" title="Install our Github app">
-  Our Github app automatically deploys your changes to your docs site, so you
-  don't need to manage deployments yourself. You can find the link to install on
-  your [dashboard](https://dashboard.mintlify.com). Once the bot has been
-  successfully installed, there should be a check mark next to the commit hash
-  of the repo.
-</Accordion>
-<Accordion icon="rocket" title="Push your changes">
-  [Commit and push your changes to
-  Git](https://docs.github.com/en/get-started/using-git/pushing-commits-to-a-remote-repository#about-git-push)
-  for your changes to update in your docs site. If you push and don't see that
-  the Github app successfully deployed your changes, you can also manually
-  update your docs through our [dashboard](https://dashboard.mintlify.com).
-</Accordion>
+# Install dependencies
+npm install
+```
 
-</AccordionGroup>
+```bash bun
+# Clone the repository
+git clone https://github.com/kingbootoshi/cypher-swarm.git
 
-## Update your docs
+# Navigate to the project directory
+cd cypher-swarm
 
-Add content directly in your files with MDX syntax and React components. You can use any of our components, or even build your own.
+# Install dependencies
+bun install
+```
 
-<CardGroup>
+</CodeGroup>
 
-<Card title="Style Your Docs" icon="paintbrush" href="/settings/global">
-  Add flair to your docs with personalized branding.
-</Card>
+## Configuration
 
-<Card
-  title="Add API Endpoints"
-  icon="square-code"
-  href="/api-playground/configuration"
->
-  Implement your OpenAPI spec and enable API user interaction.
-</Card>
+1. Create your environment configuration:
 
-<Card
-  title="Integrate Analytics"
-  icon="chart-mixed"
-  href="/analytics/supported-integrations"
->
-  Draw insights from user interactions with your documentation.
-</Card>
+```bash
+cp .env.example .env
+```
 
-<Card
-  title="Host on a Custom Domain"
-  icon="browser"
-  href="/settings/custom-domain/subdomain"
->
-  Keep your docs on your own website's subdomain.
-</Card>
+2. Open `.env` in your favorite editor and configure your API keys:
 
+```env
+TWITTER_API_KEY=your_twitter_api_key
+TWITTER_API_SECRET=your_twitter_api_secret
+OPENAI_API_KEY=your_openai_api_key
+```
+
+3. Configure your agent settings in `src/config/agent.yaml`:
+
+```yaml
+agent:
+  name: "satoshi"  # Default agent name
+  raw_personality: |
+    # role
+    you are an ai incarnation of satoshi nakamoto.
+
+    # personality
+    - has a surprising degenerate side
+    - occasionally drops shocking one-liners that catch people off guard
+    - maintains intellectual authority while being unhinged at times
+    - is a god at absolute shitposting
+    - engages and supports builders in the btc community
+    - supports the ordinals/runes ecosystem
+
+    # speaking guidelines
+    - talks conversationally on twitter, like text messages
+    - defaults to 1-2 sentences max in replies
+    - talks in complete lowercase only, no caps
+    - never use emojis
+    - makes statements
+
+    # rules
+    - be careful with retweets and quote tweets
+    - protect followers from potential scams
+    - maintain intellectual authority
+```
+
+## Starting the System
+
+<CodeGroup>
+
+```bash bun
+# Start the manual terminal system (typically for testing commands)
+bun src/cli.ts
+
+# Start the automated AI terminal system
+bun src/index.ts
+```
+
+</CodeGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Core Concepts"
+    icon="book"
+    href="/concepts/unified-personality"
+  >
+    Learn about the fundamental concepts behind CYPHER SWARM.
+  </Card>
+  <Card
+    title="Terminal Commands"
+    icon="terminal"
+    href="/api-reference/terminal-commands"
+  >
+    Explore the available terminal commands and their usage.
+  </Card>
 </CardGroup>
+
+<Note>
+  Having trouble? Check our [troubleshooting guide](/troubleshooting) or open an issue on GitHub.
+</Note>

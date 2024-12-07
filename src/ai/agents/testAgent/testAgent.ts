@@ -1,7 +1,7 @@
 import { BaseAgent } from '../BaseAgent';
 import { ModelClient } from '../../types/agentSystem';
 // Import core personality prompt
-import { corePersonalityPrompt } from '../corePersonality';
+import { generateSystemPrompt } from '../corePersonality';
 import { AgentConfig } from '../../types/agentSystem';
 
 // Configuration for chat agent following terminal agent pattern
@@ -19,7 +19,7 @@ You are a chat agent designed to have natural conversations with other AI agents
 Respond naturally in a conversational manner while maintaining the personality defined above.
 `,
   dynamicVariables: {
-    corePersonalityPrompt: corePersonalityPrompt,
+    corePersonalityPrompt: generateSystemPrompt(),
     twitterInterface: 'TWITTER INTERFACE DYNAMIC VARIABLE HERE',
   },
 };

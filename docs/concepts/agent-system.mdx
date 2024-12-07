@@ -1,0 +1,452 @@
+---
+title: 'Agent System'
+description: 'Building agents with OpenAI function calling and multi-model support'
+---
+
+## Overview
+
+The **Agent System** provides a robust framework for creating AI agents capable of interacting with external systems through tools defined using OpenAI's [function calling schemas](https://platform.openai.com/docs/guides/function-calling). Each agent is organized into its own folder under `src/ai/agents/` for better organization.
+
+## Core Concepts
+
+### Agents and Tools
+
+- **Agents** are classes that inherit from `BaseAgent` and implement specific behaviors.
+- **Tools** are functions that agents can use to perform actions. They are defined following OpenAI's function calling schemas, allowing agents to interact with any external part of the code.
+
+### Model Support
+
+- The system supports multiple AI models:
+  - **OpenAI Models** (e.g., GPT-4)
+  - **Anthropic Models** (e.g., Claude)
+  - **Fireworks Models**
+
+## Creating an Agent
+
+### 1. Define a Tool (Optional)
+
+If your agent needs to perform actions, you can define a tool.
+
+```typescript
+// src/ai/agents/MyAgent/myTool.ts
+import { z } from 'zod';
+import { Tool } from '../../types/agentSystem';
+
+// Define the tool's schema using Zod
+export const myToolSchema = z.object({
+  action: z.string(),
+  data: z.any(),
+});
+
+// Define the tool following OpenAI's function calling schema
+export const MyTool: Tool = {
+  type: 'function',
+  function: {
+    name: 'perform_action',
+    description: 'Performs an action with provided data.',
+    parameters: {
+      type: 'object',
+      required: ['action', 'data'],
+      properties: {
+        action: { type: 'string', description: 'The action to perform.' },
+        data: { type: 'any', description: 'The data required for the action.' },
+      },
+      additionalProperties: false, // Important for Claude compatibility
+    },
+  },
+};
+```
+
+### 2. Create Agent Configuration
+
+```typescript
+// src/ai/agents/MyAgent/myAgentConfig.ts
+import { AgentConfig } from '../../types/agentSystem';
+
+export const myAgentConfig: AgentConfig = {
+  systemPromptTemplate: `
+# PERSONALITY
+You are a specialized agent designed to perform specific tasks.
+
+# MAIN GOAL
+Execute tasks efficiently using the provided tools.
+
+# OUTPUT FORMAT
+Use the available tools to perform actions and provide responses.
+
+# DYNAMIC VARIABLES
+{{customInstructions}}
+`,
+  dynamicVariables: {
+    customInstructions: 'Additional runtime instructions go here',
+  },
+};
+```
+
+### 3. Implement the Agent
+
+```typescript
+// src/ai/agents/MyAgent/MyAgent.ts
+import { BaseAgent } from '../BaseAgent';
+import { ModelClient } from '../../types/agentSystem';
+import { myAgentConfig } from './myAgentConfig';
+import { myToolSchema, MyTool } from './myTool';
+
+export class MyAgent extends BaseAgent<typeof myToolSchema> {
+  constructor(modelClient: ModelClient) {
+    super(myAgentConfig, modelClient, myToolSchema);
+  }
+
+  protected defineTools(): void {
+    this.tools = [MyTool];
+    console.log('🛠️ Tools Defined:', this.tools.map(t => t.function.name));
+  }
+}
+```
+
+## Example Agents
+
+### Basic Chat Agent
+
+The simplest type of agent - used for basic conversations without tools:
+
+```typescript
+// src/ai/agents/chatAgent/chatAgentConfig.ts
+import { AgentConfig } from '../../types/agentSystem';
+
+export const chatAgentConfig: AgentConfig = {
+  systemPromptTemplate: `
+# PERSONALITY
+{{corePersonalityPrompt}}
+
+# DYNAMIC VARIABLES
+## USERNAME
+{{userName}}
+
+## SESSION ID
+{{sessionId}}
+
+# MAIN GOAL
+You are a chat agent designed to have natural conversations with other AI agents.
+
+# OUTPUT FORMAT
+Respond naturally in a conversational manner while maintaining the personality defined above.
+`,
+  dynamicVariables: {
+    corePersonalityPrompt: 'You are a friendly and engaging conversational partner.',
+    userName: 'User',
+    sessionId: 'session123',
+  },
+};
+
+// src/ai/agents/chatAgent/chatAgent.ts
+import { BaseAgent } from '../BaseAgent';
+import { ModelClient } from '../../types/agentSystem';
+import { chatAgentConfig } from './chatAgentConfig';
+
+export class ChatAgent extends BaseAgent<null> {
+  constructor(modelClient: ModelClient) {
+    super(chatAgentConfig, modelClient, null);
+  }
+
+  protected defineTools(): void {
+    // No tools needed for basic chat
+  }
+}
+```
+
+### Chat Room Test Example
+
+Shows how to create multiple agents that can converse with each other:
+
+```typescript
+// src/tests/chatRoomTest.ts
+import { ChatAgent } from '../ai/agents/chatAgent/chatAgent';
+import { OpenAIClient } from '../ai/models/clients/OpenAiClient';
+import { AnthropicClient } from '../ai/models/clients/AnthropicClient';
+
+// Initialize agents with different models
+const openAIAgent = new ChatAgent(new OpenAIClient("gpt-4o"));
+const anthropicAgent = new ChatAgent(new AnthropicClient("claude-3-5-sonnet-20240620"));
+
+// Have agents converse
+let lastMessage = '';
+for (let i = 0; i < 5; i++) {
+  // OpenAI agent's turn
+  const openAIResult = await openAIAgent.run(lastMessage);
+  console.log('OpenAI:', openAIResult.output);
+  lastMessage = openAIResult.output;
+
+  // Anthropic agent's turn
+  const anthropicResult = await anthropicAgent.run(lastMessage);
+  console.log('Anthropic:', anthropicResult.output);
+  lastMessage = anthropicResult.output;
+}
+```
+
+### Tool-Using Agent Example
+
+The Media Agent is a practical example of an agent that generates media content for tweets:
+
+```typescript
+// src/ai/agents/mediaAgent/mediaTool.ts
+import { z } from 'zod';
+import { Tool } from '../../types/agentSystem';
+
+// Define the content type enum for strict type checking
+const MediaContentType = {
+  Image: 'image',
+  Video: 'video'
+} as const;
+
+export const mediaToolSchema = z.object({
+  content_type: z.enum([MediaContentType.Image, MediaContentType.Video])
+    .describe('The type of media to generate: either "image" or "video"'),
+  media_prompt: z.string()
+    .describe('A prompt used for text-to-image generation. Be very descriptive, and include specific details. You can include a description of the scene, the mood, the style, etc. If you want text in the image, make sure to include it in the prompt.')
+});
+
+export const MediaTool: Tool = {
+  type: 'function',
+  function: {
+    name: "generate_media",
+    description: "Based on the main tweet provided to you, generate media to accompany the tweet.",
+    strict: true,
+    parameters: {
+      type: "object",
+      required: [
+        "content_type",
+        "media_included"
+      ],
+      properties: {
+        content_type: {
+          type: "string",
+          enum: [MediaContentType.Image, MediaContentType.Video],
+          description: "The type of media to generate: either \"image\" or \"video\""
+        },
+        media_prompt: {
+          type: "string",
+          description: "A prompt used for text-to-image generation. Be very descriptive, and include specific details. You can include a description of the scene, the mood, the style, etc. If you want text in the image, make sure to include it in the prompt."
+        }
+      }
+    }
+  }
+};
+
+// src/ai/agents/mediaAgent/mediaAgentConfig.ts
+import { AgentConfig } from '../../types/agentSystem';
+import { CORE_PERSONALITY } from '../corePersonality';
+import { activeSummaries, recentMainTweets } from '../../../utils/dynamicVariables';
+
+export const mediaAgentConfig: AgentConfig = {
+  systemPromptTemplate: `
+# PERSONALITY
+{{corePersonalityPrompt}}
+
+# MAIN GOAL
+You are the media agent designed to generate media for Satoshi's tweets. Based on the main tweet provided to you, generate media to accompany the tweet.
+
+# OUTPUT FORMAT
+Respond naturally in a conversational manner while maintaining the personality defined above. Use loaded context to inform your response.
+`,
+  dynamicVariables: {
+    corePersonalityPrompt: CORE_PERSONALITY,
+    currentSummaries: activeSummaries,
+    terminalLog: "TERMINAL LOG DYNAMIC VARIABLE HERE",
+    recentMainTweets: recentMainTweets || 'No recent tweets available',
+    memories: 'MEMORIES DYNAMIC VARIABLE HERE'
+  },
+};
+
+// src/ai/agents/mediaAgent/mediaAgent.ts
+import { BaseAgent } from '../BaseAgent';
+import { ModelClient } from '../../types/agentSystem';
+import { mediaAgentConfig } from './mediaAgentConfig';
+import { MediaTool, mediaToolSchema } from './mediaTool';
+
+export class MediaAgent extends BaseAgent<typeof mediaToolSchema> {
+  constructor(modelClient: ModelClient) {
+    super(mediaAgentConfig, modelClient, mediaToolSchema);
+  }
+
+  protected defineTools(): void {
+    this.tools = [MediaTool];
+  } 
+}
+```
+
+This example demonstrates:
+- Using enums for strict type checking of tool parameters
+- Detailed schema descriptions for better AI understanding
+- Integration with dynamic variables and core personality
+- Practical use case of generating media content for tweets
+
+Usage example:
+
+```typescript
+import { MediaAgent } from '../ai/agents/mediaAgent/mediaAgent';
+import { OpenAIClient } from '../ai/models/clients/OpenAiClient';
+
+const mediaAgent = new MediaAgent(
+  new OpenAIClient('gpt-4', { temperature: 0.7 })
+);
+
+const result = await mediaAgent.run('Create an image for my tweet about Bitcoin adoption.');
+
+if (result.success) {
+  console.log('Media Generation Result:', {
+    type: result.output.content_type,
+    prompt: result.output.media_prompt
+  });
+}
+```
+
+## Multi-Model Support
+
+The system supports multiple AI models through dedicated clients and adapters:
+
+```typescript
+// OpenAI
+const openAIAgent = new MyAgent(
+  new OpenAIClient('gpt-4o', { temperature: 1 })
+);
+
+// Anthropic
+const anthropicAgent = new MyAgent(
+  new AnthropicClient('claude-3-5-haiku-20241022', { temperature: 1 })
+);
+
+// Fireworks
+const fireworksAgent = new MyAgent(
+  new FireworkClient('accounts/fireworks/models/llama-v3p1-405b-instruct', { temperature: 1 })
+);
+```
+
+## Best Practices
+
+- **Folder Organization**: Keep each agent in its own folder with its tools and configuration
+- **Tool Definition**: Always use `additionalProperties: false` in tool schemas for better Claude compatibility
+- **Type Safety**: Use Zod schemas to ensure proper typing of tool inputs/outputs
+- **Model Agnostic**: Design agents to work consistently across different AI models
+- **Error Handling**: Always check `result.success` when running agents
+
+## BaseAgent Features
+
+The `BaseAgent` class provides a rich set of features for managing conversations and agent state:
+
+### Message Management
+
+```typescript
+// Add messages to the conversation
+agent.addMessage({
+  role: 'user',
+  content: 'Hello!',
+});
+
+// Add user messages (with optional image content)
+agent.addUserMessage('How are you?', imageData);
+
+// Add AI responses
+agent.addAgentMessage('I am doing well!', imageData);
+
+// Get last messages
+const lastUserMsg = agent.getLastUserMessage();
+const lastAgentMsg = agent.getLastAgentMessage();
+
+// Load existing chat history
+const messages = [
+  { role: 'user', content: 'Hello' },
+  { role: 'assistant', content: 'Hi there!' }
+];
+agent.loadChatHistory(messages); // Preserves system message
+```
+
+### Image Support
+
+```typescript
+// Add a single image
+agent.addImage(
+  {
+    data: 'base64_image_data',
+    mime: 'image/jpeg'
+  },
+  'Optional text to accompany image',
+  'user' // or 'assistant'
+);
+
+// Add multiple images
+agent.addImage(
+  [
+    { data: 'image1_data', mime: 'image/jpeg' },
+    { data: 'image2_data', mime: 'image/png' }
+  ],
+  'Text for multiple images'
+);
+```
+
+### Running the Agent
+
+```typescript
+// Basic run
+const result = await agent.run('User input here');
+
+// Run with dynamic variables
+const result = await agent.run('Input message', {
+  customVariable: 'Custom value',
+  anotherVariable: 'Another value'
+});
+
+// Handle results
+if (result.success) {
+  // For tool-using agents
+  console.log('Tool output:', result.output);
+  
+  // For chat agents
+  console.log('Response:', result.output);
+} else {
+  console.error('Error:', result.error);
+}
+```
+
+### System Prompt Management
+
+```typescript
+// System prompt is compiled with dynamic variables
+const systemPrompt = agent.compileSystemPrompt({
+  customInstruction: 'Additional instruction',
+  userName: 'John'
+});
+
+// Dynamic variables can be updated at runtime
+const result = await agent.run('Input', {
+  updatedVariable: 'New value'
+});
+```
+
+### Logging
+
+The agent system includes comprehensive logging (via Logger utility):
+
+```typescript
+// Enable logging for debugging
+Logger.enable();
+
+// Logs include:
+// - Message history updates
+// - System prompt compilation
+// - Tool definitions and executions
+// - Model responses
+// - Error states
+
+// Disable logging
+Logger.disable();
+```
+
+## Notes
+
+- The `BaseAgent` class handles all core functionality including message history, tool execution, and model interactions
+- Tools follow OpenAI's function calling schema for consistency across models
+- Each model has its own adapter to handle model-specific formatting requirements
+- Agents can be tested with different models to ensure consistent behavior
+
+For more details on implementation, refer to the source code in `src/ai/agents/BaseAgent.ts` and the example agents in the codebase.

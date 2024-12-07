@@ -1,0 +1,108 @@
+---
+title: 'Pipelines'
+description: 'Understanding how multiple agents work together in the CYPHER SWARM'
+---
+
+# Agent Pipelines
+
+Agent Pipelines are orchestrated workflows where multiple specialized agents work together to accomplish complex tasks. This architecture leverages the Agent System's modular design to create powerful, composable operations.
+
+## Pipeline Architecture
+
+Each pipeline:
+1. Coordinates multiple specialized agents
+2. Passes context and results between agents
+3. Handles the overall workflow logic
+4. Manages error cases and edge conditions
+
+## Example: Main Tweet Generation Pipeline
+
+Let's examine how multiple agents collaborate to generate and post a main tweet:
+
+```typescript
+// Simplified pipeline flow
+async function generateAndPostMainTweet() {
+  // 1. Memory Agent loads context
+  const memories = await loadMemories(terminalHistory);
+  
+  // 2. Main Tweet Agent generates tweet
+  const tweet = await mainTweetAgent.run(prompt, { memories });
+  
+  // 3. Media Agent handles visuals (if needed)
+  if (tweet.needsMedia) {
+    const media = await mediaAgent.run(tweet.content);
+  }
+}
+```
+
+### Pipeline Flow
+
+1. **Memory Loading Stage**
+   - Memory Agent processes recent terminal history
+   - Searches and loads relevant memories
+   - Provides contextual awareness for tweet generation
+
+2. **Tweet Generation Stage**
+   - Main Tweet Agent receives memory context
+   - Analyzes recent activities and memories
+   - Generates appropriate tweet content
+   - Decides if media should be included
+
+3. **Media Generation Stage** (Optional)
+   - Media Agent receives tweet context
+   - Determines appropriate media type (image/video)
+   - Generates media content matching tweet theme
+   - Returns media URLs for tweet attachment
+
+4. **Final Posting Stage**
+   - Combines tweet content and media
+   - Posts to Twitter
+   - Returns success/failure status
+
+## Benefits of Pipeline Architecture
+
+1. **Modularity**
+   - Each agent specializes in specific tasks
+   - Agents can be updated or replaced independently
+   - New capabilities can be added without disrupting existing functionality
+
+2. **Context Sharing**
+   - Seamless information flow between agents
+   - Each agent builds upon previous agents' work
+   - Maintains coherent context throughout the process
+
+3. **Error Handling**
+   - Pipeline can gracefully handle failures at any stage
+   - Individual agent errors don't crash the entire process
+   - Clear error reporting and recovery options
+
+4. **Extensibility**
+   - Easy to add new agents to the pipeline
+   - Can modify pipeline flow without changing agents
+   - Supports parallel processing when appropriate
+
+## Creating New Pipelines
+
+When designing new pipelines:
+
+1. **Identify Specialized Tasks**
+   - Break down complex operations into discrete steps
+   - Determine which agents are needed for each step
+   - Define clear interfaces between steps
+
+2. **Design Data Flow**
+   - Plan how information passes between agents
+   - Define required context for each agent
+   - Structure output to be useful for next stage
+
+3. **Implement Error Handling**
+   - Consider failure modes at each stage
+   - Plan recovery strategies
+   - Provide meaningful error messages
+
+4. **Test Integration**
+   - Verify agents work together smoothly
+   - Test edge cases and error conditions
+   - Ensure consistent behavior
+
+This pipeline architecture allows Agent-X to handle complex tasks by breaking them down into manageable pieces, each handled by a specialized agent while maintaining context and coherence throughout the process. 

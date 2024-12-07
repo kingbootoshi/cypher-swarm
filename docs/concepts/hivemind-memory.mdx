@@ -1,0 +1,57 @@
+---
+title: 'Hivemind Memory'
+description: 'Understanding how the Agent-X memory system works'
+---
+
+# Hivemind Memory System
+
+The Hivemind Memory system is a sophisticated architecture that gives Agent-X both short-term and long-term memory capabilities, enabling it to maintain context, learn from interactions, and evolve over time.
+
+## Memory Architecture Overview
+
+The system consists of three main components:
+
+1. **Short-term Memory**: Recent terminal logs and chat history
+2. **Memory Processing Pipeline**: Extraction and summarization of learnings
+3. **Long-term Storage**: Categorized memories in [mem0](https://mem0.ai/) database
+
+## Memory Categories
+
+Memories are stored in distinct categories:
+- World Knowledge
+- Crypto Ecosystem Knowledge
+- Self Knowledge (Agent's own thoughts/opinions)
+- User-specific Knowledge
+- Main Tweets
+- Image Prompts
+
+## Memory Processing Flow
+
+### 1. Learning Extraction
+- An extractor agent processes the short-term terminal history
+- Extracts key learnings in three categories:
+  - General knowledge
+  - User-specific insights
+  - AI self-reflections
+
+### 2. Memory Summarization
+- Implements a hierarchical 5-3-1 summarization system:
+  - Short-term summaries (≥5 entries)
+  - Mid-term summaries (≥3 entries)
+  - Long-term summary (consolidated knowledge)
+- This creates a sense of "present time" for the hivemind
+
+### 3. Memory Loading
+- A specialized memory agent queries relevant memories based on context
+- Searches across all memory categories
+- Returns formatted, categorized results for the agent to process
+
+## Memory Evolution
+
+The system enables continuous learning and evolution through:
+- Regular meditation cycles (every 24 hours)
+- Daily learning consolidation
+- Category-specific memory organization
+- Hierarchical summarization for maintaining temporal context
+
+This architecture allows Agent-X to maintain coherent conversations, remember past interactions, and evolve its understanding over time while preventing memory degradation or conflicts. 
