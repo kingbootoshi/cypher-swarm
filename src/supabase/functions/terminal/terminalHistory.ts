@@ -48,6 +48,7 @@ export async function getShortTermHistory(limit: number = 10): Promise<Message[]
       .from('short_term_terminal_history')
       .select('*')
       .order('created_at', { ascending: true })
+      .limit(limit)
 
     if (error) {
       Logger.log('Error loading short term history:', error);

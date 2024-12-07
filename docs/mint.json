@@ -58,7 +58,8 @@
         "concepts/terminal-agent",
         "concepts/agent-system",
         "concepts/hivemind-memory",
-        "concepts/pipelines"
+        "concepts/pipelines",
+        "concepts/terminal-commands"
       ]
     }
   ],

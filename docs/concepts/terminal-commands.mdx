@@ -1,0 +1,207 @@
+---
+title: 'Terminal Commands'
+description: 'Learn how to create and implement terminal commands for Agent-X'
+---
+
+# Creating Terminal Commands
+
+Terminal commands are the primary way Agent-X interacts with the system and external services. This guide will walk you through creating new terminal commands.
+
+## Command Structure
+
+Each command is a TypeScript file that exports a `Command` object with the following structure:
+
+```typescript
+import { Command } from '../../types/CommandType';
+
+export const yourCommand: Command = {
+  name: 'command-name',
+  description: 'What your command does',
+  parameters: [
+    {
+      name: 'paramName',
+      description: 'Parameter description',
+      required: true,
+      type: 'string', // 'string' | 'number' | 'boolean'
+      defaultValue: 'optional default'
+    }
+  ],
+  handler: async (args) => {
+    // Command implementation
+    return {
+      output: 'Command result'
+    };
+  }
+};
+```
+
+## Step-by-Step Guide
+
+### 1. Create Command File
+
+Create a new TypeScript file in `src/terminal/commands/` with a descriptive name:
+
+```bash
+touch src/terminal/commands/your-command.ts
+```
+
+### 2. Implement Command
+
+Your command implementation should:
+
+- Import necessary dependencies
+- Define command metadata (name, description, parameters)
+- Implement the handler function
+- Handle errors appropriately
+- Return meaningful output
+
+Example:
+
+```typescript
+import { Command } from '../../types/CommandType';
+import { Logger } from '../../utils/logger';
+
+export const greetCommand: Command = {
+  name: 'greet',
+  description: 'Greets a user with a custom message',
+  parameters: [
+    {
+      name: 'name',
+      description: 'Name of the person to greet',
+      required: true,
+      type: 'string'
+    },
+    {
+      name: 'greeting',
+      description: 'Custom greeting message',
+      required: false,
+      type: 'string',
+      defaultValue: 'Hello'
+    }
+  ],
+  handler: async (args) => {
+    try {
+      const message = `${args.greeting}, ${args.name}!`;
+      Logger.log('Greeting command executed', { args });
+      return {
+        output: message
+      };
+    } catch (error) {
+      Logger.error('Greeting command failed', { error });
+      return {
+        output: `Error: ${error.message}`
+      };
+    }
+  }
+};
+```
+
+### 3. Parameter Types
+
+Commands support three parameter types:
+- `string`: Text input
+- `number`: Numeric values
+- `boolean`: True/false values
+
+Parameters can be:
+- Required: Must be provided when executing the command
+- Optional: Can have default values
+- Typed: Automatically converted to the correct type
+
+### 4. Best Practices
+
+1. **Naming Conventions**
+   - Use kebab-case for command names (e.g., `get-tweets`, `send-message`)
+   - Use camelCase for parameter names
+   - Files should match command names
+
+2. **Error Handling**
+   ```typescript
+   try {
+     // Command logic
+   } catch (error) {
+     Logger.error('Command failed', { error });
+     return {
+       output: `Error: ${error.message}`
+     };
+   }
+   ```
+
+3. **Logging**
+   - Use the Logger utility for consistent logging
+   - Log important events and errors
+   - Include relevant context in logs
+
+4. **Documentation**
+   - Add JSDoc comments for better IDE support
+   - Document any side effects
+   - Include usage examples
+
+### 5. Testing Commands
+
+Test your command in the terminal:
+
+```bash
+@your-command-name param1 param2
+```
+
+The command system will:
+1. Parse parameters
+2. Convert types
+3. Apply default values
+4. Execute your handler
+5. Return the output
+
+## Command Registry
+
+Commands are automatically registered when:
+1. They're placed in the `src/terminal/commands/` directory
+2. They export a valid Command object
+3. The command name is unique
+
+The registry provides:
+- Command discovery
+- Parameter validation
+- Type conversion
+- Error handling
+
+## Example Commands
+
+Here are some example commands to reference:
+
+1. **Simple Command**
+```typescript
+export const ping: Command = {
+  name: 'ping',
+  description: 'Simple ping command',
+  handler: async () => ({
+    output: 'pong'
+  })
+};
+```
+
+2. **Command with Parameters**
+```typescript
+export const echo: Command = {
+  name: 'echo',
+  description: 'Echoes back the input',
+  parameters: [
+    {
+      name: 'message',
+      description: 'Message to echo',
+      required: true,
+      type: 'string'
+    }
+  ],
+  handler: async (args) => ({
+    output: args.message
+  })
+};
+```
+
+## Next Steps
+
+- Review existing commands in `src/terminal/commands/` for more examples
+- Check the command registry implementation for advanced features
+- Explore integration with other system components
+- Consider adding tests for your commands 

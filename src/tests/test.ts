@@ -1,3 +1,4 @@
 import { getRecentMainTweets } from "../supabase/functions/twitter/tweetEntries";
+import { getShortTermHistory } from "../supabase/functions/terminal/terminalHistory";
 
-console.log(await getRecentMainTweets());
+console.log("short term history: ", await getShortTermHistory(6));
