@@ -13,24 +13,24 @@ const AGENT_NAME = configLoader.getAgentName();
  * Base function to handle common memory addition logic and error handling
  * @param category Memory category (user_id in mem0)
  * @param msgTemplate Array of message objects
- * @param metadata Optional additional metadata
- * @param infer Optional flag to control memory inference (defaults to true)
+ * @param options Optional configuration object for memory addition
  */
 async function addMemoryBase(
     category: string,
     msgTemplate: MessageTemplate,
-    metadata: Record<string, any> = {},
-    infer: boolean = true
+    options: {
+        metadata?: Record<string, any>;
+        infer?: boolean;
+    } = {}
 ): MemoryResponse {
     try {
-        // Always include UTC timestamp
         const timestamp = new Date().toISOString();
         
         const response = await client.add(msgTemplate, {
             agent_id: AGENT_NAME,
             user_id: category,
-            metadata: { ...metadata, timestamp },
-            infer
+            metadata: { ...(options.metadata || {}), timestamp },
+            infer: options.infer ?? true // Default to true if not specified
         });
         
         Logger.log(`Memory added to category: ${category}`);
@@ -44,15 +44,21 @@ async function addMemoryBase(
 /**
  * Add world knowledge to agent's memory
  */
-export function addWorldKnowledge(msgTemplate: MessageTemplate): MemoryResponse {
-    return addMemoryBase("world_knowledge", msgTemplate);
+export function addWorldKnowledge(
+    msgTemplate: MessageTemplate, 
+    options?: { infer?: boolean; metadata?: Record<string, any> }
+): MemoryResponse {
+    return addMemoryBase("world_knowledge", msgTemplate, options);
 }
 
 /**
  * Add crypto ecosystem knowledge to agent's memory
  */
-export function addCryptoKnowledge(msgTemplate: MessageTemplate): MemoryResponse {
-    return addMemoryBase("crypto_ecosystem_knowledge", msgTemplate);
+export function addCryptoKnowledge(
+    msgTemplate: MessageTemplate,
+    options?: { infer?: boolean; metadata?: Record<string, any> }
+): MemoryResponse {
+    return addMemoryBase("crypto_ecosystem_knowledge", msgTemplate, options);
 }
 
 /**
@@ -79,7 +85,7 @@ export function addUserSpecificKnowledge(
  * Stores exact tweet content without inference to maintain original message integrity
  */
 export function addMainTweet(msgTemplate: MessageTemplate): MemoryResponse {
-    return addMemoryBase("main_tweets", msgTemplate, {}, false);
+    return addMemoryBase("main_tweets", msgTemplate, { infer: false });
 }
 
 /**

@@ -14,7 +14,7 @@ import {
   async function testMemorySearches() {
     try {
       // Test search queries
-      const testQuery = "bitcoin, ai, crypto, blockchain";
+      const testQuery = "what is CyPh36YWsiML5v2AtUqU3UMmKfgcZpMMDVCV12AhJFA";
       const testUserId = "123"; // Replace with an actual user ID for testing
   
       Logger.log("🧪 Starting memory search tests...\n");
@@ -34,20 +34,20 @@ import {
       const selfResults = await searchSelfKnowledge(testQuery);
       Logger.log("Self Knowledge Results:", selfResults, "\n");
   
-      // Test user-specific knowledge search
-      Logger.log("Testing User-Specific Knowledge Search:");
-      const userResults = await searchUserSpecificKnowledge(testQuery, testUserId);
-      Logger.log("User-Specific Results:", userResults, "\n");
+      // // Test user-specific knowledge search
+      // Logger.log("Testing User-Specific Knowledge Search:");
+      // const userResults = await searchUserSpecificKnowledge(testQuery, testUserId);
+      // Logger.log("User-Specific Results:", userResults, "\n");
   
-      // Test main tweets search
-      Logger.log("Testing Main Tweets Search:");
-      const tweetResults = await searchMainTweet(testQuery);
-      Logger.log("Main Tweets Results:", tweetResults, "\n");
+      // // Test main tweets search
+      // Logger.log("Testing Main Tweets Search:");
+      // const tweetResults = await searchMainTweet(testQuery);
+      // Logger.log("Main Tweets Results:", tweetResults, "\n");
   
-      // Test image prompts search
-      Logger.log("Testing Image Prompts Search:");
-      const imageResults = await searchImagePrompt(testQuery);
-      Logger.log("Image Prompts Results:", imageResults, "\n");
+      // // Test image prompts search
+      // Logger.log("Testing Image Prompts Search:");
+      // const imageResults = await searchImagePrompt(testQuery);
+      // Logger.log("Image Prompts Results:", imageResults, "\n");
   
     } catch (error) {
       Logger.log("❌ Error during memory search tests:", error);
