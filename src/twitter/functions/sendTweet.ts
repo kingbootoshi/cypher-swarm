@@ -5,6 +5,27 @@ import { Logger } from '../../utils/logger';
 import { addMainTweet } from '../../memory/addMemories';
 
 /**
+ * Extracts tweet ID from response based on tweet type
+ * @param responseData - API response data
+ * @param isLongTweet - Whether this was a long tweet
+ * @returns Tweet ID or null
+ */
+function extractTweetId(responseData: any, isLongTweet: boolean): string | null {
+  try {
+    if (isLongTweet) {
+      // Path for long tweets (notetweets)
+      return responseData?.data?.notetweet_create?.tweet_results?.result?.rest_id;
+    } else {
+      // Path for regular tweets
+      return responseData?.data?.create_tweet?.tweet_results?.result?.rest_id;
+    }
+  } catch (error) {
+    Logger.log('Error extracting tweet ID:', error);
+    return null;
+  }
+}
+
+/**
  * Sends a main tweet with optional media and logs it to the database.
  * @param text - The text content of the tweet
  * @param mediaUrls - Optional array of media URLs
@@ -26,8 +47,9 @@ export async function sendTweet(
       ? await scraper.sendLongTweet(text, undefined, mediaData)
       : await scraper.sendTweet(text, undefined, mediaData);
       
+    Logger.log("RAW RESPONSE", response);
     const responseData = await response.json();
-    const tweetId = responseData?.data?.create_tweet?.tweet_results?.result?.rest_id;
+    const tweetId = extractTweetId(responseData, isLongTweet);
 
     if (tweetId) {
       Logger.log(`${isLongTweet ? 'Long tweet' : 'Tweet'} sent successfully (ID: ${tweetId})`);
