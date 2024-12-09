@@ -2,6 +2,11 @@
 
 import { z } from 'zod';
 import { Tool } from '../../types/agentSystem';
+import { configLoader } from '../../../utils/config';
+
+// Get agent name for dynamic field name
+const agentName = configLoader.getAgentName().toLowerCase();
+const selfFieldName = `${agentName}_self` as const;
 
 // Define the user-specific learning schema
 const userLearningSchema = z.object({
@@ -9,13 +14,18 @@ const userLearningSchema = z.object({
   learnings: z.array(z.string()).describe('Specific learnings and observations about this user')
 });
 
-export const extractorToolSchema = z.object({
+// Create dynamic schema with computed property name
+const extractorSchemaFields = {
   summary: z.string().describe('A concise paragraph summarizing the entire terminal log'),
   world_knowledge: z.array(z.string()).describe('Knowledge learned about the world, excluding crypto'),
   crypto_ecosystem_knowledge: z.array(z.string()).describe('Knowledge about the crypto ecosystem'),
-  satoshi_self: z.array(z.string()).describe('AI agent\'s personal growth and perspectives'),
   user_specific: z.array(userLearningSchema).optional().describe('Learnings about specific users encountered in the conversation'),
-});
+} as const;
+
+// Add the dynamic self field
+extractorSchemaFields[selfFieldName] = z.array(z.string()).describe(`AI agent's personal growth and perspectives`);
+
+export const extractorToolSchema = z.object(extractorSchemaFields);
 
 export const ExtractorTool: Tool = {
   type: 'function',
@@ -28,7 +38,7 @@ export const ExtractorTool: Tool = {
       "required": [
         "world_knowledge",
         "crypto_ecosystem_knowledge",
-        "satoshi_self",
+        selfFieldName,
         "summary"
       ],
       "properties": {
@@ -50,12 +60,12 @@ export const ExtractorTool: Tool = {
           },
           "description": "A list of knowledge learned about the crypto ecosystem and its culture."
         },
-        "satoshi_self": {
+        [selfFieldName]: {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "description": "learnings about your personal growth, new perspectives, feelings, or opinions developed from the current terminal log"
+          "description": `learnings about your personal growth, new perspectives, feelings, or opinions developed from the current terminal log`
         },
         "user_specific": {
           "type": "array",

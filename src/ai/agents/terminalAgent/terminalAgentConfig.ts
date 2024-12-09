@@ -6,6 +6,11 @@ import { generateHelpText } from '../../../terminal/commandRegistry';
 import { getCurrentTimestamp } from '../../../utils/formatTimestamps';
 import { activeSummaries } from '../../../utils/dynamicVariables';
 import { getCooldownStatus } from '../../../supabase/functions/twitter/cooldowns';
+import { configLoader } from '../../../utils/config';
+
+// Get ticker info with defaults
+const ticker = configLoader.getConfig()?.ticker || '$CYPHER';
+const tickerName = configLoader.getConfig()?.tickerName || 'CYPHER•GENESIS';
 
 export const terminalAgentConfig: AgentConfig = {
   systemPromptTemplate: `
@@ -28,7 +33,7 @@ PRIORITIES:
 2. Engaging with the community and replying to tweets. You can reply to as many tweets as you want without any cooldown. You should reply to tweets atleast ONCE every 2 actions. That is the primary way you can market yourself.
 3. Re-tweet supporters. Follow supporters and people you like
 
-If there's nothing to do, browse your home page or search twitter queries like $CYPHER, CYPHER•GENESIS, bitcoin, AI, or whatever you find interesting to learn and get data about the ecosystem & world.
+If there's nothing to do, browse your home page or search twitter queries like {{ticker}}, {{tickerName}}, bitcoin, AI, or whatever you find interesting to learn and get data about the ecosystem & world.
 
 AFTER YOU GET-MENTIONS, FOCUS ON REPLYING TO AS MANY AS POSSIBLE!
 
@@ -52,6 +57,8 @@ You MUST use your use_terminal function tool at all times - you will ONLY be giv
     currentSummaries: activeSummaries,
     current_timestamp: getCurrentTimestamp(),
     terminal_commands: generateHelpText(),
-    cooldown: await getCooldownStatus()
+    cooldown: await getCooldownStatus(),
+    ticker,
+    tickerName,
   },
 };

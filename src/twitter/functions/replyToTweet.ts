@@ -51,8 +51,14 @@ export async function replyToTweet(
     // Like the tweet before replying
     await likeTweet(replyToTweetId);
 
-    // Send the reply using the Twitter client
-    const response = await scraper.sendTweet(text, replyToTweetId, mediaData);
+    // Check if reply exceeds standard character limit
+    const isLongTweet = text.length > 279;
+    
+    // Send reply using appropriate method based on length
+    const response = isLongTweet 
+      ? await scraper.sendLongTweet(text, replyToTweetId, mediaData)
+      : await scraper.sendTweet(text, replyToTweetId, mediaData);
+      
     const responseData = await response.json();
     const replyTweetId = responseData?.data?.create_tweet?.tweet_results?.result?.rest_id;
 
@@ -63,6 +69,8 @@ export async function replyToTweet(
         message: 'Failed to retrieve reply tweet ID from response'
       };
     }
+
+    Logger.log(`${isLongTweet ? 'Long reply' : 'Reply'} sent successfully (ID: ${replyTweetId})`);
 
     // Log the bot's reply tweet
     const tweetLogResult = await logTweet({
@@ -107,7 +115,6 @@ export async function replyToTweet(
       context
     });
 
-    Logger.log(`Reply sent successfully (ID: ${replyTweetId})`);
     return {
       success: true,
       message: 'Successfully replied to tweet',

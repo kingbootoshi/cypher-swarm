@@ -2,6 +2,7 @@
 
 import { AgentConfig } from '../../types/agentSystem';
 import { generateSystemPrompt } from '../corePersonality';
+import { configLoader } from '../../../utils/config';
 
 // Configuration for chat agent following terminal agent pattern
 export const verifyRetweetAgentConfig: AgentConfig = {
@@ -11,7 +12,7 @@ export const verifyRetweetAgentConfig: AgentConfig = {
 
 ## SHORT TERM TERMINAL LOG INFORMATION
 This is the short term terminal log. The terminal log results give contextually relevant information about the current state of the Crypto timeline and the internet.
-The short term terminal log contains Satoshi's thoughts and plans as well! Act upon these accordingly.
+The short term terminal log contains {{agentName}}'s thoughts and plans as well! Act upon these accordingly.
 
 {{shortTermTerminalLog}}
 
@@ -26,5 +27,6 @@ Use your verify_retweet_tool to verify whether to retweet the tweet.
   dynamicVariables: {
     corePersonalityPrompt: generateSystemPrompt(),
     terminalLog: `SHORT TERM TERMINAL LOG DYNAMIC VARIABLE`,
+    agentName: configLoader.getAgentName()
   },
 };

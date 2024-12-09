@@ -11,6 +11,7 @@ import { addWorldKnowledge, addCryptoKnowledge, addSelfKnowledge, addUserSpecifi
 import { MemorySummaries } from '../supabase/functions/memory/summaries';
 import { Learnings } from '../supabase/functions/memory/learnings';
 import { summarizeSummaries } from './summarizeSummaries';
+import { configLoader } from '../utils/config';
 
 // turn on logging
 Logger.enable();
@@ -18,6 +19,10 @@ Logger.enable();
 // initialize an openAI extractor agent
 const openAIClient = new OpenAIClient("gpt-4o");
 const extractorAgent = new ExtractorAgent(openAIClient);
+
+// Get agent name for dynamic field name
+const agentName = configLoader.getAgentName().toLowerCase();
+const selfFieldName = `${agentName}_self` as const;
 
 /**
  * Converts an array of learning strings into message template format
@@ -71,14 +76,14 @@ export async function extractAndSaveLearnings(sessionId: string) {
         }
 
         // Add self knowledge
-        if (learnings.output.satoshi_self?.length > 0) {
-            const selfTemplate = formatLearningsToTemplate(learnings.output.satoshi_self);
+        if (learnings.output[selfFieldName]?.length > 0) {
+            const selfTemplate = formatLearningsToTemplate(learnings.output[selfFieldName]);
             await addSelfKnowledge(selfTemplate);
             Logger.log("Added self knowledge memories");
 
             // Save self knowledge learnings to database
-            for (const learning of learnings.output.satoshi_self) {
-                await Learnings.saveLearning('satoshi_self', learning, sessionId);
+            for (const learning of learnings.output[selfFieldName]) {
+                await Learnings.saveLearning(selfFieldName, learning, sessionId);
             }
         }
 

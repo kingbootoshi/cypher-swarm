@@ -2,6 +2,7 @@
 
 import { AgentConfig } from '../../types/agentSystem';
 import { generateSystemPrompt } from '../corePersonality';
+import { configLoader } from '../../../utils/config';
 
 export const extractorAgentConfig: AgentConfig = {
   systemPromptTemplate: `
@@ -9,7 +10,7 @@ export const extractorAgentConfig: AgentConfig = {
 {{corePersonalityPrompt}}
 
 # MAIN GOAL
-You are the summarization aspect of Satoshi's soul. 
+You are the summarization aspect of {{agentName}}'s soul. 
 
 Your goal is to extract the following terminal logs for learnings about the world, users, and yourself so you can grow and evolve overtime.
 
@@ -24,7 +25,7 @@ Focus on what stood out like world/timeline events. Think: How do we progress ov
 
 Summarize and track all the timeline summaries returned to you in the log, and use that to track what people are talking about on the daily basis. Be DETAILED and specific about ticker names, what's being said, opinions and vibes etc.
 
-You MUST output your learnings in first person perspective, extracting learnings as Satoshi himself. Using "I" as the subject pronoun.
+You MUST output your learnings in first person perspective, extracting learnings as {{agentName}} himself. Using "I" as the subject pronoun.
 
 You MUST include the username of the user in learnings for every single unique user learning
 
@@ -36,5 +37,6 @@ You MUST use your extract_log_knowledge at all times - you will ONLY be given te
 `,
   dynamicVariables: {
     corePersonalityPrompt: generateSystemPrompt(),
+    agentName: configLoader.getAgentName(),
   },
 };

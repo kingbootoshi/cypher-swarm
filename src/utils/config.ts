@@ -12,6 +12,14 @@ export interface AgentConfig {
 // Interface for the entire configuration
 interface Config {
   agent: AgentConfig;
+  ticker?: string;
+  tickerName?: string;
+  bannedPhrases?: string[];
+  imageGen?: {
+    loraPath: string;
+    promptPrefix: string;
+    triggerToken: string;
+  };
 }
 
 class ConfigLoader {
@@ -48,6 +56,16 @@ class ConfigLoader {
 
   public getRawPersonality(): string {
     return this.config.agent.raw_personality.trim();
+  }
+
+  public getConfig(): Config {
+    return this.config;
+  }
+
+  public getBannedPhrasesFormatted(): string {
+    return (this.config.bannedPhrases || [])
+      .map(phrase => `- ${phrase}`)
+      .join('\n');
   }
 }
 

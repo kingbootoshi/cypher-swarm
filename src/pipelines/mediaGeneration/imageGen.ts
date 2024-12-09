@@ -1,7 +1,14 @@
 import { fal } from "@fal-ai/client";
 import dotenv from "dotenv";
+import { configLoader } from "../../utils/config";
 
 dotenv.config();
+
+// Get image generation settings with defaults
+const imageConfig = configLoader.getConfig().imageGen || {
+  loraPath: "Bootoshi/retroanime",
+  promptPrefix: "retro anime style image of"
+};
 
 // Configure fal client with API key from environment variables
 fal.config({
@@ -15,15 +22,14 @@ fal.config({
  */
 export async function generateImage(prompt: string): Promise<string> {
   try {
-    // Combine the prompt with retro anime style prefix
-    const fullPrompt = `retro anime style image of ${prompt}`;
+    const fullPrompt = `${imageConfig.promptPrefix} ${prompt}`;
 
     const result = await fal.subscribe("fal-ai/flux-lora", {
       input: {
         prompt: fullPrompt,
         loras: [
           {
-            path: "Bootoshi/retroanime",
+            path: imageConfig.loraPath,
             scale: 1
           }
         ],

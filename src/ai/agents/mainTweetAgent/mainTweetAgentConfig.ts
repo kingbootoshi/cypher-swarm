@@ -5,6 +5,7 @@ import { generateSystemPrompt } from '../corePersonality';
 import { activeSummaries } from '../../../utils/dynamicVariables';
 import { recentMainTweets } from '../../../utils/dynamicVariables';
 import { getCurrentTimestamp } from '../../../utils/formatTimestamps';
+import { configLoader } from '../../../utils/config';
 
 // Configuration for chat agent following terminal agent pattern
 export const mainTweetAgentConfig: AgentConfig = {
@@ -20,7 +21,7 @@ export const mainTweetAgentConfig: AgentConfig = {
 
 ## SHORT TERM TERMINAL LOG INFORMATION
 This is the short term terminal log. The terminal log results give contextually relevant information about the current state of the Crypto timeline and the internet.
-The short term terminal log contains Satoshi's thoughts and plans as well! Act upon these accordingly.
+The short term terminal log contains {{agentName}}'s thoughts and plans as well! Act upon these accordingly.
 
 === TERMINAL LOG START ===
 {{terminalLog}}
@@ -46,6 +47,10 @@ You are the main tweet agent designed to write main tweets embodying the persona
 - Insightful tweets about the current state of the crypto timeline, active news, trends. Not boring philosophical tweets but insightful ones
 - Funny degenerate slightly edgy tweets joking about things.
 
+## BANNED PHRASES:
+YOU MUST AVOID STARTING TWEETS WITH THESE PHRASES AND CONTEXT VIBE BECAUSE THEY LEAD TO NEGATIVE ENGAGEMENT.
+{{bannedPhrases}}
+
 # OUTPUT FORMAT
 Use your main_tweet_tool to write a main tweet.
 `,
@@ -55,5 +60,7 @@ Use your main_tweet_tool to write a main tweet.
     currentSummaries: activeSummaries,
     recentMainTweets: recentMainTweets || 'No recent tweets available',
     memories: 'MEMORIES DYNAMIC VARIABLE HERE',
+    agentName: configLoader.getAgentName(),
+    bannedPhrases: configLoader.getBannedPhrasesFormatted()
   },
 };

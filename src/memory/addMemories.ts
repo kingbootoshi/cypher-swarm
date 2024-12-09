@@ -7,7 +7,7 @@ export type MessageTemplate = Array<{ role: string; content: string }>;
 export type MemoryResponse = Promise<any>; // Replace 'any' with actual response type from mem0ai if available
 
 // Get the agent name from config
-const AGENT_NAME = configLoader.getAgentName();
+const AGENT_NAME = configLoader.getAgentName().toLowerCase();
 
 /**
  * Base function to handle common memory addition logic and error handling

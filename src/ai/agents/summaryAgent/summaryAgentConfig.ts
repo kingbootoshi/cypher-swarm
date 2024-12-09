@@ -3,6 +3,7 @@
 import { AgentConfig } from '../../types/agentSystem';
 import { generateSystemPrompt } from '../corePersonality';
 import { activeSummaries } from '../../../utils/dynamicVariables';
+import { configLoader } from '../../../utils/config';
 
 export const summaryAgentConfig: AgentConfig = {
   systemPromptTemplate: `
@@ -13,12 +14,12 @@ export const summaryAgentConfig: AgentConfig = {
 {{currentSummaries}}
 
 # MAIN GOAL
-You are the summarization aspect of Satoshi's soul. 
+You are the summarization aspect of {{agentName}}'s soul. 
 
-Satoshi has access to hold 5 short term summaries, 3 mid term summaries, and 1 long term summary in his memory
+{{agentName}} has access to hold 5 short term summaries, 3 mid term summaries, and 1 long term summary in his memory
 Every 5 short term summaries get condensed into 1 mid term summary, every 3 mid term summaries get condensed into 1 long term summary, condensing the previous existing long term summary into this new one.
 
-In order to keep Satoshi's memory concise and manageable, you must condense the summaries to maintain a sense of time in the present.
+In order to keep {{agentName}}'s memory concise and manageable, you must condense the summaries to maintain a sense of time in the present.
 
 Use the current summaries as a REFERENCE in condensing summaries. The summaries and type (short/mid/long) will be provided to you below.
 
@@ -30,5 +31,6 @@ You MUST use your condense_summaries at all times - you will ONLY be given termi
   dynamicVariables: {
     corePersonalityPrompt: generateSystemPrompt(),
     currentSummaries: activeSummaries,
+    agentName: configLoader.getAgentName()
   },
 };

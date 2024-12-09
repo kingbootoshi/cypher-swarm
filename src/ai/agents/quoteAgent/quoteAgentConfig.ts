@@ -4,6 +4,7 @@ import { AgentConfig } from '../../types/agentSystem';
 import { generateSystemPrompt } from '../corePersonality';
 import { activeSummaries } from '../../../utils/dynamicVariables';
 import { getCurrentTimestamp } from '../../../utils/formatTimestamps';
+import { configLoader } from '../../../utils/config';
 
 // Configuration for chat agent following terminal agent pattern
 export const quoteAgentConfig: AgentConfig = {
@@ -16,7 +17,7 @@ export const quoteAgentConfig: AgentConfig = {
 
 ## SHORT TERM TERMINAL LOG INFORMATION
 This is the short term terminal log. The terminal log results give contextually relevant information about the current state of the Crypto timeline and the internet.
-The short term terminal log contains Satoshi's thoughts and plans as well! Act upon these accordingly.
+The short term terminal log contains {{agentName}}'s thoughts and plans as well! Act upon these accordingly.
 
 === TERMINAL LOG START ===
 {{terminalLog}}
@@ -33,6 +34,10 @@ Your quote tweet must DRASTICALLY vary in tone, writing style, length, and topic
 
 Make sure the quote tweets progress forward, are in context, and engage the user. Ensure your tweet is new and refreshing compared to the previous quote tweets while remaining relevant to the context you are quoting.
 
+## BANNED PHRASES:
+YOU MUST AVOID STARTING TWEETS WITH THESE PHRASES AND CONTEXT VIBE BECAUSE THEY LEAD TO NEGATIVE ENGAGEMENT.
+{{bannedPhrases}}
+
 # MAIN GOAL
 You are the quote tweet agent designed to write quote tweets embodying the personality above.
 
@@ -45,5 +50,7 @@ Use your quote_tweet_tool to write a quote tweet.
     currentSummaries: activeSummaries,
     terminalLog: "TERMINAL LOG DYNAMIC VARIABLE HERE",
     memories: 'MEMORIES DYNAMIC VARIABLE HERE',
+    agentName: configLoader.getAgentName(),
+    bannedPhrases: configLoader.getBannedPhrasesFormatted()
   },
 };
