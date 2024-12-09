@@ -44,7 +44,7 @@ export const ExtractorTool: Tool = {
       "properties": {
         "summary": {
           "type": "string",
-          "description": "A detailed 3-4 sentences paragraph summarizing the current events (such as what happened on the twitter timeline), focusing on key actions and specific details. Don't log your own generic actions of interacting with users. Focus on timeline learnings, internet learnings, and world events. This acts as your sense of time in the present."
+          "description": "A detailed 3-4 sentences paragraph summarizing the current events (such as what happened on the twitter timeline), focusing on key actions and specific details. Focus on timeline learnings, internet learnings, and world events. This acts as your sense of time in the present."
         },
         "world_knowledge": {
           "type": "array",
