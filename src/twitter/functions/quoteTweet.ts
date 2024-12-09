@@ -8,6 +8,7 @@ import { logTweet } from '../../supabase/functions/twitter/tweetEntries';
 import { logTwitterInteraction } from '../../supabase/functions/twitter/interactionEntries';
 import { hasAlreadyActioned } from '../../supabase/functions/twitter/tweetInteractionChecks';
 import { QuoteResult } from '../types/tweetResults';
+import { addQuoteTweet } from '../../memory/addMemories';
 
 /**
  * Sends a quote tweet with optional media attachments
@@ -53,6 +54,10 @@ export async function quoteTweet(
     const response = await scraper.sendQuoteTweet(text, quotedTweetId, {
       mediaData: mediaData || [],
     });
+
+    // Add the reply tweet text to memory
+    await addQuoteTweet([{ role: 'user', content: text }]);
+    Logger.log('Quote tweet text added to memory.');
 
     const responseData = await response.json();
     const tweetId = responseData?.data?.create_tweet?.tweet_results?.result?.rest_id;

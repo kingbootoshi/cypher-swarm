@@ -14,35 +14,35 @@ import {
   async function testMemorySearches() {
     try {
       // Test search queries
-      const testQuery = "what is CyPh36YWsiML5v2AtUqU3UMmKfgcZpMMDVCV12AhJFA";
+      const testQuery = "ai";
       const testUserId = "123"; // Replace with an actual user ID for testing
   
       Logger.log("🧪 Starting memory search tests...\n");
   
-      // Test world knowledge search
-      Logger.log("Testing World Knowledge Search:");
-      const worldResults = await searchWorldKnowledge(testQuery);
-      Logger.log("World Knowledge Results:", worldResults, "\n");
+      // // Test world knowledge search
+      // Logger.log("Testing World Knowledge Search:");
+      // const worldResults = await searchWorldKnowledge(testQuery);
+      // Logger.log("World Knowledge Results:", worldResults, "\n");
   
-      // Test crypto knowledge search
-      Logger.log("Testing Crypto Knowledge Search:");
-      const cryptoResults = await searchCryptoKnowledge(testQuery);
-      Logger.log("Crypto Knowledge Results:", cryptoResults, "\n");
+      // // Test crypto knowledge search
+      // Logger.log("Testing Crypto Knowledge Search:");
+      // const cryptoResults = await searchCryptoKnowledge(testQuery);
+      // Logger.log("Crypto Knowledge Results:", cryptoResults, "\n");
   
-      // Test self knowledge search
-      Logger.log("Testing Self Knowledge Search:");
-      const selfResults = await searchSelfKnowledge(testQuery);
-      Logger.log("Self Knowledge Results:", selfResults, "\n");
+      // // Test self knowledge search
+      // Logger.log("Testing Self Knowledge Search:");
+      // const selfResults = await searchSelfKnowledge(testQuery);
+      // Logger.log("Self Knowledge Results:", selfResults, "\n");
   
       // // Test user-specific knowledge search
       // Logger.log("Testing User-Specific Knowledge Search:");
       // const userResults = await searchUserSpecificKnowledge(testQuery, testUserId);
       // Logger.log("User-Specific Results:", userResults, "\n");
   
-      // // Test main tweets search
-      // Logger.log("Testing Main Tweets Search:");
-      // const tweetResults = await searchMainTweet(testQuery);
-      // Logger.log("Main Tweets Results:", tweetResults, "\n");
+      // Test main tweets search
+      Logger.log("Testing Main Tweets Search:");
+      const tweetResults = await searchMainTweet(testQuery);
+      Logger.log("Main Tweets Results:", tweetResults, "\n");
   
       // // Test image prompts search
       // Logger.log("Testing Image Prompts Search:");

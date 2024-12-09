@@ -18,13 +18,19 @@ export async function sendTweet(
     // Prepare media data for Twitter API
     const mediaData = mediaUrls ? await prepareMediaData(mediaUrls) : undefined;
 
-    // Send the tweet using the Twitter client
-    const response = await scraper.sendTweet(text, undefined, mediaData);
+    // Check if tweet exceeds standard character limit
+    const isLongTweet = text.length > 279;
+    
+    // Send tweet using appropriate method based on length
+    const response = isLongTweet 
+      ? await scraper.sendLongTweet(text, undefined, mediaData)
+      : await scraper.sendTweet(text, undefined, mediaData);
+      
     const responseData = await response.json();
     const tweetId = responseData?.data?.create_tweet?.tweet_results?.result?.rest_id;
 
     if (tweetId) {
-      Logger.log(`Tweet sent successfully (ID: ${tweetId})`);
+      Logger.log(`${isLongTweet ? 'Long tweet' : 'Tweet'} sent successfully (ID: ${tweetId})`);
 
       // Log the tweet to the database with prepared media data
       const logResult = await logTweet({

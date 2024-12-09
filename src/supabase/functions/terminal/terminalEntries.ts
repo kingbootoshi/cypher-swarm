@@ -1,25 +1,32 @@
 import { supabase } from '../../supabaseClient';
 import { ToolOutputFromSchema } from '../../../ai/types/agentSystem';
-import { terminalToolSchema } from '../../../ai/agents/TerminalAgent/TerminalTool';
+import { terminalToolSchema } from '../../../ai/agents/terminalAgent/terminalTool';
 
 type TerminalToolOutput = ToolOutputFromSchema<typeof terminalToolSchema>;
 
 /**
- * Creates a new terminal entry and returns its ID
- * The entry starts with null content which will be updated when we get the response
+ * Creates a new terminal entry in the database
+ * @param sessionId - The current session ID
+ * @param output - The terminal tool output containing thoughts, plan, and commands
+ * @returns The ID of the created entry
  */
 export async function createTerminalEntry(
   sessionId: string,
   output: TerminalToolOutput
 ) {
   try {
+    // Convert commands array to string for storage
+    const commandsString = output.terminal_commands
+      .map(cmd => cmd.command)
+      .join('\n');
+
     const { data: entry } = await supabase
       .from('terminal_history')
       .insert({
         session_id: sessionId,
         internal_thought: output.internal_thought,
         plan: output.plan,
-        command: output.terminal_command,
+        command: commandsString, // Store all commands as a newline-separated string
         terminal_log: null // Will be updated when we get response
       })
       .select('id')

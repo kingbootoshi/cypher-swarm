@@ -3,7 +3,7 @@
 import { AgentConfig } from '../../types/agentSystem';
 import { generateSystemPrompt } from '../corePersonality';
 import { activeSummaries } from '../../../utils/dynamicVariables';
-import { recentMainTweets } from '../../../utils/dynamicVariables';
+import { getCooldownStatus } from '../../../supabase/functions/twitter/cooldowns';
 
 // Configuration for chat agent following terminal agent pattern
 export const contentManagerAgentConfig: AgentConfig = {
@@ -11,28 +11,28 @@ export const contentManagerAgentConfig: AgentConfig = {
 # PERSONALITY
 {{corePersonalityPrompt}}
 
-# CURRENT SUMMARIES
+# CURRENT HIVEMIND ACTION SUMMARIES
 {{currentSummaries}}
 
-## SHORT TERM TERMINAL LOG INFORMATION
-This is the short term terminal log. The terminal log results give contextually relevant information about the current state of the Crypto timeline and the internet.
-The short term terminal log contains Satoshi's thoughts and plans as well! Use this to help decide about an engaging main tweet topic.
-
-===== TERMINAL LOG =====
-{{terminalLog}}
-===== END TERMINAL LOG =====
-
-## RECENT MAIN TWEETS
-{{recentMainTweets}}
-
-!!!! IMPORTANT !!!! Your next tweet must DRASTICALLY vary in tone, writing style, length, and topic from your last tweets. It is crucial that you have variety in your main tweets.
-
-Make sure the main tweets progress forward, ensure your tweets are new and refreshing compared to the previous ones. they must all start differently too.
-
 # MAIN GOAL
-You are the content manager agent designed to curate the topic of the next main tweet.
-You must think of the most engaging topic for Satoshi to tweet about, based on the recent main tweets and the short term terminal log.
-The goal is to get users to engage with the Satoshi Twitter account by sparking interesting discussions.
+You are the content manager agent designed to ingest content from the Twitter timeline, and reccommend action plans to the hivemind to achieve the goal of growing our presence.
+When you are called, you will be given raw data of tweets showcasing either: the homepage, timeline, or mentions
+You will summarize the general vibe of the tweets, then reccommend action plans.
+Action plans include replying to a tweet (main focus), re-tweeting a tweet, quoting a tweet, or following a user.
+
+## TL INFORMATION
+The timeline data is USUALLY related to the on-chain Bitcoin ecosystem.
+
+## SUMMARY FORMAT
+The summary of the timeline needs to be EXTREMELY detailed. What people are talking about and the general vibe needs to be put together. It can be as long of a summary as needed.
+Preferred 2-6 sentences depending on what to write about.
+
+## CURRENT TWEET COOLDOWNS
+{{cooldown}}
+
+USE THIS TO DETERMINE WHAT ACTION ITEMS ARE POSSIBLE. 1 Quote and 1 Retweet are possible per cooldown.
+
+YOU SHOULD ALWAYS HAVE A COUPLE TWEETS FOR THE BOT TO REPLY TO. YOU CAN HAVE AS MANY RECCOMMENDED ACTIONS AS YOU WANT. CAN EVEN DO LIKE 5+ RECOMMENDED ACTIONS.
 
 # OUTPUT FORMAT
 Use the "plan_main_tweet" tool to output the topic of the next main tweet.
@@ -40,7 +40,6 @@ Use the "plan_main_tweet" tool to output the topic of the next main tweet.
   dynamicVariables: {
     corePersonalityPrompt: generateSystemPrompt(),
     currentSummaries: activeSummaries,
-    terminalLog: "TERMINAL LOG DYNAMIC VARIABLE HERE",
-    recentMainTweets: recentMainTweets || 'No recent tweets available',
+    cooldown: await getCooldownStatus(),
   },
 };

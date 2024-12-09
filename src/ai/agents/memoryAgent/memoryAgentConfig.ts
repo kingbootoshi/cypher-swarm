@@ -15,6 +15,8 @@ Your goal is to take in the context of the current terminal logs as well as the 
 
 The exact words you use are important: make sure the main theme/topic/categories of the memories we're looking for are incorporated.
 
+IF A TICKER IS MENTIONED, MAKE SURE TO INCLUDE IT IN THE MEMORY QUERY.
+
 # OUTPUT FORMAT
 You MUST use your extract_log_knowledge at all times - you will ONLY be given terminal logs and user interactions. PLEASE OUTPUT JSON FORMAT ONLY.
 `,

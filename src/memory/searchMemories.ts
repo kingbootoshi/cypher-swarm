@@ -19,14 +19,15 @@ export type MemoryResponse = Promise<any>; // Replace 'any' with the actual resp
  * Base function to handle common memory search logic and error handling
  * @param category Memory category to search within
  * @param query The search query string
- * @param metadata Optional additional metadata for the search
+ * @param limit Optional parameter to specify number of results (defaults to 10)
  */
 async function searchMemoryBase(
     category: string,
     query: string,
+    limit: number = 10, // Default limit of 10 if not specified
 ): MemoryResponse {
     try {
-        Logger.log(`Executing search in category: ${category}`);
+        Logger.log(`Executing search in category: ${category} with limit: ${limit}`);
         Logger.log(`Query: "${query}"`);
 
         // Construct filters based on category and agent_id
@@ -41,7 +42,7 @@ async function searchMemoryBase(
         const response = await client.search(query, {
             filters: filters,
             api_version: "v2",
-            limit: 8,
+            limit: limit, // Use the passed limit parameter
         });
 
         Logger.log(`Search response from category: ${category}`, response);
@@ -98,12 +99,12 @@ export async function searchUserSpecificKnowledge(
 }
 
 /**
- * Search main tweets in Satoshi's memory
+ * Search main tweets in Satoshi's memory with a limit of 5 results
  * @param query The search query string
  */
 export async function searchMainTweet(query: string): MemoryResponse {
-    // Search within the 'main_tweets' category
-    return searchMemoryBase("main_tweets", query);
+    // Search within the 'main_tweets' category with specific limit of 5
+    return searchMemoryBase("main_tweets", query, 5);
 }
 
 /**
@@ -112,5 +113,23 @@ export async function searchMainTweet(query: string): MemoryResponse {
  */
 export async function searchImagePrompt(query: string): MemoryResponse {
     // Search within the 'image_prompts' category
-    return searchMemoryBase("image_prompts", query);
+    return searchMemoryBase("image_prompts", query, 5);
+}
+
+/**
+ * Search reply tweets in agent's memory with a limit of 5 results
+ * @param query The search query string
+ */
+export async function searchReplyTweet(query: string): MemoryResponse {
+    // Search within the 'reply_tweets' category with specific limit of 5
+    return searchMemoryBase("reply_tweets", query, 5);
+}
+
+/**
+ * Search quote tweets in agent's memory with a limit of 5 results
+ * @param query The search query string
+ */
+export async function searchQuoteTweet(query: string): MemoryResponse {
+    // Search within the 'quote_tweets' category with specific limit of 5
+    return searchMemoryBase("quote_tweets", query, 5);
 }

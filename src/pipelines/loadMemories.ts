@@ -7,7 +7,10 @@ import {
     searchSelfKnowledge,
     searchUserSpecificKnowledge,
     formatMemoryResults,
-    searchMainTweet
+    searchMainTweet,
+    searchReplyTweet,
+    searchImagePrompt,
+    searchQuoteTweet
 } from '../memory/searchMemories';
 import { getUserIDsFromUsernames } from '../utils/getUserIDfromUsername';
 
@@ -17,7 +20,10 @@ export interface MemoryOptions {
     cryptoKnowledge?: boolean;
     selfKnowledge?: boolean;
     mainTweets?: boolean;
+    replyTweets?: boolean;
+    quoteTweets?: boolean;
     userTweets?: boolean;
+    imagePrompts?: boolean;
 }
 
 // Default options when none specified
@@ -26,7 +32,10 @@ const DEFAULT_MEMORY_OPTIONS: MemoryOptions = {
     cryptoKnowledge: true,
     selfKnowledge: true,
     mainTweets: true,
-    userTweets: true
+    replyTweets: true,
+    quoteTweets: true,
+    userTweets: true,
+    imagePrompts: false
 };
 
 /**
@@ -76,6 +85,24 @@ export async function loadMemories(
             const mainTweetKnowledgeResults = await searchMainTweet(query);
             Logger.log("Main Tweet Knowledge Results:", mainTweetKnowledgeResults);
             formattedMemories += `### POTENTIALLY RELEVANT TWEETS I MADE\n${formatMemoryResults(mainTweetKnowledgeResults)}\n\n`;
+        }
+
+        if (options.replyTweets) {
+            const replyTweetResults = await searchReplyTweet(query);
+            Logger.log("Reply Tweet Knowledge Results:", replyTweetResults);
+            formattedMemories += `### POTENTIALLY RELEVANT REPLY TWEETS I MADE\n${formatMemoryResults(replyTweetResults)}\n\n`;
+        }
+
+        if (options.quoteTweets) {
+            const quoteTweetResults = await searchQuoteTweet(query);
+            Logger.log("Quote Tweet Knowledge Results:", quoteTweetResults);
+            formattedMemories += `### POTENTIALLY RELEVANT QUOTE TWEETS I MADE\n${formatMemoryResults(quoteTweetResults)}\n\n`;
+        }
+
+        if (options.imagePrompts) {
+            const imagePromptResults = await searchImagePrompt(query);
+            Logger.log("Image Prompt Results:", imagePromptResults);
+            formattedMemories += `### RELEVANT IMAGE PROMPTS\n${formatMemoryResults(imagePromptResults)}\n\n`;
         }
 
         if (options.userTweets && usernames && usernames.length > 0) {

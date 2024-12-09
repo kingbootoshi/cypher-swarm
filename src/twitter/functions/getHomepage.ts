@@ -1,6 +1,7 @@
 import { scraper } from '../twitterClient';
 import { formatTimestamp } from '../../utils/formatTimestamps';
 import { hasInteractedWithTweet, debugTweetInteractions } from '../../supabase/functions/twitter/tweetInteractionChecks';
+import { isUserFollowedByBot } from '../../supabase/functions/twitter/followEntries';
 import { Logger } from '../../utils/logger';
 
 /**
@@ -25,7 +26,7 @@ export async function getHomepage(maxTweets: number = 20): Promise<string[]> {
     rawTweets.push(...response.tweets.slice(0, maxTweets));
     Logger.log(`Found ${rawTweets.length}/${maxTweets} tweets, checking for previous interactions...`);
 
-    // Filter out already interacted tweets
+    // Filter out already interacted tweets and check following status
     const unhandledTweets = await Promise.all(
       rawTweets.map(async (tweet) => {
         const hasInteracted = await hasInteractedWithTweet(tweet.id!);
@@ -34,7 +35,10 @@ export async function getHomepage(maxTweets: number = 20): Promise<string[]> {
           Logger.log(`Filtering out tweet ${tweet.id} - already interacted with`);
           return null;
         }
-        return tweet;
+        
+        // Check if we're following the user
+        const isFollowing = await isUserFollowedByBot(tweet.username || '');
+        return { ...tweet, isFollowing };
       })
     );
 
@@ -46,7 +50,9 @@ export async function getHomepage(maxTweets: number = 20): Promise<string[]> {
           formatTimestamp(new Date(tweet.timeParsed)) :
           'Unknown time';
         
-        return `- [${tweet.id}] @${tweet.username || 'unknown_user'} (${timestamp}): ${tweet.text}`;
+        const followStatus = tweet.isFollowing ? '(FOLLOWING)' : '(NOT FOLLOWING)';
+        
+        return `- [${tweet.id}] @${tweet.username || 'unknown_user'} ${followStatus} (${timestamp}): ${tweet.text}`;
       });
 
     Logger.log(`Returning ${formattedTweets.length} formatted tweets after filtering`);

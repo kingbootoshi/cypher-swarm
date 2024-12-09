@@ -154,7 +154,17 @@ export abstract class BaseAgent<T extends z.ZodTypeAny | null = null> {
   }
 
   protected async handleFunctionCall(args: any): Promise<any> {
-    return args;
+    // Format array parameters if present
+    const formattedArgs = Object.entries(args).reduce((acc: any, [key, value]) => {
+      // If value is an array of objects, stringify each object
+      if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
+        acc[key] = value.map(item => JSON.stringify(item)).join(', ');
+      } else {
+        acc[key] = value;
+      }
+      return acc;
+    }, {});
+    return formattedArgs;
   }
 
   protected abstract defineTools(): void;
@@ -234,11 +244,15 @@ export abstract class BaseAgent<T extends z.ZodTypeAny | null = null> {
         formattedResponse += `## USED TOOL: ${functionCall.functionName}\n`;
         
         // Format each argument in the function call
-        for (const [key, value] of Object.entries(functionCall.functionArgs)) {
-          // Convert key to uppercase and replace underscores with spaces
+        const formattedArgs = await this.handleFunctionCall(functionCall.functionArgs);
+        for (const [key, value] of Object.entries(formattedArgs)) {
           const formattedKey = key.toUpperCase().replace(/_/g, '_');
-          // Handle string values with proper quoting
-          const formattedValue = typeof value === 'string' ? `"${value}"` : value;
+          // Handle arrays and objects specially
+          const formattedValue = Array.isArray(value) 
+            ? `[\n  ${value}\n]`
+            : typeof value === 'object' 
+              ? JSON.stringify(value, null, 2)
+              : typeof value === 'string' ? `"${value}"` : value;
           formattedResponse += `${formattedKey}: ${formattedValue}\n`;
         }
       }

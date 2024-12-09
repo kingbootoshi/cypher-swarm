@@ -3,13 +3,29 @@ import { isCooldownActive } from '../../supabase/functions/twitter/cooldowns';
 
 /**
  * @command twitter-tweet
- * @description Generates and posts a new main tweet with optional media
+ * @description Generates and posts a new main tweet with required topic input
  */
 export const twitterTweet: Command = {
   name: 'post-main-tweet',
-  description: 'Generates and posts a new main tweet with optional media attachments. An agent will handle the rest.',
-  parameters: [],
-  handler: async () => {
+  description: 'Generates and posts a new main tweet. Requires a topic parameter in quotes (e.g., "Tweet a long $CYPHER bull post")',
+  parameters: [
+    {
+      name: 'topic',
+      description: 'The topic to generate the tweet about',
+      required: true,
+      type: 'string'
+    }
+  ],
+  handler: async (args) => {
+    // Check if topic was provided
+    if (!args.topic) {
+      return {
+        output: '❌ Action: Post Main Tweet\n' +
+                'Status: Failed\n' +
+                'Reason: Topic parameter is required. Please provide a topic in quotes.'
+      };
+    }
+
     // Lazy import generateAndPostMainTweet to avoid initialization issues
     const { generateAndPostMainTweet } = await import('../../pipelines/generateMainTweet');
 
@@ -25,13 +41,14 @@ export const twitterTweet: Command = {
     }
 
     try {
-      // Proceed with generating and posting the tweet
-      const result = await generateAndPostMainTweet();
+      // Proceed with generating and posting the tweet with the provided topic
+      const result = await generateAndPostMainTweet(args.topic);
 
       return {
         output: `${result.success ? '✅' : '❌'} Action: Post Main Tweet\n` +
                `${result.tweetId ? `Tweet ID: ${result.tweetId}\n` : ''}` +
                `Status: ${result.success ? 'Success' : 'Failed'}\n` +
+               `Topic: ${args.topic}\n` +
                `Text: ${result.tweetText}\n` +
                `Media: ${result.mediaUrls ? result.mediaUrls.join(', ') : 'None'}\n` +
                `Details: ${result.message}`

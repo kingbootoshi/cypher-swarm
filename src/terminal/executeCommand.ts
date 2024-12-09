@@ -52,7 +52,52 @@ function parseArguments(
 }
 
 /**
- * Executes a terminal command and returns the result.
+ * Pre-processes the command line to escape special characters in quoted strings
+ * @param commandLine - Raw command line input
+ * @returns Processed command line with escaped special characters
+ */
+function preprocessCommandLine(commandLine: string): string {
+  // Match quoted strings (both single and double quotes)
+  return commandLine.replace(/(["'])(.*?)\1/g, (match, quote, content) => {
+    // Escape $ symbols within quoted strings
+    const escaped = content.replace(/\$/g, '\\$');
+    return `${quote}${escaped}${quote}`;
+  });
+}
+
+/**
+ * Executes multiple terminal commands sequentially and bundles their outputs
+ * @param commands - Array of command objects containing the commands to execute
+ * @returns Combined execution result with all outputs
+ */
+export async function executeMultipleCommands(
+  commands: { command: string }[]
+): Promise<{
+  commands: string[];
+  output: string;
+}> {
+  const outputs: string[] = [];
+  const executedCommands: string[] = [];
+
+  for (const cmd of commands) {
+    const result = await executeCommand(cmd.command);
+    outputs.push(result.output);
+    executedCommands.push(result.command);
+  }
+
+  // Bundle all outputs together with command prefixes
+  const bundledOutput = executedCommands.map((cmd, index) => 
+    `$ ${cmd}\n${outputs[index]}`
+  ).join('\n\n');
+
+  return {
+    commands: executedCommands,
+    output: bundledOutput
+  };
+}
+
+/**
+ * Executes a single terminal command and returns the result.
  * @param commandLine - The command line input as a string.
  * @returns The command execution result.
  */
@@ -71,8 +116,16 @@ export async function executeCommand(
     };
   }
 
-  const tokens = parse(commandLine.trim());
-  const [commandName, ...argsTokens] = tokens;
+  // Preprocess the command line before parsing
+  const processedCommand = preprocessCommandLine(commandLine.trim());
+  const tokens = parse(processedCommand);
+  
+  // Unescape the tokens after parsing
+  const unescapedTokens = tokens.map(token => 
+    typeof token === 'string' ? token.replace(/\\\$/g, '$') : token
+  );
+
+  const [commandName, ...argsTokens] = unescapedTokens;
 
   const command = getCommand(commandName);
 

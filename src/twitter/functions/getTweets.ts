@@ -8,9 +8,9 @@ import { Logger } from '../../utils/logger';
  * Gets recent tweets from a specific user
  * @param username - Twitter username (without @ symbol)
  * @param maxTweets - Maximum number of tweets to fetch
- * @returns Formatted string of user's tweets
+ * @returns Array of formatted tweet strings
  */
-export async function getTweets(username: string, maxTweets: number): Promise<string> {
+export async function getTweets(username: string, maxTweets: number): Promise<string[]> {
   try {
     Logger.log(`Fetching tweets from @${username}...`);
     const rawTweets: Tweet[] = [];
@@ -43,15 +43,14 @@ export async function getTweets(username: string, maxTweets: number): Promise<st
           formatTimestamp(new Date(tweet.timeParsed)) :
           'Unknown time';
           
-        return `- [${tweet.id}] (${timestamp}) ${tweet.text}`;
-      })
-      .join('\n');
+        return `- [${tweet.id}] @${tweet.username || 'unknown_user'} (${timestamp}): ${tweet.text}`;
+      });
 
-    const count = unhandledTweets.filter(t => t !== null).length;
-    return `Fetched ${count} unhandled tweets from @${username}:\n${formattedTweets}`;
+    Logger.log(`Returning ${formattedTweets.length} formatted tweets after filtering`);
+    return formattedTweets;
 
   } catch (error) {
     Logger.log('Error fetching tweets:', error);
-    return `Error fetching tweets: ${error}`;
+    return [];
   }
 } 

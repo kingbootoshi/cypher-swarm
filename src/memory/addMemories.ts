@@ -92,5 +92,21 @@ export function addMainTweet(msgTemplate: MessageTemplate): MemoryResponse {
  * Add image prompts to agent's memory
  */
 export function addImagePrompt(msgTemplate: MessageTemplate): MemoryResponse {
-    return addMemoryBase("image_prompts", msgTemplate);
+    return addMemoryBase("image_prompts", msgTemplate, { infer: false });
+}
+
+/**
+ * Add reply tweets to agent's memory
+ * Stores exact reply tweet content without inference to maintain original message integrity
+ */
+export function addReplyTweet(msgTemplate: MessageTemplate): MemoryResponse {
+    return addMemoryBase("reply_tweets", msgTemplate, { infer: false });
+}
+
+/**
+ * Add quote tweets to agent's memory
+ * Stores exact quote tweet content without inference to maintain original message integrity
+ */
+export function addQuoteTweet(msgTemplate: MessageTemplate): MemoryResponse {
+    return addMemoryBase("quote_tweets", msgTemplate, { infer: false });
 }

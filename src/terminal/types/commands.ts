@@ -65,4 +65,5 @@ export interface CommandParameter {
      * The output of the command execution.
      */
     output: string;
+    data?: any;
   }>;

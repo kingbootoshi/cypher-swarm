@@ -3,9 +3,20 @@
 import { z } from 'zod';
 import { Tool } from '../../types/agentSystem';
 
+// Define tweet length options as a const array for type safety and reusability
+const TWEET_LENGTH_OPTIONS = [
+  'one word',
+  'very short',
+  'short',
+  'medium',
+  'long',
+  'very long'
+] as const;
+
 export const mainTweetToolSchema = z.object({
   internal_thoughts: z.string().describe('Your internal thoughts about what you want to tweet.'),
-  tweet_length: z.string().describe('The length of the tweet you want to send. one word, very short, short, medium, long, very long.'),
+  // Use z.enum to restrict tweet_length to specific options
+  tweet_length: z.enum(TWEET_LENGTH_OPTIONS).describe('The length of the tweet you want to send.'),
   main_tweet: z.string().describe('The main tweet.'),
   media_included: z.boolean().describe('Whether or not to include generated media in the tweet.')
 });
@@ -27,15 +38,16 @@ export const MainTweetTool: Tool = {
       "properties": {
         "internal_thoughts": {
           "type": "string",
-          "description": "Your internal thoughts about the current state of the crypto timeline."
+          "description": "Your internal thoughts about HOW to make new unique tweet that varies from your recent tweets & existing tweets based on your current summaries, learnings, and recent short term terminal history log."
         },
         "tweet_length": {
           "type": "string",
-          "description": "The length of the tweet you want to send. one word, very short, short, medium, long, very long."
+          "enum": TWEET_LENGTH_OPTIONS,
+          "description": "The length of the tweet you want to send. Make sure to vary these, so if your recent tweets are short, make them long and vice versa."
         },
         "main_tweet": {
           "type": "string",
-          "description": "The main tweet. Max 280 characters."
+          "description": "The main tweet."
         },
         "media_included": {
           "type": "boolean",

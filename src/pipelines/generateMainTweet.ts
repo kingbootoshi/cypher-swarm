@@ -27,7 +27,7 @@ interface MainTweetResult {
  * - Result formatting
  */
 export async function generateAndPostMainTweet(
-  prompt = "Generate a main tweet based on your recent activities."
+  topic = "Generate a main tweet based on your recent activities."
 ): Promise<MainTweetResult> {
   Logger.enable();
   try {
@@ -39,7 +39,18 @@ export async function generateAndPostMainTweet(
 
     // Load memories and terminal history
     const formattedHistory = await getFormattedRecentHistory();
-    const relevantMemories = await loadMemories(`[SHORT TERM TERMINAL LOGS]\n\n${formattedHistory}`);
+
+    // Load memories
+    const relevantMemories = await loadMemories(`Load in memories based on this following topic: ${topic}`, {
+      worldKnowledge: true,
+      cryptoKnowledge: true,
+      selfKnowledge: true,
+      mainTweets: true,
+      replyTweets: false,
+      userTweets: false,
+      imagePrompts: false,
+      quoteTweets: false
+    });
 
     // Set up runtime variables
     const runtimeVariables = {
@@ -48,9 +59,8 @@ export async function generateAndPostMainTweet(
     };
 
     // Generate main tweet
-    const mainTweetResponse = await mainTweetAgent.run(prompt, runtimeVariables);
+    const mainTweetResponse = await mainTweetAgent.run(`GENERATE A MAIN TWEET ABOUT ${topic}`, runtimeVariables);
     const tweetText = mainTweetResponse.output.main_tweet;
-    const mediaIncluded = mainTweetResponse.output.media_included;
 
     // Send the tweet using sendTweet function
     const tweetId = await sendTweet(tweetText);

@@ -41,7 +41,7 @@ async function initializeCLI() {
       const entryId = await createTerminalEntry(sessionId, {
         internal_thought: 'MANUAL CLI INPUT',
         plan: 'MANUAL CLI EXECUTION',
-        terminal_command: trimmedInput
+        terminal_commands: [{ command: trimmedInput }]
       });
 
       // Execute the command

@@ -9,7 +9,7 @@ import { generateImage } from './mediaGeneration/imageGen';
 import { generateImageToVideo } from './mediaGeneration/combinedGeneration';
 import { Logger } from '../utils/logger';
 import { FireworkClient } from "../ai/models/clients/FireworkClient";
-
+import { addImagePrompt } from '../memory/addMemories';
 // Type for the main tweet result
 interface MainTweetResult {
   success: boolean;
@@ -27,7 +27,7 @@ interface MainTweetResult {
  * - Result formatting
  */
 export async function generateAndPostMediaTweet(
-  prompt = "Generate a main tweet with media based on your recent activities. This main tweet WILL include media, which the media agent will handle"
+  topic = "Generate a main tweet with media based on your recent activities. This main tweet WILL include media, which the media agent will handle"
 ): Promise<MainTweetResult> {
   Logger.enable();
   try {
@@ -40,7 +40,18 @@ export async function generateAndPostMediaTweet(
 
     // Load memories and terminal history
     const formattedHistory = await getFormattedRecentHistory();
-    const relevantMemories = await loadMemories(`[SHORT TERM TERMINAL LOGS]\n\n${formattedHistory}`);
+
+    // Load memories
+    const relevantMemories = await loadMemories(`Load in memories based on this following topic: ${topic}`, {
+      worldKnowledge: true,
+      cryptoKnowledge: true,
+      selfKnowledge: true,
+      mainTweets: true,
+      replyTweets: false,
+      userTweets: false,
+      imagePrompts: true,
+      quoteTweets: false
+    });
 
     // Set up runtime variables
     const runtimeVariables = {
@@ -49,7 +60,7 @@ export async function generateAndPostMediaTweet(
     };
 
     // Generate main tweet
-    const mainTweetResponse = await mainTweetAgent.run(prompt, runtimeVariables);
+    const mainTweetResponse = await mainTweetAgent.run(`GENERATE A MAIN TWEET ABOUT ${topic}`, runtimeVariables);
     const tweetText = mainTweetResponse.output.main_tweet;
     const mediaIncluded = true; // FORCING A MEDIA TWEET
 
@@ -59,6 +70,9 @@ export async function generateAndPostMediaTweet(
       const mediaResponse = await mediaAgent.run(`[MAIN TWEET]\n\n${tweetText}`, runtimeVariables);
       const contentType = mediaResponse.output.content_type;
       const mediaPrompt = mediaResponse.output.media_prompt;
+
+      // Add the media prompt to memory
+      addImagePrompt([{ role: 'user', content: mediaPrompt }]);
 
       // Generate media and obtain media URLs
       if (contentType === 'image') {

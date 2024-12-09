@@ -1,7 +1,7 @@
 import { OpenAIClient } from '../ai/models/clients/OpenAiClient';
 import { AnthropicClient } from '../ai/models/clients/AnthropicClient';
 import { FireworkClient } from '../ai/models/clients/FireworkClient';
-import { BaseAgent } from '../ai/agents/BaseAgent';
+import { BaseAgent } from '../ai/agents/baseAgent';
 import { AgentConfig } from '../ai/types/agentSystem';
 import { Tool } from '../ai/types/agentSystem';
 import { z } from 'zod';

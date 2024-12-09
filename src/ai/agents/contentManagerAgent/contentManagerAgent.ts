@@ -1,15 +1,15 @@
 import { BaseAgent } from '../baseAgent';
 import { ModelClient } from '../../types/agentSystem';
 import { contentManagerAgentConfig } from './contentManagerConfig';
-import { PlanMainTweetTool, planMainTweetSchema } from './contentManagerTool';
+import { ContentManagerTool, contentManagerToolSchema } from './contentManagerTool';
 
 // ChatAgent extends BaseAgent with no schema type (null)
-export class ContentManagerAgent extends BaseAgent<typeof planMainTweetSchema> {
+export class ContentManagerAgent extends BaseAgent<typeof contentManagerToolSchema> {
   constructor(modelClient: ModelClient) {
-    super(contentManagerAgentConfig, modelClient, planMainTweetSchema);
+    super(contentManagerAgentConfig, modelClient, contentManagerToolSchema);
   }
 
   protected defineTools(): void {
-    this.tools = [PlanMainTweetTool];
+    this.tools = [ContentManagerTool];
   }
 }

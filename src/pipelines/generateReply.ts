@@ -75,12 +75,15 @@ async function generateTweetReply(
   const formattedHistory = await getFormattedRecentHistory();
 
   // Load memories with empty array fallback for undefined usernames
-  const memories = await loadMemories(textContent, {
+  const memories = await loadMemories(`What memories should we load in to reply to this tweet? TWEET:\n\n${textContent}`, {
     worldKnowledge: true,
     cryptoKnowledge: true,
     selfKnowledge: true,
     mainTweets: false,
-    userTweets: true
+    replyTweets: true,
+    userTweets: true,
+    imagePrompts: false,
+    quoteTweets: false
 }, usernames);
   Logger.log('Active memories fetched:', memories);
 

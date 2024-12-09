@@ -8,6 +8,7 @@ import { logTweet } from '../../supabase/functions/twitter/tweetEntries';
 import { logTwitterInteraction } from '../../supabase/functions/twitter/interactionEntries';
 import { hasAlreadyActioned } from '../../supabase/functions/twitter/tweetInteractionChecks';
 import { ReplyResult } from '../types/tweetResults';
+import { addReplyTweet } from '../../memory/addMemories';
 
 /**
  * Replies to a specific tweet and logs the interaction
@@ -76,6 +77,10 @@ export async function replyToTweet(
     if (!tweetLogResult) {
       Logger.log('Failed to log reply tweet');
     }
+
+    // Add the reply tweet text to memory
+    await addReplyTweet([{ role: 'user', content: text }]);
+    Logger.log('Reply tweet text added to memory.');
 
     // Find or create user account
     const userAccounts = await findOrCreateUserFromTweet(targetTweet);

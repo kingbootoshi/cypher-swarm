@@ -22,6 +22,8 @@ In order to keep Satoshi's memory concise and manageable, you must condense the 
 
 Use the current summaries as a REFERENCE in condensing summaries. The summaries and type (short/mid/long) will be provided to you below.
 
+Summaries need to be very DETAILED and specific. They can't be vague. The topic, learnings, and engagements done need to be detailed and tracked.
+
 # OUTPUT FORMAT
 You MUST use your condense_summaries at all times - you will ONLY be given terminal logs and user interactions. PLEASE OUTPUT JSON FORMAT ONLY.
 `,

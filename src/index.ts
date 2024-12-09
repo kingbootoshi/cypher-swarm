@@ -2,7 +2,7 @@
 
 import { TerminalAgent } from './ai/agents/terminalAgent/terminalAgent';
 import { AnthropicClient } from './ai/models/clients/AnthropicClient';
-import { executeCommand } from './terminal/executeCommand';
+import { executeCommand, executeMultipleCommands } from './terminal/executeCommand';
 import { ensureAuthenticated } from './twitter/twitterClient';
 import { ModelType, Message } from './ai/types/agentSystem';
 import dotenv from 'dotenv';
@@ -78,17 +78,17 @@ export async function startAISystem() {
           const entryId = await createTerminalEntry(sessionId, {
             internal_thought: functionResult.output.internal_thought,
             plan: functionResult.output.plan,
-            terminal_command: functionResult.output.terminal_command
+            terminal_commands: functionResult.output.terminal_commands
           });
 
           if (!entryId) {
             throw new Error('Failed to create terminal entry');
           }
 
-          // Execute command
-          const commandOutput = await executeCommand(functionResult.output.terminal_command);
+          // Execute commands and get bundled output
+          const commandOutput = await executeMultipleCommands(functionResult.output.terminal_commands);
 
-          // Update the same entry with the response
+          // Update the same entry with the bundled response
           await updateTerminalResponse(entryId, commandOutput.output);
 
           // Retrieve the last assistant message from the agent's message history
@@ -102,7 +102,11 @@ export async function startAISystem() {
           // Store terminal output in short-term history and update agent's message history
           const terminalOutputMessage: Message = {
             role: 'user',
-            content: `TERMINAL OUTPUT ${getCurrentTimestamp()}: ${commandOutput.output}`,
+            content: `TERMINAL OUTPUT ${getCurrentTimestamp()}: ${
+              typeof commandOutput.output === 'object' 
+                ? JSON.stringify(commandOutput.output, null, 2)
+                : commandOutput.output
+            }`,
           };
           terminalAgent.addMessage(terminalOutputMessage);
           await storeTerminalMessage(terminalOutputMessage, sessionId);

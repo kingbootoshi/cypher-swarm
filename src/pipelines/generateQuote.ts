@@ -79,8 +79,11 @@ async function generateQuoteTweet(
       worldKnowledge: true,
       cryptoKnowledge: true,
       selfKnowledge: true,
-      mainTweets: true,
-      userTweets: true
+      mainTweets: false,
+      userTweets: true,
+      imagePrompts: false,
+      replyTweets: false,
+      quoteTweets: true
   }, usernames);
 
   Logger.log('Active memories fetched:', memories);
