@@ -11,6 +11,27 @@ import { ReplyResult } from '../types/tweetResults';
 import { addReplyTweet } from '../../memory/addMemories';
 
 /**
+ * Extracts tweet ID from response based on tweet type
+ * @param responseData - API response data
+ * @param isLongTweet - Whether this was a long tweet
+ * @returns Tweet ID or null
+ */
+function extractTweetId(responseData: any, isLongTweet: boolean): string | null {
+  try {
+    if (isLongTweet) {
+      // Path for long tweets (notetweets)
+      return responseData?.data?.notetweet_create?.tweet_results?.result?.rest_id;
+    } else {
+      // Path for regular tweets
+      return responseData?.data?.create_tweet?.tweet_results?.result?.rest_id;
+    }
+  } catch (error) {
+    Logger.log('Error extracting tweet ID:', error);
+    return null;
+  }
+}
+
+/**
  * Replies to a specific tweet and logs the interaction
  * @param replyToTweetId - The ID of the tweet to reply to
  * @param text - The text content of the reply
@@ -59,8 +80,9 @@ export async function replyToTweet(
       ? await scraper.sendLongTweet(text, replyToTweetId, mediaData)
       : await scraper.sendTweet(text, replyToTweetId, mediaData);
       
+    Logger.log("RAW RESPONSE", response);
     const responseData = await response.json();
-    const replyTweetId = responseData?.data?.create_tweet?.tweet_results?.result?.rest_id;
+    const replyTweetId = extractTweetId(responseData, isLongTweet);
 
     if (!replyTweetId) {
       Logger.log('Failed to retrieve reply tweet ID from response:', responseData);
