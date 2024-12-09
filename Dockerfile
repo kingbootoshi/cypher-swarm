@@ -23,7 +23,7 @@ RUN apt-get update -qq && \
 COPY package.json bun.lockb ./
 
 # Use --frozen-lockfile to ensure exact versions are installed
-RUN bun install --frozen-lockfile
+RUN bun install
 
 # Copy application code
 COPY . .

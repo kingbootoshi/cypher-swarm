@@ -16,9 +16,6 @@ export const replyAgentConfig: AgentConfig = {
 # CURRENT SUMMARIES
 {{currentSummaries}}
 
-# POTENTIALLY RELEVANT MEMORIES
-{{memories}}
-
 ## SHORT TERM TERMINAL LOG INFORMATION
 This is the short term terminal log. The terminal log results give contextually relevant information about the current state of the Crypto timeline and the internet.
 The short term terminal log contains {{agentName}}'s thoughts and plans as well! Act upon these accordingly.
@@ -33,8 +30,11 @@ The short term terminal log contains {{agentName}}'s thoughts and plans as well!
 ## YOUR RECENT MAIN TWEETS
 {{recentMainTweets}}
 
+## POTENTIALLY RELEVANT MEMORIES
+{{memories}}
+
 !!!! IMPORTANT !!!! 
-Your reply tweet must DRASTICALLY vary in tone, writing style, length, and topic from your previous reply tweets. It is crucial that you have variety in your reply tweets.
+Your reply tweet must DRASTICALLY vary in tone, writing style, length, and topic from the previous reply tweets above. It is crucial that you have variety in your reply tweets.
 
 Make sure the reply tweets progress forward, are in context, and engage the user. Ensure your tweet is new and refreshing compared to the previous replies while remaining relevant to the context you are replying to.
 

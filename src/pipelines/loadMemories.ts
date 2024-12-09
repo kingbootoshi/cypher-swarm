@@ -84,13 +84,13 @@ export async function loadMemories(
         if (options.mainTweets) {
             const mainTweetKnowledgeResults = await searchMainTweet(query);
             Logger.log("Main Tweet Knowledge Results:", mainTweetKnowledgeResults);
-            formattedMemories += `### POTENTIALLY RELEVANT TWEETS I MADE\n${formatMemoryResults(mainTweetKnowledgeResults)}\n\n`;
+            formattedMemories += `### POTENTIALLY RELEVANT TWEETS I MADE\nWARNING: DO NOT REPEAT THESE TWEETS. YOU ALREADY MADE THESE TWEETS. YOU MUST MAKE NEW DRASTICALLY DIFFERENT TWEETS.\n${formatMemoryResults(mainTweetKnowledgeResults)}\n\n`;
         }
 
         if (options.replyTweets) {
             const replyTweetResults = await searchReplyTweet(query);
             Logger.log("Reply Tweet Knowledge Results:", replyTweetResults);
-            formattedMemories += `### POTENTIALLY RELEVANT REPLY TWEETS I MADE\n${formatMemoryResults(replyTweetResults)}\n\n`;
+            formattedMemories += `### POTENTIALLY RELEVANT REPLY TWEETS I MADE\nWARNING: DO NOT REPEAT THESE TWEETS. YOU ALREADY MADE THESE TWEETS. YOU MUST MAKE NEW DRASTICALLY DIFFERENT TWEETS.\n${formatMemoryResults(replyTweetResults)}\n\n`;
         }
 
         if (options.quoteTweets) {

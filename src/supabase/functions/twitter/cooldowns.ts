@@ -55,6 +55,25 @@ async function getLastTweetDetails(tweetType: TweetType): Promise<TweetRecord | 
   }
 }
 
+// Add this helper function for consistent logging
+function logCooldownCheck(
+  tweetType: TweetType, 
+  lastTweetTime: Date | null, 
+  currentTime: Date, 
+  timeSinceLastTweet: number, 
+  cooldownPeriod: number, 
+  text: string | null | undefined
+) {
+  Logger.log(`\n=== Cooldown Check for ${tweetType.toUpperCase()} tweet ===`);
+  Logger.log(`Last Tweet Time (UTC): ${lastTweetTime?.toISOString() || 'No previous tweet'}`);
+  Logger.log(`Current Time (UTC): ${currentTime.toISOString()}`);
+  Logger.log(`Time Since Last Tweet (ms): ${timeSinceLastTweet}`);
+  Logger.log(`Cooldown Period (ms): ${cooldownPeriod}`);
+  if (text) Logger.log(`Last Tweet Text: ${text}`);
+  Logger.log(`Time remaining: ${Math.max(0, (cooldownPeriod - timeSinceLastTweet) / (60 * 1000)).toFixed(2)} minutes`);
+  Logger.log(`=====================================\n`);
+}
+
 /**
  * Checks if the cooldown is active for a specific tweet type.
  * @param tweetType - The type of tweet to check.
@@ -63,6 +82,7 @@ async function getLastTweetDetails(tweetType: TweetType): Promise<TweetRecord | 
 export async function isCooldownActive(tweetType: TweetType): Promise<{ isActive: boolean; remainingTime: number | null }> {
   // For media tweets, check both dedicated media tweets and main tweets with media
   if (tweetType === 'media') {
+    Logger.log("\n🖼️ Checking MEDIA tweet cooldown...");
     const [mediaLastTweet, mainWithMediaTweet] = await Promise.all([
       getLastTweetDetails('media'),
       supabase
@@ -73,12 +93,18 @@ export async function isCooldownActive(tweetType: TweetType): Promise<{ isActive
         .order('created_at', { ascending: false })
         .limit(1)
         .single()
-        .then(({ data }) => data ? {
-          created_at: parseTimestampToUTC(data.created_at || new Date().toISOString()),
-          text: data.text || '',
-          has_media: true
-        } : null)
+        .then(({ data }) => {
+          Logger.log("Main tweet with media query result:", data);
+          return data ? {
+            created_at: parseTimestampToUTC(data.created_at || new Date().toISOString()),
+            text: data.text || '',
+            has_media: true
+          } : null;
+        })
     ]);
+
+    Logger.log("Dedicated media tweet:", mediaLastTweet);
+    Logger.log("Main tweet with media:", mainWithMediaTweet);
 
     let lastMediaTweet: TweetRecord | null = null;
     if (mediaLastTweet && mainWithMediaTweet) {
@@ -103,7 +129,8 @@ export async function isCooldownActive(tweetType: TweetType): Promise<{ isActive
 
   // For main tweets, only check main tweets without media
   if (tweetType === 'main') {
-    const { data } = await supabase
+    Logger.log("\n📝 Checking MAIN tweet cooldown...");
+    const { data, error } = await supabase
       .from('twitter_tweets')
       .select('created_at, text, has_media')
       .eq('tweet_type', 'main')
@@ -112,7 +139,11 @@ export async function isCooldownActive(tweetType: TweetType): Promise<{ isActive
       .limit(1)
       .single();
 
+    Logger.log("Main tweet query result:", data);
+    if (error) Logger.log("Error fetching main tweet:", error.message);
+
     if (!data) {
+      Logger.log("No previous main tweets found");
       return { isActive: false, remainingTime: null };
     }
 
@@ -120,6 +151,8 @@ export async function isCooldownActive(tweetType: TweetType): Promise<{ isActive
     const currentTime = new Date();
     const timeSinceLastTweet = currentTime.getTime() - lastTweetTime.getTime();
     const cooldownPeriod = COOLDOWN_DURATION * 60 * 1000;
+
+    logCooldownCheck('main', lastTweetTime, currentTime, timeSinceLastTweet, cooldownPeriod, data.text);
 
     const isActive = timeSinceLastTweet < cooldownPeriod;
     const remainingTime = isActive ? Math.ceil((cooldownPeriod - timeSinceLastTweet) / (60 * 1000)) : null;
@@ -144,15 +177,15 @@ export async function isCooldownActive(tweetType: TweetType): Promise<{ isActive
   let timeSinceLastTweet = currentTime.getTime() - lastTweetTime.getTime();
   const cooldownPeriod = COOLDOWN_DURATION * 60 * 1000;
 
-  // Log detailed cooldown computation
-  Logger.log(`Cooldown Check for tweet type: ${tweetType}`);
-  Logger.log(`Last Tweet Time (UTC): ${lastTweetTime.toISOString()}`);
-  Logger.log(`Current Time (UTC): ${currentTime.toISOString()}`);
-  Logger.log(`Time Since Last Tweet (ms): ${timeSinceLastTweet}`);
-  Logger.log(`Cooldown Period (ms): ${cooldownPeriod}`);
-  Logger.log(`Last Tweet Text: ${lastTweetDetails.text}`);
+  logCooldownCheck(
+    tweetType,
+    lastTweetTime || null,
+    currentTime,
+    timeSinceLastTweet,
+    cooldownPeriod,
+    lastTweetDetails.text
+  );
 
-  // Handle future lastTweetTime
   if (timeSinceLastTweet < 0) {
     Logger.log(`Warning: Last tweet time is in the future. Adjusting timeSinceLastTweet to 0.`);
     timeSinceLastTweet = 0;

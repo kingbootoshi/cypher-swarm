@@ -111,7 +111,7 @@ export async function startAISystem() {
           terminalAgent.addMessage(terminalOutputMessage);
           await storeTerminalMessage(terminalOutputMessage, sessionId);
 
-          await new Promise((resolve) => setTimeout(resolve, 15000));
+          await new Promise((resolve) => setTimeout(resolve, 120000));
           actionCount++;
         }
 

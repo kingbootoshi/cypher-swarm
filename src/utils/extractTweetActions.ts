@@ -11,6 +11,7 @@ interface TweetAction {
   role: string;
   action: string;
   tweetId: string;
+  parentTweetId?: string;
   status: string;
   details: string;
   textContent?: string;
@@ -20,68 +21,79 @@ interface TweetAction {
 
 /**
  * Extracts successful tweet actions from the short-term terminal history.
- * Only returns tweets that have a valid tweet ID.
+ * Supports both single and multiple commands per log entry.
  */
 async function extractTweetActions(): Promise<TweetAction[]> {
   try {
-    // Use the existing getShortTermHistory function instead of direct DB query
     const messages = await getShortTermHistory(100);
-    // Log the number of messages retrieved from short-term history for debugging
     Logger.log(`Retrieved ${messages.length} messages from short-term history`);
     
     const tweetActions: TweetAction[] = [];
     let currentSessionId: string | null = null;
 
-    // Iterate over the messages to extract actions
     for (const message of messages) {
-      // Skip non-user messages or messages without content
       if (message.role !== 'user' || !message.content) {
         continue;
       }
 
-      // Extract timestamp if present
+      // Extract timestamp from the log header
       const timestampMatch = message.content.match(/\[(\d{2}\/\d{2}\/\d{2} - \d{1,2}:\d{2} [AP]M [A-Z]+)\]/);
       const timestamp = timestampMatch ? timestampMatch[1] : null;
 
-      // Clean the output by removing timestamp and TERMINAL OUTPUT prefix
-      const output = message.content
-        .replace(/TERMINAL OUTPUT:?\s*(\[\d{2}\/\d{2}\/\d{2} - \d{1,2}:\d{2} [AP]M [A-Z]+\]:?)?\s*/, '')
-        .trim();
+      // Split the content into individual command blocks
+      // Each command block starts with a '$' symbol
+      const commandBlocks = message.content
+        .split(/\$(?=\s*[a-zA-Z-]+)/)
+        .filter(block => block.trim());
 
-      const lines = output.split('\n');
-
-      // Extract details from the terminal output
-      const actionLine = lines.find(line => line.includes('Action:'));
-      const tweetIdLine = lines.find(line => line.includes('Tweet ID:') || line.includes('Reply Tweet ID:'));
-      const statusLine = lines.find(line => line.startsWith('Status:'));
-      const detailsLine = lines.find(line => line.startsWith('Details:'));
-      const textLine = lines.find(line => line.startsWith('Text:'));
-      const mediaLine = lines.find(line => line.startsWith('Media:'));
-
-      // Only process if we have a tweet ID
-      if (tweetIdLine) {
-        const tweetId = tweetIdLine.split(':')[1].trim();
+      // Process each command block separately
+      for (const block of commandBlocks) {
+        // Clean the command block
+        const cleanBlock = block.trim();
         
-        // Only add to results if we have a valid tweet ID
-        if (tweetId) {
-          tweetActions.push({
-            sessionId: currentSessionId || 'unknown',
-            role: message.role,
-            action: actionLine ? actionLine.replace('Action:', '').replace('✅', '').trim() : '',
-            tweetId,
-            status: statusLine ? statusLine.replace('Status:', '').trim() : '',
-            details: detailsLine ? detailsLine.replace('Details:', '').trim() : '',
-            textContent: textLine ? textLine.replace('Text:', '').trim() : undefined,
-            mediaUrls: mediaLine && mediaLine !== 'Media: None'
-              ? mediaLine.replace('Media:', '').trim().split(', ')
-              : [],
-            timestamp: timestamp || undefined
-          });
+        // Skip if not a tweet-related action
+        if (!cleanBlock.includes('Tweet ID:') && !cleanBlock.includes('Reply Tweet ID:')) {
+          continue;
+        }
+
+        // Split into lines and process
+        const lines = cleanBlock.split('\n');
+
+        // Extract action details
+        const actionLine = lines.find(line => line.includes('Action:'));
+        const parentTweetIdLine = lines.find(line => line.includes('Parent Tweet ID:'));
+        const replyTweetIdLine = lines.find(line => line.includes('Reply Tweet ID:'));
+        const tweetIdLine = replyTweetIdLine || parentTweetIdLine;
+        const statusLine = lines.find(line => line.startsWith('Status:'));
+        const detailsLine = lines.find(line => line.startsWith('Details:'));
+        const textLine = lines.find(line => line.startsWith('Text:'));
+        const mediaLine = lines.find(line => line.startsWith('Media:'));
+
+        // Only process if we have a tweet ID
+        if (tweetIdLine) {
+          const tweetId = tweetIdLine.split(':')[1].trim();
+          
+          if (tweetId) {
+            tweetActions.push({
+              sessionId: currentSessionId || 'unknown',
+              role: message.role,
+              action: actionLine ? actionLine.replace('Action:', '').replace('��', '').replace('ℹ️', '').trim() : '',
+              tweetId,
+              parentTweetId: parentTweetIdLine ? parentTweetIdLine.split(':')[1].trim() : undefined,
+              status: statusLine ? statusLine.replace('Status:', '').trim() : '',
+              details: detailsLine ? detailsLine.replace('Details:', '').trim() : '',
+              textContent: textLine ? textLine.replace('Text:', '').trim() : undefined,
+              mediaUrls: mediaLine && mediaLine !== 'Media: None'
+                ? mediaLine.replace('Media:', '').trim().split(', ')
+                : [],
+              timestamp: timestamp || undefined
+            });
+          }
         }
       }
     }
 
-    Logger.log('Extracted Tweet Actions:', tweetActions);
+    Logger.log(`Extracted ${tweetActions.length} Tweet Actions`);
     return tweetActions;
 
   } catch (error) {
@@ -98,14 +110,19 @@ export async function gatherUserInteractions(): Promise<Map<string, TwitterInter
   // Extract tweet actions from the short-term history
   const tweetActions = await extractTweetActions();
 
-  // Collect unique tweet IDs from the actions
+  // Collect unique parent tweet IDs from the actions
   const uniqueTweetIds = new Set<string>();
   for (const action of tweetActions) {
-    uniqueTweetIds.add(action.tweetId);
+    // Use parentTweetId for reply actions, otherwise use tweetId
+    const relevantTweetId = action.parentTweetId || action.tweetId;
+    uniqueTweetIds.add(relevantTweetId);
   }
 
   // Map to group interactions by user ID
   const userInteractionsMap = new Map<string, TwitterInteractionResult[]>();
+
+  // Log the tweet IDs we're processing
+  Logger.log('Processing tweet IDs for interactions:', Array.from(uniqueTweetIds));
 
   // Iterate over each unique tweet ID
   for (const tweetId of uniqueTweetIds) {
@@ -123,15 +140,11 @@ export async function gatherUserInteractions(): Promise<Map<string, TwitterInter
       // Add the interaction to the user's array of interactions
       userInteractionsMap.get(userId)?.push(interactionResult);
     } else {
-      // Log if no interaction is found for the tweet ID
       Logger.log(`No interaction found for tweet ID: ${tweetId}`);
     }
   }
 
-  // Log the grouped user interactions
-  Logger.log('User Interactions Map:', userInteractionsMap);
-
-  // Return the map containing user interactions grouped by user ID
+  Logger.log(`Processed interactions for ${userInteractionsMap.size} unique users`);
   return userInteractionsMap;
 }
 
