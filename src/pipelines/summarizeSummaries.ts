@@ -7,7 +7,7 @@ import { SummaryAgent } from '../ai/agents/summaryAgent/summaryAgent';
 Logger.enable();
 
 // Initialize the OpenAI client with the desired model
-const openAIClient = new OpenAIClient("gpt-4o");
+const openAIClient = new OpenAIClient("gpt-4o-mini");
 const summaryAgent = new SummaryAgent(openAIClient);
 
 /**

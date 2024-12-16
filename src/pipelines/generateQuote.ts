@@ -2,7 +2,6 @@ import { assembleTwitterInterface } from '../twitter/utils/imageUtils';
 import { QuoteAgent } from '../ai/agents/quoteAgent/quoteAgent';
 import { Logger } from '../utils/logger';
 import { OpenAIClient } from '../ai/models/clients/OpenAiClient';
-import { AnthropicClient } from '../ai/models/clients/AnthropicClient';
 import { quoteTweet } from '../twitter/functions/quoteTweet';
 import { loadMemories } from './loadMemories';
 import { FireworkClient } from '../ai/models/clients/FireworkClient';
@@ -96,10 +95,9 @@ async function generateQuoteTweet(
   };
 
   // Initialize OpenAI client and quote agent
-  const openAIClient = new OpenAIClient("gpt-4o");
-  const anthropicClient = new AnthropicClient("claude-3-5-sonnet-20241022");
+  const openAIClient = new OpenAIClient("gpt-4o-mini");
   const fireworksClient = new FireworkClient("accounts/fireworks/models/llama-v3p3-70b-instruct");
-  const quoteAgent = new QuoteAgent(anthropicClient);
+  const quoteAgent = new QuoteAgent(openAIClient);
 
   // Add images to the agent's context if available
   if (imageContents && imageContents.length > 0) {

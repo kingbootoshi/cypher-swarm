@@ -1,0 +1,81 @@
+# Mission Configuration Template
+missions:
+  - id: "primary_growth"
+    description: "Develop and engage the community through strategic content and interactions"
+    priority: 1
+    status: "active"
+    metrics:
+      engagement_rate: 0
+      new_followers: 0
+      daily_interactions: 0
+      content_reach: 0
+      sentiment_score: 0
+    completion_criteria:
+      - description: "Reach target follower milestone"
+        target: 1000
+        current: 0
+      - description: "Achieve sustained engagement rate"
+        target: 5
+        current: 0
+      - description: "Maintain daily interaction quota"
+        target: 100
+        current: 0
+
+  - id: "ecosystem_education"
+    description: "Create educational content and resources to enhance community knowledge"
+    priority: 2
+    status: "pending"
+    metrics:
+      educational_posts: 0
+      resource_shares: 0
+      knowledge_engagement: 0
+      tutorial_completions: 0
+    completion_criteria:
+      - description: "Publish educational content series"
+        target: 50
+        current: 0
+      - description: "Achieve tutorial engagement target"
+        target: 75
+        current: 0
+      - description: "Generate knowledge-sharing discussions"
+        target: 100
+        current: 0
+
+  - id: "community_building"
+    description: "Foster meaningful connections and discussions within the community"
+    priority: 3
+    status: "pending"
+    metrics:
+      discussion_threads: 0
+      community_events: 0
+      member_interactions: 0
+      collaboration_initiatives: 0
+    completion_criteria:
+      - description: "Launch community initiatives"
+        target: 25
+        current: 0
+      - description: "Foster inter-community collaborations"
+        target: 10
+        current: 0
+      - description: "Facilitate meaningful discussions"
+        target: 200
+        current: 0
+
+# Current active mission identifier
+current_mission: "primary_growth"
+
+# Mission template structure for reference:
+#
+# missions:
+#   - id: "mission_identifier"
+#     description: "Detailed mission objective and strategy"
+#     priority: 1-5 (1 highest)
+#     status: "active|pending|completed"
+#     metrics:
+#       metric_name: numeric_value
+#     completion_criteria:
+#       - description: "Measurable goal description"
+#         target: numeric_target
+#         current: current_value
+#     created_at: ISO8601_timestamp
+#     updated_at: ISO8601_timestamp
