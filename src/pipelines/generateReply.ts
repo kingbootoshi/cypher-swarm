@@ -2,7 +2,6 @@ import { assembleTwitterInterface } from '../twitter/utils/imageUtils';
 import { ReplyAgent } from '../ai/agents/replyAgent/replyAgent';
 import { Logger } from '../utils/logger';
 import { OpenAIClient } from '../ai/models/clients/OpenAiClient';
-import { AnthropicClient } from '../ai/models/clients/AnthropicClient';
 import { FireworkClient } from '../ai/models/clients/FireworkClient';
 import { replyToTweet } from '../twitter/functions/replyToTweet';
 import { loadMemories } from './loadMemories';
@@ -95,10 +94,9 @@ async function generateTweetReply(
   };
 
   // Initialize OpenAI client and reply agent
-  const openAIClient = new OpenAIClient("gpt-4o");
-  const anthropicClient = new AnthropicClient("claude-3-5-sonnet-20241022");
+  const openAIClient = new OpenAIClient("gpt-4o-mini");
   const fireworksClient = new FireworkClient("accounts/fireworks/models/llama-v3p3-70b-instruct");
-  const replyAgent = new ReplyAgent(anthropicClient);
+  const replyAgent = new ReplyAgent(openAIClient);
 
   // Add images to the agent's context if available
   if (imageContents && imageContents.length > 0) {

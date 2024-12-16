@@ -1,7 +1,7 @@
 import { assembleTwitterInterface } from '../twitter/utils/imageUtils';
 import { VerifyRetweetAgent } from '../ai/agents/verifyRetweetAgent/verifyRetweetAgent';
 import { Logger } from '../utils/logger';
-import { AnthropicClient } from '../ai/models/clients/AnthropicClient';
+import { OpenAIClient } from '../ai/models/clients/OpenAiClient';
 import { retweet } from '../twitter/functions/retweet';
 
 // Type for the reply result
@@ -51,8 +51,8 @@ async function verifyRetweet(
   Logger.enable();
 
   // Initialize OpenAI client and reply agent
-  const anthropicClient = new AnthropicClient("claude-3-5-sonnet-20241022");
-  const verifyAgent = new VerifyRetweetAgent(anthropicClient);
+  const openAIClient = new OpenAIClient("gpt-4o-mini");
+  const verifyAgent = new VerifyRetweetAgent(openAIClient);
 
   // Add images to the agent's context if available
   if (imageContents && imageContents.length > 0) {

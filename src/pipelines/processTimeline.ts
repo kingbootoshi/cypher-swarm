@@ -2,14 +2,12 @@ import { ContentManagerAgent } from "../ai/agents/contentManagerAgent/contentMan
 import { OpenAIClient } from "../ai/models/clients/OpenAiClient";
 import { FireworkClient } from "../ai/models/clients/FireworkClient";
 import { Logger } from "../utils/logger";
-import { AnthropicClient } from "../ai/models/clients/AnthropicClient";
 
 Logger.enable();
 
-const openAIClient = new OpenAIClient("gpt-4o");
-const anthropicClient = new AnthropicClient("claude-3-5-haiku-20241022");
+const openAIClient = new OpenAIClient("gpt-4o-mini");
 const fireworksClient = new FireworkClient("accounts/fireworks/models/llama-v3p3-70b-instruct");
-const contentManagerAgent = new ContentManagerAgent(anthropicClient);
+const contentManagerAgent = new ContentManagerAgent(openAIClient);
 
 // Helper function to format the agent's response into a readable string
 const formatAgentResponse = (response: any): string => {
