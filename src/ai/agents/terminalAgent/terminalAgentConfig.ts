@@ -2,7 +2,7 @@
 
 import { z } from 'zod';
 import { Tool } from '../../types/agentSystem';
-import agentConfig from '../../../config/agent.yaml';
+import { configLoader } from '../../../utils/config';
 
 // Schema for individual terminal command
 export const terminalCommandSchema = z.object({
@@ -38,7 +38,7 @@ export const TerminalTool: Tool = {
       properties: {
         internal_thought: {
           type: 'string',
-          description: `${agentConfig.agent.name}'s internal reasoning process about what terminal commands to run next and why.`,
+          description: `${configLoader.getAgentName()}'s internal reasoning process about what terminal commands to run next and why.`,
         },
         plan: {
           type: 'string',
