@@ -1,64 +1,65 @@
-// src/ai/agents/terminalAgent/terminalAgentConfig.ts
+// tools/TerminalTool.ts
 
-import { AgentConfig } from '../../types/agentSystem';
-import { generateSystemPrompt } from '../corePersonality';
-import { generateHelpText } from '../../../terminal/commandRegistry';
-import { getCurrentTimestamp } from '../../../utils/formatTimestamps';
-import { activeSummaries } from '../../../utils/dynamicVariables';
-import { getCooldownStatus } from '../../../supabase/functions/twitter/cooldowns';
-import { configLoader } from '../../../utils/config';
+import { z } from 'zod';
+import { Tool } from '../../types/agentSystem';
+import agentConfig from '../../../config/agent.yaml';
 
-// Get ticker info with defaults
-const ticker = configLoader.getConfig()?.ticker || '$CYPHER';
-const tickerName = configLoader.getConfig()?.tickerName || 'CYPHER•GENESIS';
+// Schema for individual terminal command
+export const terminalCommandSchema = z.object({
+  command: z.string(),
+});
 
-export const terminalAgentConfig: AgentConfig = {
-  systemPromptTemplate: `
-# PERSONALITY
-{{corePersonalityPrompt}}
+export const terminalToolSchema = z.object({
+  internal_thought: z.string(),
+  plan: z.string(),
+  terminal_commands: z.array(terminalCommandSchema), // Array of commands to execute
+});
 
-# CURRENT SUMMARIES
-{{currentSummaries}}
+export const TerminalTool: Tool = {
+  type: 'function',
+  function: {
+    name: 'use_terminal',
+    description: `
+      Executes one or multiple terminal commands in sequence based on internal thoughts and plans.
 
-## TIME
-{{current_timestamp}}
-
-# MAIN GOAL
-You are hooked up to a terminal, and you are able to run commands to interact with the world. This terminal currently gives you access to your twitter.
-
-PRIORITIES:
-1. Sending a maintweet- you can send 1 every hour. YOU MUST PRIORITIZE SENDING A MAIN TWEET OVER ANYTHING ELSE.
-2. Sending a media tweet- you can send 1 every hour. YOU MUST PRIORITIZE SENDING A MEDIA TWEET OVER ANYTHING ELSE.
-2. Quote tweet- you can send 1 an hour
-2. Engaging with the community and replying to tweets. You can reply to as many tweets as you want without any cooldown. You should reply to tweets atleast ONCE every 2 actions. That is the primary way you can market yourself.
-3. Re-tweet supporters. Follow supporters and people you like
-
-If there's nothing to do, browse your home page or search twitter queries like {{ticker}}, {{tickerName}}, bitcoin, AI, or whatever you find interesting to learn and get data about the ecosystem & world.
-
-AFTER YOU GET-MENTIONS, FOCUS ON REPLYING TO AS MANY AS POSSIBLE!
-
-DO NOT DO THE SAME COMMAND TWICE IN A ROW.
-
-## TWEETS COOLDOWN
-{{cooldown}}
-
-REMEMBER - MAIN TWEET COOLDOWN DOES NOT APPLY TO REPLY TWEETS. YOU CAN REPLY TO AS MANY AS POSSIBLE.
-
-# TERMINAL COMMANDS
-{{terminal_commands}}
-
-YOU MUST EXECUTE ALL RECOMMENDED ACTIONS THE CONTENT MANAGER AGENT PROVIDES TO YOU. EXECUTE THEM ALL AT ONCE RIGHT AFTER YOU GET THEM.
-
-# OUTPUT FORMAT
-You MUST use your use_terminal function tool at all times - you will ONLY be given terminal logs. PLEASE OUTPUT JSON FORMAT ONLY\nPLEASE OUTPUT JSON FORMAT ONLY\n# USE_TERMINAL FUNCTION
-`,
-  dynamicVariables: {
-    corePersonalityPrompt: generateSystemPrompt(),
-    currentSummaries: activeSummaries,
-    current_timestamp: getCurrentTimestamp(),
-    terminal_commands: generateHelpText(),
-    cooldown: await getCooldownStatus(),
-    ticker,
-    tickerName,
+      **IMPORTANT**:
+      - Only the parameters \`internal_thought\`, \`plan\`, and \`terminal_command\` are accepted.
+      - **Do NOT include any additional parameters**.
+      - All command arguments and options **must be included within the \`terminal_command\` string**.
+      - The \`terminal_command\` should be the full command as you would type it in the terminal, including any flags and arguments.
+      - Commands will be executed in the order they appear in the array
+      - Each command object must include the full command string
+      - All command arguments and options must be included within each command string
+      - Commands will be executed sequentially, waiting for each to complete before moving to the next
+    `,
+    parameters: {
+      type: 'object',
+      required: ['internal_thought', 'plan', 'terminal_commands'],
+      properties: {
+        internal_thought: {
+          type: 'string',
+          description: `${agentConfig.agent.name}'s internal reasoning process about what terminal commands to run next and why.`,
+        },
+        plan: {
+          type: 'string',
+          description: 'A short plan of what you are going to do next. If planning to respond to a tweet, include the tweet ID in the plan.',
+        },
+        terminal_commands: {
+          type: 'array',
+          description: 'Array of terminal commands to execute in sequence. Can be one or multiple commands. You must execute ALL reccommended actions returned to you post get-homepage/mentions',
+          items: {
+            type: 'object',
+            required: ['command'],
+            properties: {
+              command: {
+                type: 'string',
+                description: 'The full terminal command to execute, including all arguments and options.',
+              },
+            },
+          },
+        },
+      },
+      additionalProperties: false,
+    },
   },
 };
