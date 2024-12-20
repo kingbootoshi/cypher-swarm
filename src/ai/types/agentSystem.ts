@@ -15,7 +15,9 @@ export interface Message {
 
 export interface AgentConfig {
   systemPromptTemplate: string;
-  dynamicVariables?: { [key: string]: string };
+  dynamicVariables?: {
+    [key: string]: string | (() => string);
+  };
 }
 
 export interface Tool {

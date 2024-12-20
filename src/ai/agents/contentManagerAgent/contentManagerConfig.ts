@@ -27,6 +27,12 @@ The timeline data is USUALLY related to the on-chain Bitcoin ecosystem.
 The summary of the timeline needs to be EXTREMELY detailed. What people are talking about and the general vibe needs to be put together. It can be as long of a summary as needed.
 Preferred 2-6 sentences depending on what to write about.
 
+## MISSION IMPACT ANALYSIS
+For each recommended action, estimate potential impact on mission metrics:
+- How it contributes to engagement rate
+- Potential for new followers
+- Expected interactions generated
+
 ## CURRENT TWEET COOLDOWNS
 {{cooldown}}
 

@@ -18,6 +18,7 @@ import { extractAndSaveLearnings } from './pipelines/extractLearnings';
 import { getCurrentTimestamp } from './utils/formatTimestamps';
 import { OpenAIClient } from './ai/models/clients/OpenAiClient';
 import { getCooldownStatus } from './supabase/functions/twitter/cooldowns';
+import { missionSystem } from './missions/systems/missionSystem';
 
 Logger.enable();
 
@@ -39,8 +40,8 @@ export async function startAISystem() {
     const sessionId = uuidv4();
     await ensureAuthenticated();
     
-    const modelClient = new AnthropicClient("claude-3-5-haiku-20241022", { temperature: 1 });
-    // const modelClient = new OpenAIClient("gpt-4o");
+    // const modelClient = new AnthropicClient("claude-3-5-haiku-20241022", { temperature: 1 });
+    const modelClient = new OpenAIClient("gpt-4o-mini");
 
     // Set initial active status
     await updateTerminalStatus(true);
@@ -67,8 +68,14 @@ export async function startAISystem() {
             Logger.log('Error loading short-term history:', error);
           }
 
-          // Run the agent
-          const functionResult = await terminalAgent.run(`REMEMBER YOUR PRIORITIES! ${await getCooldownStatus()}`);
+          // Get current mission
+          const currentMission = missionSystem.getCurrentMission();
+
+          const functionResult = await terminalAgent.run(
+            `REMEMBER YOUR PRIORITIES! 
+             ${await getCooldownStatus()}
+             ${await missionSystem.getMissionStatus()}`
+          );
 
           if (!functionResult.success) {
             throw new Error(functionResult.error);
@@ -110,6 +117,12 @@ export async function startAISystem() {
           };
           terminalAgent.addMessage(terminalOutputMessage);
           await storeTerminalMessage(terminalOutputMessage, sessionId);
+
+          // Check mission every 5 cycles
+          if (actionCount % 5 === 0) {
+            Logger.log('🎯 Scheduled mission check...');
+            await executeCommand(`get-mission-status ${currentMission?.id || ''}`);
+          }
 
           await new Promise((resolve) => setTimeout(resolve, 120000));
           actionCount++;

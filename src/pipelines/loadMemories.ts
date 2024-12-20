@@ -51,7 +51,7 @@ export async function loadMemories(
     usernames?: string[]
 ): Promise<string> {
     try {
-        const openAIClient = new OpenAIClient("gpt-4o");
+        const openAIClient = new OpenAIClient("gpt-4o-mini");
         const memoryAgent = new MemoryAgent(openAIClient);
         
         // Generate memory query from content

@@ -19,3 +19,7 @@ package-lock.json
 follows_rows.csv
 
 transferFollows.ts
+.DS_Store
+./*/.DS_Store
+./*/*/.DS_Store
+./*/*/*/.DS_Store
