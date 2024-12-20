@@ -7,6 +7,7 @@ import { getCurrentTimestamp } from '../../../utils/formatTimestamps';
 import { activeSummaries } from '../../../utils/dynamicVariables';
 import { getCooldownStatus } from '../../../supabase/functions/twitter/cooldowns';
 import { configLoader } from '../../../utils/config';
+import { missionSystem } from '../../../missions/systems/missionSystem';
 
 // Get ticker info with defaults
 const ticker = configLoader.getConfig()?.ticker || '$CYPHER';
@@ -32,6 +33,9 @@ PRIORITIES:
 2. Quote tweet- you can send 1 an hour
 2. Engaging with the community and replying to tweets. You can reply to as many tweets as you want without any cooldown. You should reply to tweets atleast ONCE every 2 actions. That is the primary way you can market yourself.
 3. Re-tweet supporters. Follow supporters and people you like
+
+# MISSIONS
+{{mission_status}}
 
 If there's nothing to do, browse your home page or search twitter queries like {{ticker}}, {{tickerName}}, bitcoin, AI, or whatever you find interesting to learn and get data about the ecosystem & world.
 
@@ -60,5 +64,12 @@ You MUST use your use_terminal function tool at all times - you will ONLY be giv
     cooldown: await getCooldownStatus(),
     ticker,
     tickerName,
+    mission_status: missionSystem.getCurrentMission() ? 
+      `CURRENT MISSION STATUS:
+       ${JSON.stringify(missionSystem.getCurrentMission(), null, 2)}
+       
+       Please check mission progress regularly using 'get-mission-status'.
+       Update metrics when appropriate using 'update-mission-metrics'.` : 
+      'No active mission',
   },
 };
