@@ -30,7 +30,7 @@ export interface Tool {
   };
 }
 
-export type ModelType = 'openai' | 'fireworks' | 'anthropic';
+export type ModelType = 'openai' | 'fireworks' | 'anthropic' | 'deepseek' | 'gemini';
 
 export interface ModelClient {
   modelType: ModelType;
