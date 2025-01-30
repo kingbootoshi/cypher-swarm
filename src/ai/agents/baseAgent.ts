@@ -6,6 +6,8 @@ import { ModelAdapter } from '../models/adapters/ModelAdapter';
 import { OpenAIAdapter } from '../models/adapters/OpenAIAdapter';
 import { AnthropicAdapter } from '../models/adapters/AnthropicAdapter';
 import { FireworksAdapter } from '../models/adapters/FireworksAdapter';
+import { DeepSeekAdapter } from '../models/adapters/DeepSeekAdapter';
+import { GeminiAdapter } from '../models/adapters/GeminiAdapter';
 import { z } from 'zod';
 
 export abstract class BaseAgent<T extends z.ZodTypeAny | null = null> {
@@ -45,6 +47,12 @@ export abstract class BaseAgent<T extends z.ZodTypeAny | null = null> {
         break;
       case 'fireworks':
         this.modelAdapter = new FireworksAdapter();
+        break;
+      case 'deepseek':
+        this.modelAdapter = new DeepSeekAdapter();
+        break;
+      case 'gemini':
+        this.modelAdapter = new GeminiAdapter();
         break;
       default:
         throw new Error(`Unsupported model type: ${this.modelType}`);
@@ -146,7 +154,7 @@ export abstract class BaseAgent<T extends z.ZodTypeAny | null = null> {
       
       if (matches) {
         Logger.log(`\n🔎 Found ${matches.length} instances of ${placeholder}`);
-        prompt = prompt.replace(regex, value);
+        prompt = prompt.replace(regex, String(value));
       }
     }
 
